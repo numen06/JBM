@@ -143,3 +143,26 @@ codegraph explore "How does a gateway request reach a Python platform service?"
 ```
 
 The generated database stays local and is never committed.
+
+## Unified API security
+
+Resource services must install `common.auth.install_api_protection(app, config)`.
+Services with an existing authentication middleware must call
+`UserInfoAuthClient.bind_app(app, profile=config.profile)` and use
+`authenticate_request(request, config.service_name)` for protected requests.
+Center makes authorization decisions from current identity and registered API
+permissions; unregistered protected APIs are denied. Business handlers must
+still verify tenant, project and object ownership.
+
+OpenAPI, Swagger and ReDoc are never anonymous, including custom documentation
+URLs and subpaths. Service whitelists and registered API grants cannot override
+this rule: platform administrators and explicitly authorized `internal` service
+tokens can read documentation; tenant users and API keys cannot. OAuth discovery
+and JWKS are protocol bootstrap endpoints, not API documentation.
+
+Public routes must be declared individually. An empty `public-paths` list means
+no anonymous routes; root paths and wildcards are rejected. Production services
+cannot disable this guard. Ordinary clients continue using
+`Authorization: Bearer <access_token>` without additional signature headers.
+Run `python -m pytest common/tests/test_document_boundary.py center/tests/test_request_access.py`
+to verify service assemblies, legacy whitelists, custom URLs and API grants.

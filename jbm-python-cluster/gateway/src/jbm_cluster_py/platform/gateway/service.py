@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import json
 import logging
 import time
@@ -81,7 +82,7 @@ def sanitize_headers(headers: Mapping[str, str]) -> dict[str, str]:
     redacted = {}
     for key, value in headers.items():
         lowered = key.lower()
-        if lowered in {"authorization", "x-internal-authorization", "cookie", "set-cookie"}:
+        if lowered in {"authorization", "x-internal-authorization", "x-signature", "cookie", "set-cookie"}:
             redacted[key] = "***"
         else:
             redacted[key] = value
@@ -116,8 +117,8 @@ class ServiceTokenProvider:
     async def _fetch_token(self) -> tuple[Optional[str], int]:
         service = str(self.config.get("service") or "jbm-cluster-platform-auth")
         path = str(self.config.get("path") or "/oauth2/token")
-        client_id = str(self.config.get("client-id") or self.config.get("clientId") or "")
-        client_secret = str(self.config.get("client-secret") or self.config.get("clientSecret") or "")
+        client_id = str(self.config.get("client-id") or self.config.get("clientId") or os.getenv("JBM_INTERNAL_CLIENT_ID") or "")
+        client_secret = str(self.config.get("client-secret") or self.config.get("clientSecret") or os.getenv("JBM_INTERNAL_CLIENT_SECRET") or "")
         scope = str(self.config.get("scope") or "internal")
         if not client_id or not client_secret:
             logger.warning("Cannot fetch service token: client-id/client-secret are empty")
@@ -216,7 +217,9 @@ class AccessLogger:
             return
         url = "http://%s:%s%s" % (host, port, path)
         try:
-            response = await self.http_client.post(url, json=dict(payload), timeout=5.0)
+            tokens = getattr(self, "service_tokens", None)
+            token = await tokens.get_token() if tokens else None
+            response = await self.http_client.post(url, json=dict(payload), headers={"Authorization": "Bearer " + token} if token else {}, timeout=5.0)
             response.raise_for_status()
         except Exception as exc:
             logger.debug("Gateway log ingest failed: %s", exc)
@@ -248,6 +251,7 @@ class GatewayProxy:
         self.service_tokens = service_tokens
         self.access_logger = access_logger
         self.security = GatewaySecurityPolicy.from_app_config(config)
+        access_logger.service_tokens = service_tokens
 
     async def proxy_http(self, request: Request, path: str) -> Response:
         request_path = "/" + path if path else "/"

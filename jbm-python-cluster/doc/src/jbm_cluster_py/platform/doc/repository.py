@@ -181,6 +181,14 @@ class DocRepository:
         result = await self.page_docs(query, PageForm(currPage=1, pageSize=limit))
         return list(result["contents"])
 
+    async def list_group_docs(self, group_id: str) -> List[Dict[str, Any]]:
+        async with self.engine.connect() as conn:
+            rows = (await conn.execute(
+                text(f"SELECT * FROM {DOC_TABLE} WHERE doc_group_id=:group_id ORDER BY update_time DESC LIMIT 100"),
+                {"group_id": group_id},
+            )).mappings().all()
+        return [self._doc_from_db(dict(row)) for row in rows]
+
     async def existing_doc_paths(self) -> set[str]:
         async with self.engine.begin() as conn:
             rows = (await conn.execute(text(f"SELECT doc_path FROM {DOC_TABLE} WHERE doc_path IS NOT NULL"))).all()

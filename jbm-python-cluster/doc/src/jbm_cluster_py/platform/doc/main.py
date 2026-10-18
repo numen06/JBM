@@ -1,11 +1,15 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import json
 import logging
 from typing import Any
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
+from sqlalchemy import text
+from jbm_cluster_py.common.auth import install_api_protection
 
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
@@ -61,6 +65,62 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    # Scoped Doc-Token-Key operations retain their own capability verification in DocService.
+    install_api_protection(app, app_config, public_paths=("/health", "/actuator/health", "/baseDocGroup/findGroupItemByToken", "/baseDocGroup/removeGroupItemByToken", "/baseDocGroup/uploadByToken"))
+
+    @app.middleware("http")
+    async def public_login_image(request: Request, call_next: Any):
+        # Login images must load before sign-in. Only the exact images referenced
+        # by existing public application branding are public, never the directory.
+        prefixes = ("/get/app-branding/", "/get/login-branding/")
+        if request.method != "GET" or not request.url.path.startswith(prefixes):
+            return await call_next(request)
+        key = request.url.path[len("/get/"):]
+        if any(part in {"", ".", ".."} for part in key.split("/")) or any(
+            c in key for c in ("\\", "%", "\x00", "\r", "\n")
+        ):
+            return await call_next(request)
+        try:
+            async with repository.engine.connect() as conn:
+                rows = (await conn.execute(text(
+                    "SELECT config_content FROM base_app_config "
+                    "WHERE config_content LIKE :branding"
+                ), {"branding": "%-branding/%"})).scalars().all()
+            configured = False
+            for raw in rows:
+                try:
+                    branding = json.loads(raw) if isinstance(raw, str) else raw
+                except ValueError:
+                    continue
+                if not isinstance(branding, dict):
+                    continue
+                for field in ("sysBg", "sysLogo"):
+                    value = str(branding.get(field) or "").strip()
+                    for root in ("/jbm-api/doc/get/", "/doc/get/"):
+                        if value.startswith(root):
+                            value = value[len(root):]
+                            break
+                    configured |= value == key
+            if not configured:
+                return await call_next(request)
+            obj = await doc_service.storage.get_object(key)
+            body = obj.body
+            image_type = (
+                "image/png" if body.startswith(b"\x89PNG\r\n\x1a\n") else
+                "image/jpeg" if body.startswith(b"\xff\xd8\xff") else
+                "image/gif" if body.startswith((b"GIF87a", b"GIF89a")) else
+                "image/webp" if body.startswith(b"RIFF") and body[8:12] == b"WEBP" else None
+            )
+            if image_type is None:
+                return await call_next(request)
+            return Response(body, media_type=image_type, headers={
+                "Cache-Control": "public, max-age=300",
+                "X-Content-Type-Options": "nosniff",
+            })
+        except Exception:
+            logger.exception("Unable to read configured public login image")
+            return Response(status_code=503)
+
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_doc_router(doc_service))
     return app

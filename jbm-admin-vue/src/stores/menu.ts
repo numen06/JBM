@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { getCurrentMenus } from '@/api/current'
 import type { BaseMenu } from '@/api/types'
 import type { JbmFrontendModule } from '@jbm7/vue-core'
+import { isPlatformAdminPath, platformMenuCodes } from '@/lib/adminAccess'
 import {
   buildNavGroups,
   normalizeMenuPath,
@@ -20,6 +21,7 @@ export const useMenuStore = defineStore('menu', () => {
   const rawMenus = ref<BaseMenu[]>([])
   const authorityMenuCodes = ref<string[]>([])
   const superAdmin = ref(false)
+  const platformAccount = ref(false)
   const loaded = ref(false)
   const loadError = ref('')
   const extensionModules = ref<JbmFrontendModule[]>([])
@@ -28,18 +30,23 @@ export const useMenuStore = defineStore('menu', () => {
     const set = new Set<string>()
     for (const m of flattenMenus(rawMenus.value)) {
       const path = normalizeMenuPath(m.path)
-      if (path) set.add(path)
+      if (path && (platformAccount.value || !isPlatformAdminPath(path))) set.add(path)
     }
     return set
   })
 
+  const allowedSubroutePaths = computed(() => new Set(
+    flattenMenus(rawMenus.value).filter(menu => !menu.children?.length)
+      .map(menu => normalizeMenuPath(menu.path)).filter((path): path is string => !!path),
+  ))
+
   const allowedMenuCodes = computed(() => {
     const set = new Set<string>()
     for (const m of flattenMenus(rawMenus.value)) {
-      if (m.menuCode) addMenuCode(set, m.menuCode)
+      if (m.menuCode && (platformAccount.value || !platformMenuCodes.has(m.menuCode.replace(/^MENU_/, '')))) addMenuCode(set, m.menuCode)
     }
     for (const code of authorityMenuCodes.value) {
-      addMenuCode(set, code)
+      if (platformAccount.value || !platformMenuCodes.has(code.replace(/^MENU_/, ''))) addMenuCode(set, code)
     }
     return set
   })
@@ -53,10 +60,10 @@ export const useMenuStore = defineStore('menu', () => {
     const extensions = extensionModules.value.flatMap((module) =>
       (module.navigation ?? []).flatMap((group) => {
         const items = group.items.filter((item) =>
-          superAdmin.value || (
+          (platformAccount.value || !isPlatformAdminPath(item.to)) && (superAdmin.value || (
             (!item.menuCodes?.length || item.menuCodes.some((code) => allowedMenuCodes.value.has(code))) &&
             (!item.permissions?.length || item.permissions.every((code) => allowedMenuCodes.value.has(code)))
-          ),
+          )),
         )
         return items.length ? [{ ...group, items }] : []
       }),
@@ -65,6 +72,7 @@ export const useMenuStore = defineStore('menu', () => {
   })
 
   function isRouteAllowed(path: string): boolean {
+    if (!platformAccount.value && isPlatformAdminPath(path)) return false
     if (superAdmin.value) return true
     if (path === '/message-center') return true
     if (!loaded.value) {
@@ -76,7 +84,7 @@ export const useMenuStore = defineStore('menu', () => {
     if (path === '/dashboard' || path.startsWith('/dashboard')) return true
     if ([...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))) return true
     if (allowedPaths.value.has(path)) return true
-    if ([...allowedPaths.value].some((p) => isPathInBase(path, p))) return true
+    if ([...allowedSubroutePaths.value].some((p) => isPathInBase(path, p))) return true
     const normalized = normalizeMenuPath(path)
     if (normalized && allowedPaths.value.has(normalized)) return true
     const matchedNavItem = STATIC_NAV_GROUPS
@@ -104,6 +112,7 @@ export const useMenuStore = defineStore('menu', () => {
     rawMenus.value = []
     authorityMenuCodes.value = []
     superAdmin.value = false
+    platformAccount.value = false
     loaded.value = false
     loadError.value = ''
   }
@@ -116,6 +125,10 @@ export const useMenuStore = defineStore('menu', () => {
     superAdmin.value = value
   }
 
+  function setPlatformAccount(value: boolean) {
+    platformAccount.value = value
+  }
+
   function registerModules(modules: JbmFrontendModule[]) {
     extensionModules.value = [...modules]
   }
@@ -123,6 +136,7 @@ export const useMenuStore = defineStore('menu', () => {
   return {
     rawMenus,
     superAdmin,
+    platformAccount,
     loaded,
     loadError,
     navGroups,
@@ -132,6 +146,7 @@ export const useMenuStore = defineStore('menu', () => {
     fetchMenus,
     setAuthorityCodes,
     setSuperAdmin,
+    setPlatformAccount,
     registerModules,
     clear,
   }

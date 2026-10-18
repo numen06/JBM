@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, Mapping
 
 import httpx
+from jbm_cluster_py.common.auth import request_authorization
 
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import CrudStore
@@ -86,7 +87,8 @@ class OpenApiCatalog:
         spec = None
         source_url = ""
         for candidate in ("/v3/api-docs", "/v2/api-docs", "/openapi.json"):
-            response = await self.client.get(base_url + candidate, timeout=15)
+            authorization = request_authorization.get()
+            response = await self.client.get(base_url + candidate, headers={"Authorization": authorization} if authorization else {}, timeout=15)
             if response.status_code < 400:
                 spec = response.json()
                 source_url = base_url + candidate

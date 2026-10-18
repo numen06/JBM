@@ -62,6 +62,7 @@ class CompatibilityService:
         "user": "userId",
     }
     PLATFORM_ONLY_RESOURCES = {
+        "app",
         "action",
         "api",
         "apikey",
@@ -195,6 +196,11 @@ class CompatibilityService:
                         "clientSecret": client_secret,
                     }
                 )
+            if resource == "apikey":
+                public_key, private_key = _rsa_key_pair()
+                api_key = "jbm_" + secrets.token_urlsafe(24)
+                saved = await self.store.save(resource, {**scoped_payload, "apiKey": api_key, "publicKey": public_key, "privateKey": None, "secretKey": None, "status": 1})
+                return ok({**saved, "apiKey": api_key, "privateKey": private_key, "publicKey": public_key, "signatureVersion": 2})
             saved = await self.store.save(resource, scoped_payload)
             if resource == "menu":
                 await self._sync_menu_authority(saved)
@@ -228,11 +234,15 @@ class CompatibilityService:
         existing = await self.store.get(resource, record_id)
         if resource == "user":
             await self._require_user(identity, record_id)
+            if method in {"PUT", "PATCH", "DELETE"}:
+                await self._require_editable_user(identity, record_id)
         elif resource == "app":
             require_tenant_record(identity, existing, "orgId")
         elif resource == "tenantDelegation":
             require_tenant_record(identity, existing, "ownerTenantId")
         scoped_payload = dict(payload)
+        if resource == "user" and method in {"PUT", "PATCH"}:
+            scoped_payload = self._safe_user_payload(identity, scoped_payload, existing)
         if resource == "user":
             for key, label in (("mobile", "手机号"), ("email", "邮箱")):
                 if key not in scoped_payload:
@@ -298,6 +308,7 @@ class CompatibilityService:
             require_internal(identity)
         if not is_platform(identity):
             platform_prefixes = (
+                "/app/",
                 "/api/",
                 "/api-docs",
                 "/authority/",
@@ -316,6 +327,8 @@ class CompatibilityService:
                 "/user/registrations",
                 "/user/third-party-accounts",
                 "/user/third-party-account-bindings",
+                "/user/sessions/mobile",
+                "/user/sessions",
             }:
                 require_platform(identity)
 
@@ -357,6 +370,7 @@ class CompatibilityService:
             return ok({"usersTotal": total, "onlineUser": 0})
         if path == "/user/userRoles":
             user_id = int(body.get("userId") or body.get("id") or _user_id(identity))
+            await self._require_user(identity, user_id)
             return ok(
                 await self.governance.repository.user_roles(
                     user_id, _app_id(identity), tenant_id(identity)
@@ -387,10 +401,13 @@ class CompatibilityService:
             rows, total = await self.store.list("user", filters, 1, 1)
             return ok({"usersTotal": total, "onlineUser": 0})
         if path == "/user/{userId}/roles" and method == "PUT":
+            require_tenant_admin(identity)
             await self._require_user(identity, params["userId"])
             role_ids = _values(body, "roleIds")
             app_id = _app_id(identity)
             roles = [row for value in role_ids if (row := await self.store.get("role", value))]
+            if any(str(row.get("roleId")) == "1" or row.get("roleCode") == "super_admin" for row in roles):
+                require_super_admin(identity)
             if len(roles) != len(set(map(str, role_ids))):
                 raise ValueError("包含不存在的角色")
             app_role_ids = [
@@ -399,7 +416,7 @@ class CompatibilityService:
             if not is_platform(identity):
                 forbidden = [
                     row for row in roles
-                    if row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
+                    if str(row.get("roleId")) == "1" or row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
                     or row.get("appId") not in (None, app_id)
                 ]
                 if forbidden:
@@ -431,7 +448,9 @@ class CompatibilityService:
                 )
             )
         if path == "/user/{userId}/orgs" and method == "PUT":
-            await self._require_user(identity, params["userId"])
+            await self._require_editable_user(identity, params["userId"])
+            if not is_platform(identity):
+                require_platform(identity)
             if not is_platform(identity) and {str(value) for value in _values(body, "orgIds")} - {
                 str(tenant_id(identity))
             }:
@@ -441,9 +460,7 @@ class CompatibilityService:
             )
             return ok()
         if path == "/user/{userId}/orgs" and method == "GET":
-            await self._require_user(identity, params["userId"])
-            ids = await self.store.linked_ids("base_user_org", "user_id", params["userId"], "org_id")
-            return ok([row for value in ids if (row := await self.store.get("org", value))])
+            return ok(await self.governance.user_orgs(int(params["userId"]), identity))
         if path == "/user/{userId}/accounts" and method == "GET":
             await self._require_user(identity, params["userId"])
             rows, _ = await self.store.list("account", {"userId": params["userId"]}, 1, 100)
@@ -451,18 +468,18 @@ class CompatibilityService:
                 row.pop("password", None)
             return ok(rows)
         if path == "/user/{userId}/password" and method == "PUT":
-            await self._require_user(identity, params["userId"])
+            await self._require_editable_user(identity, params["userId"])
             await self._set_password(
                 int(params["userId"]),
                 str(body.get("password") or body.get("currentPassword") or ""),
             )
             return ok()
         if path == "/user/{userId}/closure":
-            await self._require_user(identity, params["userId"])
+            await self._require_editable_user(identity, params["userId"])
             await self.store.save("user", {"status": 0}, params["userId"])
             return ok(True)
         if path == "/user/{userId}/status":
-            await self._require_user(identity, params["userId"])
+            await self._require_editable_user(identity, params["userId"])
             return ok(await self.store.save("user", {"status": body.get("status")}, params["userId"]))
         if path in {"/user/{userId}/activations/email", "/user/{userId}/activations/mobile"}:
             return ok(True)
@@ -481,13 +498,13 @@ class CompatibilityService:
                 raise ValueError("密码错误")
             return ok(await self.governance.current_user({"userId": exact["userId"]}))
         if path == "/user/registrations":
-            return ok(await self._create_user({**query, **body}))
+            return ok(await self._create_user({**query, **body}, identity))
         if path in {
             "/user/third-party-accounts",
             "/user/sessions/mobile",
             "/user/third-party-account-bindings",
         }:
-            return ok(await self._create_user({**query, **body}))
+            return ok(await self._create_user({**query, **body}, identity))
         if path == "/user/accounts/open-id":
             return ok(True)
         if path == "/authenticate/{loginType}/login":
@@ -622,9 +639,9 @@ class CompatibilityService:
             return ok(await self.store.save("app", values, params["appId"]))
 
         if path == "/apikey/{keyId}/secret":
-            secret = new_secret()
-            await self.store.save("apikey", {"secretKey": secret}, params["keyId"])
-            return ok(secret)
+            public_key, private_key = _rsa_key_pair()
+            await self.store.save("apikey", {"publicKey": public_key, "privateKey": None, "secretKey": None}, params["keyId"])
+            return ok(private_key)
         if path == "/apikey/{keyId}/status":
             return ok(await self.store.save("apikey", {"status": body.get("status")}, params["keyId"]))
         if path == "/apikey/{keyId}/authority":
@@ -720,6 +737,8 @@ class CompatibilityService:
         if path == "/baseDic/getDicMap":
             return ok(await self.governance.dict_map())
         if path.startswith("/baseDic/"):
+            if path.rsplit("/", 1)[-1] in {"save", "saveBatch", "mock", "delete", "deleteByIds"}:
+                require_platform(identity)
             return await self._master_data(method, path, "dic", "baseDic", body)
         if path.startswith("/baseOrg/"):
             operation = path.rsplit("/", 1)[-1]
@@ -758,6 +777,7 @@ class CompatibilityService:
                 return ok(await self.store.get("org", body.get("id") or body.get("orgId")))
             return await self._master_data(method, path, "org", "baseOrg", body)
         if path.startswith("/baseAccountLogs/"):
+            require_platform(identity)
             return await self._master_data(method, path, "accountLogs", "baseAccountLogs", body)
 
         if path == "/baseArea/getChinaAreaList":
@@ -921,9 +941,53 @@ class CompatibilityService:
             await self.store.save("authority", payload)
 
     async def _require_user(self, identity: Mapping[str, Any], user_id: Any) -> None:
+        if not is_platform(identity) and str(user_id) != str(_user_id(identity)):
+            require_tenant_admin(identity)
         if is_platform(identity) or await self.store.is_user_member(user_id, tenant_id(identity)):
             return
         require_tenant_record(identity, None, "companyId")
+
+    async def _require_editable_user(self, identity: Mapping[str, Any], user_id: Any) -> None:
+        await self._require_user(identity, user_id)
+        user = await self.store.get("user", user_id)
+        if self._privileged_user(user or {}):
+            require_super_admin(identity)
+        if not is_platform(identity):
+            require_tenant_admin(identity)
+            # Membership permits tenant-scoped access, not changing another owner's global account.
+            require_tenant_record(identity, user, "companyId")
+            if self._privileged_user(user or {}):
+                require_platform(identity)
+
+    @staticmethod
+    def _privileged_user(user: Mapping[str, Any]) -> bool:
+        return str(user.get("userName") or "").strip().lower() == "admin" or str(
+            user.get("userType") or ""
+        ).lower() in {"super", "super_admin", "admin", "platform_operator"}
+
+    @staticmethod
+    def _safe_user_payload(
+        identity: Mapping[str, Any], payload: Mapping[str, Any], existing: Mapping[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        values = dict(payload)
+        if CompatibilityService._privileged_user(values):
+            require_super_admin(identity)
+        if is_platform(identity):
+            return values
+        require_tenant_admin(identity)
+        if str(values.get("userName") or values.get("username") or values.get("account") or "").strip().lower() == "admin":
+            require_platform(identity)
+        if "userType" in values and str(values["userType"] or "normal") != str((existing or {}).get("userType") or "normal"):
+            require_platform(identity)
+        if values.get("admin") or values.get("authorities"):
+            require_platform(identity)
+        for key in ("id", "userId", "user_id"):
+            if values.get(key) not in (None, "") and str(values[key]) != str((existing or {}).get("userId")):
+                require_platform(identity)
+            values.pop(key, None)
+        allowed = {"userName", "username", "account", "nickName", "realName", "userDesc", "avatar", "sex",
+                   "status", "departmentId", "companyId", "mobile", "email", "password", "roleIds", "existingOnly"}
+        return {key: value for key, value in values.items() if key in allowed}
 
     async def _master_data(
         self, method: str, path: str, resource: str, alias: str, body: Mapping[str, Any]
@@ -982,6 +1046,8 @@ class CompatibilityService:
         payload: Mapping[str, Any],
         identity: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
+        if identity is not None:
+            payload = self._safe_user_payload(identity, payload)
         username = str(payload.get("userName") or payload.get("username") or payload.get("account") or "").strip()
         if not username:
             raise ValueError("用户名不能为空")
@@ -998,6 +1064,11 @@ class CompatibilityService:
                 raise ValueError("用户名已存在")
             if target_tenant_id <= 0:
                 raise ValueError("请选择要加入的租户")
+            if not is_platform(identity) and (
+                self._privileged_user(existing)
+                or not await self.store.is_user_member(existing["userId"], target_tenant_id)
+            ):
+                require_platform(identity)
             await self.store.ensure_link(
                 "base_user_org", "user_id", existing["userId"], "org_id", target_tenant_id
             )
@@ -1009,6 +1080,7 @@ class CompatibilityService:
         password = str(payload.get("password") or "")
         if not password:
             raise ValueError("创建新账号必须设置初始密码")
+        validate_password(password, self.password_policy)
         user_payload = dict(payload)
         user_payload.pop("mobile", None)
         user_payload.pop("email", None)
@@ -1031,7 +1103,6 @@ class CompatibilityService:
                 "org_id",
                 user["companyId"],
             )
-        validate_password(password, self.password_policy)
         await self.store.save(
             "account",
             {
@@ -1054,15 +1125,19 @@ class CompatibilityService:
         payload: Mapping[str, Any],
         target_tenant_id: int | None = None,
     ) -> None:
+        if self._privileged_user(user):
+            require_super_admin(identity)
         role_ids = _values(payload, "roleIds")
         app_id = _app_id(identity)
         roles = [row for value in role_ids if (row := await self.store.get("role", value))]
+        if any(str(row.get("roleId")) == "1" or row.get("roleCode") == "super_admin" for row in roles):
+            require_super_admin(identity)
         if len(roles) != len(set(map(str, role_ids))):
             raise ValueError("包含不存在的角色")
         if not is_platform(identity):
             forbidden = [
                 row for row in roles
-                if row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
+                if str(row.get("roleId")) == "1" or row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
                 or row.get("appId") not in (None, app_id)
             ]
             if forbidden:
@@ -1272,6 +1347,7 @@ def _oauth_app_payload(
     values = dict(payload)
     redirect_value = values.pop("redirectUris", None)
     public_value = values.pop("publicClient", None)
+    scopes_value = values.pop("allowedScopes", None)
     registration_enabled = values.pop("registrationEnabled", None)
     registration_role = values.pop("registrationDefaultRoleCode", None)
     current = (existing or {}).get("extendData")
@@ -1282,6 +1358,11 @@ def _oauth_app_payload(
             current = {}
     extend_data = dict(current)
     oauth = dict(extend_data.get("oauth") or {})
+    if scopes_value is not None:
+        scopes = scopes_value if isinstance(scopes_value, list) else str(scopes_value).replace(",", " ").split()
+        if not scopes or any(not isinstance(code, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,100}", code) for code in scopes):
+            raise ValueError("allowedScopes必须是明确的scope编码列表")
+        oauth["allowedScopes"] = sorted(set(scopes))
     if redirect_value is not None:
         raw = str(redirect_value).replace("\n", ",")
         oauth["redirectUris"] = [item.strip() for item in raw.split(",") if item.strip()]

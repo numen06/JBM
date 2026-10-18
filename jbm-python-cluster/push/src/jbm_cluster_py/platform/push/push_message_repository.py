@@ -51,6 +51,8 @@ def _bool_value(value: Any) -> bool:
         return value
     if isinstance(value, (int, float)):
         return value != 0
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return int.from_bytes(value, byteorder="big") != 0
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "y"}
     return bool(value)

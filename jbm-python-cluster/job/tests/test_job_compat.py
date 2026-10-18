@@ -7,6 +7,7 @@ from jbm_cluster_py.platform.job.main import create_app
 def job_config() -> AppConfig:
     return AppConfig(
         {
+            "jbm": {"api-access": {"enabled": False}},
             "server": {"host": "127.0.0.1", "port": 4444},
             "spring": {
                 "application": {"name": "jbm-cluster-platform-job"},

@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.push.config_repository import PushConfigRepository
 from jbm_cluster_py.platform.push.main import _ensure_system_channel_configs, create_app
-from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository
+from jbm_cluster_py.platform.push.push_message_repository import PushMessageRepository, _bool_value
 from jbm_cluster_py.platform.push.service import PushService, parse_user_id
 
 
@@ -44,6 +44,12 @@ def push_config(
         config_dir=None,
         app="push",
     )
+
+
+def test_mysql_bit_read_flag_is_decoded_as_boolean() -> None:
+    assert _bool_value(b"\x00") is False
+    assert _bool_value(b"\x01") is True
+    assert _bool_value(memoryview(b"\x00")) is False
 
 
 def test_push_message_test_send_page_read_and_ack() -> None:

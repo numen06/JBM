@@ -144,6 +144,9 @@ button, input, select, textarea { font-family: inherit; }
 .jbm-chart-bar { background: var(--jbm-bar-color, var(--jbm-chart-1)); border-radius: 4px 4px 0 0; transform-origin: bottom; animation: jbm-bar-arrive 420ms var(--jbm-ease); transition: height var(--jbm-normal) var(--jbm-ease); }
 .jbm-energy-bar { --jbm-bar-color: var(--jbm-energy-bar); background: var(--jbm-energy-bar); }
 .jbm-chart-bar.jbm-energy-bar { background: linear-gradient(180deg, var(--jbm-energy-bar-top), var(--jbm-energy-bar-bottom)); }
+@supports not (color: color-mix(in srgb, black, white)) {
+  :root { --jbm-accent-solid-hover: hsl(var(--primary) / .95); --jbm-accent-solid-pressed: hsl(var(--primary) / .85); }
+}
 .jbm-chart-empty { display: grid; place-items: center; min-height: 160px; color: hsl(var(--muted-foreground)); }
 .jbm-segmented { display: inline-flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid hsl(var(--border)); border-radius: 10px; background: hsl(var(--surface)); }
 .jbm-segmented > button { border: 1px solid transparent; border-radius: 7px; padding: 6px 12px; color: hsl(var(--muted-foreground)); background: transparent; transition: background-color var(--jbm-fast), color var(--jbm-fast), border-color var(--jbm-fast); }

@@ -1,5 +1,6 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { isPlatformAdministrator, isSuperAdministrator, platformMenuCodes } from '@/lib/adminAccess'
 
 /** 按钮/菜单权限：authority 形如 MENU_users、ACTION_users_add */
 export function usePermission() {
@@ -13,13 +14,8 @@ export function usePermission() {
     return set
   })
 
-  const isSuperAdmin = computed(() => {
-    const name = auth.user?.userName
-    if (name === 'admin') return true
-    return (auth.user?.roles ?? []).some(
-      (r) => r.roleCode === 'super_admin' || r.roleId === 1,
-    )
-  })
+  const isSuperAdmin = computed(() => isSuperAdministrator(auth.user))
+  const isPlatformAdmin = computed(() => isPlatformAdministrator(auth.user))
 
   function hasAuthority(code: string) {
     if (isSuperAdmin.value) return true
@@ -27,12 +23,14 @@ export function usePermission() {
   }
 
   function hasMenu(menuCode: string) {
+    if (!isPlatformAdmin.value && platformMenuCodes.has(menuCode)) return false
     return hasAuthority(`MENU_${menuCode}`)
   }
 
   function hasAction(actionCode: string) {
+    if (!isPlatformAdmin.value && [...platformMenuCodes].some(code => actionCode === code || actionCode.startsWith(code + '_'))) return false
     return hasAuthority(`ACTION_${actionCode}`)
   }
 
-  return { authoritySet, isSuperAdmin, hasAuthority, hasMenu, hasAction }
+  return { authoritySet, isSuperAdmin, isPlatformAdmin, hasAuthority, hasMenu, hasAction }
 }

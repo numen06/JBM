@@ -11,7 +11,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 from urllib.parse import quote, urlencode
 
 import httpx
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.masterdata import PageForm, first_payload, now_iso, page_form_from_body
@@ -326,7 +326,7 @@ class DocService:
                 if parsed < datetime.now(timezone.utc):
                     return None
             except ValueError:
-                pass
+                return None
         return token
 
     async def find_group_items_by_token(self, token_key: str) -> List[Dict[str, Any]]:
@@ -336,17 +336,24 @@ class DocService:
         group = await self.repository.get_group_by_id(str(token.get("docGroupId") or ""))
         if group is None:
             raise ValueError("没有找到对应的分组")
-        return await self.repository.list_docs({"docGroup": group.get("groupPath")}, 100)
+        return await self.repository.list_group_docs(str(group["groupId"]))
 
     async def remove_group_items_by_token(self, token_key: str, ids: Iterable[str], paths: Iterable[str]) -> bool:
         token = await self.check_token(token_key)
         if token is None:
             raise ValueError("文档token失效或者无效")
-        if list(paths):
-            return await self.delete_docs_by_paths(paths)
-        if list(ids):
-            return await self.delete_docs_by_ids(ids)
-        raise ValueError("没有填写任何参数")
+        group_id = str(token.get("docGroupId") or "")
+        if not group_id or await self.repository.get_group_by_id(group_id) is None:
+            raise HTTPException(403, "文档分组不可访问")
+        ids, paths = list(ids), list(paths)
+        if not ids and not paths:
+            raise ValueError("没有填写任何参数")
+        # Validate the whole batch before deleting any file or database record.
+        documents = [await self.repository.get_doc_by_id(str(value)) for value in ids]
+        documents += [await self.repository.get_doc_by_path(normalize_path(value)) for value in paths]
+        if any(not doc or str(doc.get("docGroupId") or "") != group_id for doc in documents):
+            raise HTTPException(403, "文档不属于授权分组")
+        return await self.delete_docs_by_ids(list({str(doc["docId"]) for doc in documents}))
 
     async def upload_by_token(self, token_key: str, file: UploadFile) -> str:
         token = await self.check_token(token_key)

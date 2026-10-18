@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { JbmMetricCard } from '@jbm7/vue-core'
 import { ChevronDown, ChevronRight, AlertCircle, Info } from '@lucide/vue'
 import PageHeader from '@/components/PageHeader.vue'
@@ -31,6 +31,11 @@ import {
 const auth = useAuthStore()
 const menuStore = useMenuStore()
 const permission = usePermission()
+const route = useRoute()
+const dashboardBase = computed(() => /\/dashboard\/?$/.test(route.path) ? route.path.replace(/\/dashboard\/?$/, '') : '')
+function dashboardLink(path: string) {
+  return `${dashboardBase.value}${path}`
+}
 
 const metricsLoading = ref(false)
 const loadedMetricsByKey = ref<Map<string, ApiMetric>>(new Map())
@@ -49,7 +54,7 @@ const permCtx = computed<PermissionContext>(() => ({
 const selfServiceMode = computed(() => isSelfServiceOnly(permCtx.value))
 
 const pageDescription = computed(() =>
-  dashboardIdentity.value?.scope === 'tenant'
+  dashboardIdentity.value?.scope === 'tenant' || !permission.isPlatformAdmin.value
     ? '租户管理控制台'
     : selfServiceMode.value
       ? '开放平台工作台'
@@ -59,7 +64,7 @@ const pageDescription = computed(() =>
 const roleLabel = computed(() => {
   const roles = auth.user?.roles ?? []
   if (!roles.length) return '—'
-  return roles.map((r) => r.roleName || r.roleCode || String(r.roleId ?? '')).join('、')
+  return roles.map((r) => r.roleName || r.roleCode).filter(Boolean).join('、') || '—'
 })
 
 const visibleMenuCount = computed(() =>
@@ -80,7 +85,7 @@ const displayVisibleMenuCount = computed(
 const scopeLabel = computed(() => {
   const scope = dashboardIdentity.value?.scope
   if (scope === 'platform') return '平台汇总'
-  if (scope === 'tenant') return `租户 ${dashboardIdentity.value?.tenantId ?? ''}`.trim()
+  if (scope === 'tenant') return '本租户'
   if (scope === 'app') return '当前应用'
   return null
 })
@@ -95,6 +100,7 @@ const menuStatusBadge = computed(() => {
 const visibleMetricDefs = computed(() => {
   const flags = dashboardSectionFlags.value
   return filterMetricsByPermission(DASHBOARD_METRICS, permCtx.value).filter((metric) => {
+    if (!permission.isPlatformAdmin.value && ['onlineUsers', 'onlineUser'].includes(metric.key)) return false
     if (!flags) return true
     if (metric.path.startsWith('/developer/')) return flags.developer !== false
     if (metric.path.startsWith('/authority/')) return flags.authority !== false
@@ -108,7 +114,7 @@ const visibleMetricDefs = computed(() => {
 const visibleSections = computed(() => {
   const sections = filterSectionsByPermission(DASHBOARD_SECTIONS, permCtx.value)
   const flags = dashboardSectionFlags.value
-  if (!flags) return sections
+  if (!flags) return []
   return sections.filter((section) => {
     const value = flags[section.key as keyof AggregatedDashboardSections]
     return value !== false
@@ -260,7 +266,7 @@ const metricCards = computed(() => {
             <span class="text-muted-foreground">角色：</span>
             <span>{{ roleLabel }}</span>
           </p>
-          <p>
+          <p v-if="permission.isPlatformAdmin.value">
             <span class="text-muted-foreground">客户端：</span>
             <code class="rounded bg-muted px-1.5 py-0.5 text-xs">{{ auth.clientId }}</code>
           </p>
@@ -331,7 +337,7 @@ const metricCards = computed(() => {
             <RouterLink
               v-for="link in section.links"
               :key="link.key"
-              :to="link.to"
+              :to="dashboardLink(link.to)"
               class="flex items-start gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-accent"
             >
               <component :is="link.icon" class="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

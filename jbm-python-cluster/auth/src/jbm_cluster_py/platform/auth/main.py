@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 import httpx
 import uvicorn
 from fastapi import FastAPI
+from jbm_cluster_py.common.auth import install_api_protection
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
@@ -83,6 +84,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    install_api_protection(app, app_config, protected_prefixes=("/docs", "/redoc", "/openapi.json", "/v3/api-docs", "/v2/api-docs"))
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_auth_router(auth_service))
     from .key_router import build_key_router

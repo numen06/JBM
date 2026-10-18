@@ -1,9 +1,9 @@
 {
   "name": "@jbm7/vue-core",
-  "version": "7.3.0-beta.13",
+  "version": "7.3.0-beta.14",
   "description": "Vue 3 integration and module runtime for the JBM 7.3 technical platform",
   "type": "module",
-  "files": ["dist/*.js", "dist/*.d.ts", "style.css", "design.css", "README.md", "DESIGN.md", "LICENSE"],
+  "files": ["dist/*.js", "dist/*.d.ts", "style.css", "design.css", "vite-compat.mjs", "vite-compat.d.mts", "README.md", "DESIGN.md", "LICENSE"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -11,7 +11,8 @@
     },
     "./style.css": "./style.css",
     "./design.css": "./design.css",
-    "./design": { "types": "./dist/design.d.ts", "import": "./dist/design.js" }
+    "./design": { "types": "./dist/design.d.ts", "import": "./dist/design.js" },
+    "./vite-compat": { "types": "./vite-compat.d.mts", "import": "./vite-compat.mjs" }
   },
   "types": "./dist/index.d.ts",
   "sideEffects": ["**/*.css"],
@@ -21,11 +22,13 @@
     "pack:check": "npm pack --dry-run"
   },
   "peerDependencies": {
+    "lightningcss": "^1.32.0",
     "@jbm7/sdk": "~7.3.0-beta.6",
     "pinia": "^3.0.0",
     "vue": "^3.5.0",
     "vue-router": "^4.6.0"
   },
+  "peerDependenciesMeta": { "lightningcss": { "optional": true } },
   "devDependencies": {
     "@jbm7/sdk": "7.3.0-beta.6",
     "pinia": "^3.0.4",

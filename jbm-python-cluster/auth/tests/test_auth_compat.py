@@ -78,6 +78,7 @@ def test_client_oauth_settings_accepts_mysql_json_mapping() -> None:
     )
 
     assert settings == {
+        "allowedScopes": ["all"],
         "publicClient": True,
         "redirectUris": ["http://debug5173.feige.51jbm.cn/login/callback"],
     }
@@ -723,6 +724,10 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
             },
         )
         assert "refresh_token" not in client_token.json()
+        for forbidden_scope in ("internal", "iot.platform.admin", "all internal"):
+            over_scoped = client.post("/oauth2/token", data={"grant_type": "client_credentials", "client_id": "JBM", "client_secret": "demo-secret", "scope": forbidden_scope})
+            assert over_scoped.status_code == 400
+            assert over_scoped.json()["error"] == "invalid_scope"
 
         missing_secret_client_token = client.post(
             "/oauth2/token",

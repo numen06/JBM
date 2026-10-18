@@ -34,10 +34,9 @@ export const useMessageStore = defineStore('messages', () => {
     loading.value = true
     error.value = ''
     try {
-      const [page, count] = await Promise.all([
-        listCurrentMessages(1, 5),
-        getUnreadMessageCount(),
-      ])
+      const count = await getUnreadMessageCount()
+      const unreadPage = count ? await listCurrentMessages(1, 5, { readFlag: false }) : null
+      const page = unreadPage?.contents?.length ? unreadPage : await listCurrentMessages(1, 5)
       recent.value = page.contents ?? []
       unreadCount.value = count
     } catch (e) {

@@ -17,8 +17,8 @@ test('JBM tenant directory merges platform and delegated tenants without duplica
       ],
     ),
     [
-      { value: '1', name: '平台运营方', code: 'platform', source: 'current', label: '本方租户 · 平台运营方（platform）' },
-      { value: '2', name: '建筑一租户', code: 'building-a', source: 'platform', label: '租户 · 建筑一租户（building-a）' },
+      { value: '1', name: '平台运营方', code: 'platform', source: 'current', label: '本方租户 · 平台运营方' },
+      { value: '2', name: '建筑一租户', code: 'building-a', source: 'platform', label: '租户 · 建筑一租户' },
       { value: '3', name: '建筑二租户', source: 'delegated', label: '受托租户 · 建筑二租户 · 能源托管' },
     ],
   )
@@ -26,7 +26,7 @@ test('JBM tenant directory merges platform and delegated tenants without duplica
 
 test('JBM tenant directory always keeps the current tenant as a safe fallback', () => {
   assert.deepEqual(mergeJbmTenantOptions('9'), [
-    { value: '9', name: undefined, code: undefined, source: 'current', label: '本方租户 · 9' },
+    { value: '9', name: undefined, code: undefined, source: 'current', label: '本方租户 · 当前租户' },
   ])
 })
 
@@ -46,8 +46,8 @@ test('platform administrators can switch across global root tenants', async () =
   assert.deepEqual(
     await createJbmTenantDirectory(client, () => ({ tenantId: '1' })).listAvailable(),
     [
-      { value: '1', name: '平台运营方', code: 'platform', source: 'current', label: '本方租户 · 平台运营方（platform）' },
-      { value: '2', name: '建筑租户', code: 'building', source: 'platform', label: '租户 · 建筑租户（building）' },
+      { value: '1', name: '平台运营方', code: 'platform', source: 'current', label: '本方租户 · 平台运营方' },
+      { value: '2', name: '建筑租户', code: 'building', source: 'platform', label: '租户 · 建筑租户' },
     ],
   )
 })

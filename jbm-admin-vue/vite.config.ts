@@ -3,6 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import type { IncomingMessage } from 'node:http'
+import { chrome109Build, chrome109CssCompatibility } from './packages/vue-core/vite-compat.mjs'
 
 /** dev 本地：默认经本机 Gateway 6060；也可用 VITE_PROXY_TARGET 指向已发布后台。 */
 function resolveGatewayTarget(mode: string) {
@@ -40,6 +41,8 @@ function proxyMap(target: string, prefixes: string[]) {
 export default defineConfig(({ mode }) => ({
   base: process.env.JBM_ADMIN_BASE_PATH || '/',
   plugins: [vue(), tailwindcss()],
+  build: chrome109Build,
+  css: { postcss: { plugins: [chrome109CssCompatibility()] } },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

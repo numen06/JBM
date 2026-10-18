@@ -228,7 +228,7 @@ export function useOrgTree() {
 
   function orgLabel(id?: OrgIdValue) {
     if (id == null || id === '') return '—'
-    return orgNameMap.value.get(String(id)) ?? String(id)
+    return orgNameMap.value.get(String(id)) ?? '未关联组织'
   }
 
   function findOrgInSubTree(id: OrgIdValue, nodes: BaseOrg[] = subTree.value): BaseOrg | undefined {

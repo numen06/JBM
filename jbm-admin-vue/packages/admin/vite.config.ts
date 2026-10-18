@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
+import { chrome109Build, chrome109CssCompatibility } from '../vue-core/vite-compat.mjs'
 
 const entries = [
   'index', 'auth', 'system', 'authority', 'gateway', 'logs',
@@ -11,6 +12,7 @@ const entries = [
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  css: { postcss: { plugins: [chrome109CssCompatibility()] } },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '../../src'),
@@ -21,6 +23,7 @@ export default defineConfig({
     },
   },
   build: {
+    ...chrome109Build,
     cssCodeSplit: false,
     lib: {
       entry: Object.fromEntries(entries.map((name) => [name, path.resolve(__dirname, `src/${name}.ts`)])),
