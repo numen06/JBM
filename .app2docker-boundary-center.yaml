@@ -15,7 +15,7 @@
   "image": {
     "name": "jbm-python-cluster",
     "prefix": "registry.cn-shanghai.aliyuncs.com/okc",
-    "tag": "boundary-20261018.center.1",
+    "tag": "boundary-20261018.center.2",
     "push": true
   },
   "push_mode": "multi",

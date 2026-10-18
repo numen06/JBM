@@ -56,3 +56,24 @@ async def test_userinfo_uses_current_roles_instead_of_embedded_admin_claim():
     service._permissions_for_claims = AsyncMock(return_value=[])
     identity = await service.userinfo('previously-issued-token')
     assert identity['admin'] is False and identity['roles'] == ['emc_admin']
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('operation', ['create', 'rename', 'delete', 'grant'])
+async def test_platform_operator_cannot_create_or_modify_reserved_roles(operation):
+    store = AsyncMock()
+    store.get.return_value = {'roleId': 1, 'roleCode': 'admin'} if operation != 'rename' else {'roleId': 4, 'roleCode': 'business'}
+    service = CompatibilityService(store, AsyncMock(), AsyncMock())
+    actor = {'userId': 2, 'tenantId': 20, 'appId': 30, 'roles': ['platform_operator']}
+    with pytest.raises(HTTPException):
+        if operation == 'create':
+            await service._collection('POST', 'role', {}, {'roleCode': 'super_admin'}, actor)
+        elif operation == 'rename':
+            await service._item('PUT', 'role', 4, {'roleCode': 'super_admin'}, actor)
+        elif operation == 'delete':
+            await service._item('DELETE', 'role', 1, {}, actor)
+        else:
+            await service.handle('PUT', '/authority/roles/{roleId}', {'roleId': 1}, {}, {'authorityIds': []}, actor)
+    store.save.assert_not_awaited()
+    store.delete.assert_not_awaited()
+    store.replace_links.assert_not_awaited()

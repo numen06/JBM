@@ -119,6 +119,8 @@ class CompatibilityService:
     ) -> dict[str, Any]:
         if resource in self.PLATFORM_ONLY_RESOURCES:
             require_platform(identity)
+        if resource == "role" and method != "GET" and self._privileged_role(payload):
+            require_super_admin(identity)
         if resource == "user" and method == "POST" and not is_platform(identity):
             require_tenant_admin(identity)
         scoped_query = dict(query)
@@ -232,6 +234,10 @@ class CompatibilityService:
         if resource == "user" and method in {"PUT", "PATCH", "DELETE"} and not is_platform(identity):
             require_tenant_admin(identity)
         existing = await self.store.get(resource, record_id)
+        if resource == "role" and method != "GET" and (
+            self._privileged_role(existing or {}) or self._privileged_role(payload)
+        ):
+            require_super_admin(identity)
         if resource == "user":
             await self._require_user(identity, record_id)
             if method in {"PUT", "PATCH", "DELETE"}:
@@ -597,6 +603,8 @@ class CompatibilityService:
         if path == "/role/{roleId}/users" and method == "PUT":
             require_platform(identity)
             role = await self.store.get("role", params["roleId"])
+            if self._privileged_role(role or {}):
+                require_super_admin(identity)
             if role is None or role.get("appId") in (None, ""):
                 raise ValueError("应用角色不能为空")
             users = [
@@ -688,6 +696,10 @@ class CompatibilityService:
         }
         if path in authority_links:
             table, owner_column, param_name = authority_links[path]
+            if table == "base_authority_role" and method != "GET" and self._privileged_role(
+                await self.store.get("role", params[param_name]) or {}
+            ):
+                require_super_admin(identity)
             return await self._grant(method, table, owner_column, params[param_name], body)
         if path in {
             "/authority/resources",
@@ -972,6 +984,12 @@ class CompatibilityService:
             require_tenant_record(identity, user, "companyId")
             if self._privileged_user(user or {}):
                 require_platform(identity)
+
+    @staticmethod
+    def _privileged_role(role: Mapping[str, Any]) -> bool:
+        return str(role.get("roleId")) == "1" or role.get("roleCode") in {
+            "admin", "super_admin", "platform_operator", "iot_operator",
+        }
 
     @staticmethod
     def _privileged_user(user: Mapping[str, Any]) -> bool:
