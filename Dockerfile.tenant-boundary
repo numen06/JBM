@@ -1,0 +1,8 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+COPY jbm-python-cluster/common/src/jbm_cluster_py/common/api_access.py /app/common/src/jbm_cluster_py/common/api_access.py
+COPY jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/service.py /app/auth/src/jbm_cluster_py/platform/auth/service.py
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/access.py jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/compatibility_service.py jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/request_access.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/application/
+RUN python -c "from jbm_cluster_py.common.api_access import is_super_admin; from jbm_cluster_py.platform.auth.service import AuthService"
+USER appuser

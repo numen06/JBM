@@ -22,6 +22,7 @@ from jbm_cluster_py.common.api_access import (
     permission_codes,
     require_api_boundary,
     signature_payload,
+    tenant_administration_api,
 )
 
 
@@ -109,7 +110,7 @@ class RequestAccessService:
                     .scalars()
                     .all()
                 )
-            if not is_platform(identity) and not (
+            if not is_platform(identity) and not tenant_administration_api(service, method, path, identity) and not (
                 set(authorities) | set(action_codes)
             ) & permission_codes(identity):
                 raise HTTPException(403, "未获准调用此API")

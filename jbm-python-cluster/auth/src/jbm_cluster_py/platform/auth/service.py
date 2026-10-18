@@ -963,6 +963,7 @@ class AuthService:
             "departmentId": claims.get("department_id"),
             "userType": claims.get("user_type"),
             "roles": role_context[0],
+            "admin": role_context[1],
             "permissions": permissions,
             "scope": claims.get("scope"),
             "mustChangePassword": bool(claims.get("must_change_password")),

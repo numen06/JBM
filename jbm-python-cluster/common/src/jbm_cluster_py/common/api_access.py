@@ -51,12 +51,24 @@ def role_codes(identity: Mapping[str, Any]) -> set[str]:
     }
 
 
-def is_platform(identity: Mapping[str, Any]) -> bool:
+def is_super_admin(identity: Mapping[str, Any]) -> bool:
     return (
         identity.get("admin") is True
-        or bool(role_codes(identity) & {"super_admin", "platform_operator"})
-        or identity.get("username") == "admin"
+        or "super_admin" in role_codes(identity)
+        or (identity.get("username") or identity.get("userName")) == "admin"
     )
+
+
+def is_platform(identity: Mapping[str, Any]) -> bool:
+    return is_super_admin(identity) or "platform_operator" in role_codes(identity)
+
+
+IOT_INFRASTRUCTURE_PATHS = ("/workers", "/observability", "/emqx", "/tdengine", "/admin", "/air-conditioning/connections")
+
+
+def is_iot_infrastructure(path: str) -> bool:
+    path = normalized_path(path)
+    return any(path == prefix or path.startswith(prefix + "/") for prefix in IOT_INFRASTRUCTURE_PATHS)
 
 
 def is_service(identity: Mapping[str, Any]) -> bool:
@@ -65,6 +77,14 @@ def is_service(identity: Mapping[str, Any]) -> bool:
         and identity.get("user_id") is None
         and bool(identity.get("clientId") or identity.get("client_id"))
         and "internal" in permission_codes(identity)
+    )
+
+
+def tenant_administration_api(service: str, method: str, path: str, identity: Mapping[str, Any]) -> bool:
+    """Only scoped member APIs; handlers still enforce ownership and feature ceilings."""
+    return service_key(service) == "center" and "tenant_admin" in role_codes(identity) and (
+        any(path == p or path.startswith(p + "/") for p in ("/user", "/org", "/baseOrg", "/tenant-features"))
+        or (path == "/role/all" and method.upper() == "GET")
     )
 
 
@@ -161,6 +181,7 @@ CENTER_RULES = tuple(
 ) + (
     ApiRule("/internal", internal_only=True),
     ApiRule("/current", authenticated=True),
+    ApiRule("/role/all", authenticated=True),
     ApiRule("/tenant-features/context", authenticated=True),
     ApiRule("/tenant-features", write=(frozenset({"tenant.features.manage"}),)),
     ApiRule(
@@ -405,6 +426,11 @@ def service_key(service: str) -> str:
 def require_api_boundary(service: str, path: str, identity: Mapping[str, Any]) -> None:
     """API/action grants cannot turn platform or internal management into tenant APIs."""
     path = normalized_path(path)
+    if service_key(service) == "iot" and is_iot_infrastructure(path):
+        if path == "/workers/heartbeat" and is_service(identity):
+            return
+        if not is_super_admin(identity):
+            raise HTTPException(403, "仅超级管理员可管理平台基础设施和平台接入")
     matches = [rule for rule in SERVICE_RULES.get(service_key(service), ()) if rule.matches(path)]
     if not matches:
         return
@@ -425,6 +451,8 @@ def authorize_api(
 ) -> None:
     path = normalized_path(path)
     require_api_boundary(service, path, identity)
+    if service_key(service) == "iot" and path == "/workers/heartbeat" and is_service(identity):
+        return
     matches = [
         r for r in (*SERVICE_RULES.get(service_key(service), ()), *extra_rules) if r.matches(path)
     ]
@@ -438,6 +466,8 @@ def authorize_api(
     if rule.internal_only:
         allowed = is_service(identity) or is_platform(identity)
     elif is_platform(identity):
+        allowed = True
+    elif tenant_administration_api(service, method, path, identity):
         allowed = True
     elif rule.platform_only or is_service(identity):
         allowed = False
