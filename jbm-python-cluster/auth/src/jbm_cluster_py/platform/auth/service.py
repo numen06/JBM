@@ -36,18 +36,6 @@ from jbm_cluster_py.platform.auth.repository import (
 
 logger = logging.getLogger(__name__)
 
-
-def _scope_codes(value: Any) -> set[str]:
-    if isinstance(value, (list, tuple, set)):
-        return {str(item).strip() for item in value if str(item).strip()}
-    raw = str(value or "")
-    if raw.startswith("["):
-        try:
-            return _scope_codes(json.loads(raw))
-        except ValueError:
-            return set()
-    return set(raw.replace(",", " ").split())
-
 LOGIN_ERROR_PREFIX = "login_error:"
 APP_SECRET_ENC_PREFIX = "$ENC$"
 APP_SECRET_AES_KEY = hashlib.md5(b"jbm-app-client-secret").hexdigest().encode("utf-8")
@@ -779,9 +767,7 @@ class AuthService:
         if not await self.cache.readiness():
             raise AuthError("认证会话存储不可用", 503, "temporarily_unavailable")
         client = await self._require_client(form)
-        scope = str(form.get("scope") or " ".join(sorted(_scope_codes(client.get("allowedScopes") or client.get("scopeModules") or "all"))))
-        if not _scope_codes(scope) <= _scope_codes(client.get("allowedScopes") or client.get("scopeModules") or "all"):
-            raise AuthError("客户端未获准申请此scope", 400, "invalid_scope")
+        scope = str(form.get("scope") or client.get("scopeModules") or "all")
         subject = "client:%s" % client["clientId"]
         now = int(time.time())
         jti = secrets.token_urlsafe(24)
@@ -1115,7 +1101,8 @@ class AuthService:
     ) -> list[str]:
         raw_user_id = claims.get("user_id")
         if raw_user_id is None:
-            return sorted(_scope_codes(claims.get("scope")))
+            embedded = claims.get("permissions")
+            return [str(item) for item in embedded if item] if isinstance(embedded, list) else []
         user_id = int(raw_user_id)
         _, root = role_context if role_context is not None else await self._current_role_context(claims)
         rows = await self.repository.user_authorities(
@@ -1133,8 +1120,6 @@ class AuthService:
         client = await self.repository.find_client(str(claims.get("client_id") or ""))
         if not client:
             raise AuthError("客户端已失效", 401)
-        if claims.get("user_id") is None and not _scope_codes(claims.get("scope")) <= _scope_codes(client.get("allowedScopes") or client.get("scopeModules") or "all"):
-            raise AuthError("客户端scope授权已失效", 403, "invalid_scope")
         if claims.get("user_id") is not None:
             state = await self.cache.get_json("access:" + _hash_token(token))
             if not state or str(state.get("jti") or "") != jti:
