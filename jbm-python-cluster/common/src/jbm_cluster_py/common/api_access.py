@@ -241,6 +241,8 @@ IOT_RULES = tuple(
             "iot.platform.operate",
         ),
         ("/streetlights", ("iot_streetlights",), "iot.platform.operate", "iot.platform.read"),
+        ("/streetlightArea", ("iot_streetlights",), "iot.platform.operate", "iot.platform.read"),
+        ("/businessRuleInstance", ("iot_streetlights", "iot_operations"), "iot.platform.operate", "iot.platform.read"),
         (
             "/feige-manager/resources",
             ("iot_feige_resources",),
@@ -276,7 +278,13 @@ IOT_RULES = tuple(
             "iot.platform.read",
         ),
     )
-) + (ApiRule("/auth/me", authenticated=True), ApiRule("/auth/permissions", authenticated=True))
+) + (
+    # Shared template definitions remain platform-managed; business pages read the catalog.
+    ApiRule("/businessRuleTemplate", platform_only=True),
+    iot_rule("/businessRuleTemplate/getList", ("iot_streetlights", "iot_operations")),
+    ApiRule("/auth/me", authenticated=True),
+    ApiRule("/auth/permissions", authenticated=True),
+)
 
 
 SERVICE_RULES = {
