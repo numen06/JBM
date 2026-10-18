@@ -194,6 +194,8 @@ class PushService:
         return await self.handle_push_event(event)
 
     async def handle_push_event(self, payload: Mapping[str, Any]) -> Optional[Dict[str, Any]]:
+        if payload.get('recipientType') == 'tenant_admin':
+            return await self._deliver_tenant_admins(payload)
         push_way = str(payload.get("pushWay") or payload.get("push_way") or "internal").lower()
         if push_way == "internal":
             await self._deliver_websocket(payload)
@@ -226,6 +228,53 @@ class PushService:
         else:
             logger.warning("Unknown pushWay: %s", push_way)
             return {"deliveryStatus": "failed", "deliveryChannel": push_way, "errorMessage": "Unknown pushWay"}
+
+    async def _deliver_tenant_admins(self, payload: Mapping[str, Any]) -> Dict[str, Any]:
+        scope = payload.get('extend') or {}
+        tenant = str(scope.get('tenantId') or '')
+        client = str(payload.get('recipientAppClient') or '')
+        try:
+            if self.message_repository is None:
+                raise ValueError('Tenant directory is unavailable')
+            users = await self.message_repository.tenant_admin_recipients(tenant, client)
+            if not users:
+                raise ValueError('No active tenant administrator')
+        except Exception as exc:
+            logger.warning('Tenant notification deferred: tenant=%s error=%s', tenant, type(exc).__name__)
+            await self._defer_tenant_message(payload)
+            return {'deliveryStatus': 'pending', 'reason': 'tenant_admin_unavailable'}
+        deliveries = []
+        completed = {int(user) for user in payload.get('deliveredRecipientIds', [])}
+        for user in users:
+            if user in completed:
+                continue
+            event = {**payload, 'recUserId': user}
+            event.pop('recipientType', None)
+            try:
+                deliveries.append(await self.handle_push_event(event))
+            except Exception:
+                await self._defer_tenant_message({**payload, 'deliveredRecipientIds': sorted(completed)})
+                return {'deliveryStatus': 'pending', 'reason': 'recipient_delivery_unavailable'}
+            completed.add(user)
+        return {'deliveryStatus': 'failed' if any(d and d.get('deliveryStatus') == 'failed' for d in deliveries) else 'sent',
+                'recipientCount': len(users), 'deliveries': deliveries}
+
+    async def _defer_tenant_message(self, payload: Mapping[str, Any]) -> None:
+        """Keep unresolved audiences durable without blocking other recipients."""
+        import aio_pika
+
+        channel = getattr(self.rabbitmq, 'channel', None)
+        if channel is None:
+            raise RuntimeError('Tenant notification retry broker is unavailable')
+        queue = self.push_queue_name() + '.tenant-admin.retry'
+        await channel.declare_queue(queue, durable=True, arguments={
+            'x-message-ttl': 300_000, 'x-dead-letter-exchange': '',
+            'x-dead-letter-routing-key': self.push_queue_name(),
+        })
+        await channel.default_exchange.publish(aio_pika.Message(
+            body=json.dumps(dict(payload), ensure_ascii=False).encode('utf-8'),
+            delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
+        ), routing_key=queue)
 
     async def _deliver_websocket(self, payload: Mapping[str, Any]) -> None:
         rec_user_id = self._event_rec_user_id(payload)

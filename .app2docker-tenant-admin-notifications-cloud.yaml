@@ -1,0 +1,28 @@
+{
+  "version": "1.0",
+  "build": {
+    "project_type": "python",
+    "use_project_dockerfile": true,
+    "dockerfile_name": "Dockerfile.tenant-admin-notifications",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ],
+    "build_args": {
+      "BASE_IMAGE": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:6251b958a0b3e7cd537ebfd88480bfaa407ed985e43c1c53f0871c0deb94e177"
+    }
+  },
+  "image": {
+    "name": "jbm-python-cluster",
+    "prefix": "registry.cn-shanghai.aliyuncs.com/okc",
+    "tag": "tenant-admin-notifications-20261019.cloud.1",
+    "push": true
+  },
+  "push_mode": "multi",
+  "services": [
+    {
+      "name": "jbm-python-cluster",
+      "image_name": "jbm-python-cluster"
+    }
+  ]
+}

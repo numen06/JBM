@@ -1,0 +1,6 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+USER root
+COPY jbm-python-cluster/push/src/jbm_cluster_py/platform/push/service.py jbm-python-cluster/push/src/jbm_cluster_py/platform/push/push_message_repository.py deploy/tenant-admin-notifications/install.py /tmp/tenant-admin-notifications/
+RUN python /tmp/tenant-admin-notifications/install.py
+USER appuser

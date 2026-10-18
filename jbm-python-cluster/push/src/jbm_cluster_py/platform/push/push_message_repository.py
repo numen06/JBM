@@ -59,6 +59,25 @@ def _bool_value(value: Any) -> bool:
 
 
 class PushMessageRepository:
+    async def tenant_admin_recipients(self, tenant: str, client: str) -> list[int]:
+        if not tenant or tenant == '0' or not client:
+            raise ValueError('Device notification requires an owning tenant and application')
+        async with self.engine.connect() as conn:
+            result = await conn.execute(text('''
+                SELECT DISTINCT u.user_id FROM base_role_user ru
+                JOIN base_user u ON u.user_id=ru.user_id
+                JOIN base_role r ON r.role_id=ru.role_id
+                JOIN base_app a ON a.api_key=:client AND a.status=1
+                WHERE ru.tenant_id=:tenant AND (ru.app_id IS NULL OR ru.app_id=a.app_id)
+                  AND r.role_code IN ('tenant_admin','iot_admin')
+                  AND u.status=1 AND (r.status IS NULL OR r.status=1)
+                  AND EXISTS (SELECT 1 FROM base_user_org uo
+                              WHERE uo.user_id=u.user_id AND uo.org_id=:tenant
+                                AND (uo.expire_time IS NULL OR uo.expire_time>CURRENT_TIMESTAMP))
+                ORDER BY u.user_id
+            '''), {'tenant': tenant, 'client': client})
+            return [int(value) for value in result.scalars()]
+
     def __init__(self, database_config: Mapping[str, Any]) -> None:
         database_url = configured_database_url(database_config) or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         self.database_url = database_url
