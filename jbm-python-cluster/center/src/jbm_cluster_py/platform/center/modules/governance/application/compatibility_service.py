@@ -970,7 +970,7 @@ class CompatibilityService:
         if self._privileged_user(user or {}):
             require_super_admin(identity)
         current_roles = await self.governance.repository.user_roles(
-            int(user_id), _app_id(identity), int((user or {}).get("companyId") or tenant_id(identity)),
+            int(user_id), None, None,
         )
         for role in current_roles:
             code = role.get("roleCode", role.get("role_code"))

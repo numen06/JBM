@@ -33,6 +33,7 @@ async def test_tenant_cannot_remove_global_role_from_ordinary_type_account():
     service = CompatibilityService(store, governance, AsyncMock())
     with pytest.raises(HTTPException):
         await service._require_editable_user({"userId": 2, "tenantId": 20, "appId": 30, "roles": ["tenant_admin"]}, 3)
+    governance.repository.user_roles.assert_awaited_once_with(3, None, None)
 
 
 @pytest.mark.asyncio
