@@ -18,12 +18,14 @@ import {
   sendEmailBindCode,
   sendMobileBindCode,
   updateCurrentUser,
+  updatePassword,
 } from '@/api/current'
 import { fetchSmsCodeConfig } from '@/api/captcha'
 import { uploadDoc } from '@/api/doc'
 import { useDocImageSrc } from '@/composables/useDocImageSrc'
 import { useFeedback } from '@/composables/useFeedback'
 import { useAuthStore } from '@/stores/auth'
+import { passwordPolicyError } from '@/lib/passwordPolicy'
 
 const auth = useAuthStore()
 const feedback = useFeedback()
@@ -48,6 +50,46 @@ const emailCode = ref('')
 const emailCodeSent = ref(false)
 const emailSending = ref(false)
 const emailBinding = ref(false)
+const passwordForm = reactive({ originPassword: '', currentPassword: '', confirmPassword: '' })
+const passwordSaving = ref(false)
+const passwordError = ref('')
+const passwordNotice = ref('')
+
+async function changePassword() {
+  if (passwordSaving.value) return
+  passwordError.value = ''
+  passwordNotice.value = ''
+  if (!passwordForm.originPassword || !passwordForm.currentPassword || !passwordForm.confirmPassword) {
+    passwordError.value = '请填写当前密码、新密码和确认密码'
+    return
+  }
+  const policyError = passwordPolicyError(passwordForm.currentPassword)
+  if (policyError) {
+    passwordError.value = policyError
+    return
+  }
+  if (passwordForm.currentPassword !== passwordForm.confirmPassword) {
+    passwordError.value = '两次输入的新密码不一致'
+    return
+  }
+  if (passwordForm.currentPassword === passwordForm.originPassword) {
+    passwordError.value = '新密码不能与当前密码相同'
+    return
+  }
+  passwordSaving.value = true
+  try {
+    await updatePassword({ ...passwordForm })
+    auth.clearMustChangePassword()
+    passwordForm.originPassword = ''
+    passwordForm.currentPassword = ''
+    passwordForm.confirmPassword = ''
+    passwordNotice.value = '密码修改成功，下次登录请使用新密码'
+  } catch (error) {
+    passwordError.value = error instanceof Error ? error.message : '修改密码失败，请稍后重试'
+  } finally {
+    passwordSaving.value = false
+  }
+}
 
 const form = reactive({
   nickName: '',
@@ -334,6 +376,26 @@ onBeforeUnmount(resetPendingAvatar)
 
     </section>
     <section v-show="activeTab === 'authentication'" id="profile-authentication-panel" role="tabpanel" aria-labelledby="profile-authentication-tab" tabindex="0">
+    <Card class="mb-5">
+      <CardHeader><CardTitle>修改密码</CardTitle></CardHeader>
+      <CardContent>
+        <form class="max-w-xl space-y-4" @submit.prevent="changePassword">
+          <FormField label="当前密码" for-id="profile-current-password" required>
+            <Input id="profile-current-password" v-model="passwordForm.originPassword" type="password" autocomplete="current-password" placeholder="请输入当前登录密码" :disabled="passwordSaving" required />
+          </FormField>
+          <FormField label="新密码" for-id="profile-new-password" required>
+            <Input id="profile-new-password" v-model="passwordForm.currentPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" placeholder="请输入新密码" :disabled="passwordSaving" required aria-describedby="profile-password-policy" />
+          </FormField>
+          <FormField label="确认新密码" for-id="profile-confirm-password" required>
+            <Input id="profile-confirm-password" v-model="passwordForm.confirmPassword" type="password" autocomplete="new-password" maxlength="128" placeholder="请再次输入新密码" :disabled="passwordSaving" required />
+          </FormField>
+          <p id="profile-password-policy" class="text-xs leading-5 text-muted-foreground">8–128 位，至少包含大写字母、小写字母、数字、特殊字符中的 3 类。</p>
+          <p v-if="passwordError" role="alert" class="text-sm text-destructive">{{ passwordError }}</p>
+          <p v-if="passwordNotice" role="status" class="text-sm text-primary">{{ passwordNotice }}</p>
+          <Button type="submit" :disabled="passwordSaving">{{ passwordSaving ? '正在修改…' : '修改密码' }}</Button>
+        </form>
+      </CardContent>
+    </Card>
     <Card>
       <CardHeader>
         <CardTitle>账号绑定</CardTitle>
