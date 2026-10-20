@@ -373,7 +373,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param roleIds
      * @return
      */
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户分配角色", notes = "用户分配角色")
     @PostMapping("/roles/add")
     public ResultBody addUserRoles(
@@ -390,7 +389,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      *
      * @return
      */
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户分配角色", notes = "用户分配角色")
     @PostMapping("/addRole")
     public ResultBody addUserRoles(@RequestBody BaseUserForm baseUserForm) {
@@ -404,7 +402,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
      * @param userId
      * @return
      */
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户已分配角色", notes = "获取用户已分配角色")
     @PostMapping("/roles")
     public ResultBody<List<BaseRole>> getUserRoles(@RequestParam(value = "userId") Long userId) {
@@ -477,7 +474,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     }
 
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "模糊搜索用户")
     @PostMapping("/retrievalUsers")
     public ResultBody<List<BaseUser>> retrievalUsers(@RequestBody PageForm pageForm) {
@@ -504,7 +500,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         }
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "用户统计")
     @GetMapping("/getUserInfoStatistics")
     public ResultBody<UserInfoStatistics> getUserInfoStatistics() {
@@ -518,7 +513,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     }
 
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过Ids获取多个用户")
     @GetMapping("/getUsersByIds")
     public ResultBody<List<BaseUser>> getUsersByIds(@RequestBody IdsForm ids) {
@@ -527,7 +521,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "改变用户状态")
     @GetMapping("/updateUserStatus")
     public ResultBody<BaseUser> updateUserStatus(@RequestParam(value = "userId") Long userId,
@@ -545,7 +538,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
     @Autowired
     private BaseAccountService baseAccountService;
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取用户帐号信息")
     @GetMapping("/getUserAccounts")
     @Override
@@ -555,7 +547,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         });
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "小程序登录-更新用户openId信息")
     @PostMapping("/updateOpenIdByPhone")
     public ResultBody<BaseUser> updateOpenIdByPhone(@RequestParam(value = "openId") String openId,
@@ -565,7 +556,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return ResultBody.callback(() -> baseAccountService.updateOpenIdByPhone(openId, sessionKey, accountType, phone));
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
     @PostMapping("/model")
     @Override
@@ -573,7 +563,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return super.model(masterDataRequsetBody);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量保存", notes = "批量保存")
     @PostMapping("/saveBatch")
     @Override
@@ -597,7 +586,6 @@ public class BaseUserController extends MasterDataCollection<BaseUser, BaseUserS
         return super.remove(masterDataRequsetBody);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
     @PostMapping("/deleteByIds")
     @Override

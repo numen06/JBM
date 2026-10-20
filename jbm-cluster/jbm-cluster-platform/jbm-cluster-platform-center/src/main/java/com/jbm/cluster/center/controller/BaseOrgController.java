@@ -34,21 +34,18 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return ResultBody.callback(() -> this.service.findTopCompany(baseOrg));
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取下级公司", notes = "获取下级公司")
     @PostMapping("/findRelegationCompany")
     public ResultBody<List<BaseOrg>> findRelegationCompany(@RequestBody BaseOrg baseOrg) {
         return ResultBody.callback(() -> this.service.findRelegationCompany(baseOrg));
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取组织信息", notes = "获取组织信息")
     @PostMapping("/getBaseOrg")
     public ResultBody<BaseOrg> getBaseOrg(@RequestBody BaseOrg baseOrg) {
         return ResultBody.callback(() -> this.service.getBaseOrg(baseOrg));
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取分页列表", notes = "获取分页列表")
     @PostMapping("/pageList")
     @Override
@@ -56,7 +53,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.pageList(entityPageSearchForm);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取列表", notes = "获取列表")
     @PostMapping("/list")
     @Override
@@ -64,7 +60,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.list(entityRequestForm);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "获取单个实体", notes = "获取单个实体")
     @PostMapping("/model")
     @Override
@@ -72,7 +67,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.model(entityRequestForm);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "保存单个实体", notes = "保存单个实体")
     @PostMapping("/save")
     @Override
@@ -80,7 +74,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.save(entityRequestForm);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "批量保存", notes = "批量保存")
     @PostMapping("/saveBatch")
     @Override
@@ -96,7 +89,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.mock();
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "删除实体", notes = "删除实体")
     @PostMapping("/delete")
     @Override
@@ -104,7 +96,6 @@ public class BaseOrgController extends MultiPlatformCollection<BaseOrg, BaseOrgS
         return super.remove(entityRequestForm);
     }
 
-    @SaCheckRole(JbmConstants.USER_TYPE_ADMIN)
     @ApiOperation(value = "通过id删除实体", notes = "通过id删除实体")
     @PostMapping("/deleteByIds")
     @Override
