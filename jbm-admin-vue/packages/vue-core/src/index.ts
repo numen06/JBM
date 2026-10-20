@@ -185,9 +185,9 @@ export const JbmWorkspaceNavigation = defineComponent({
   },
   emits: navigateEmits,
   setup(props, { emit }) {
-    return () => h('div', { class: 'jbm-workspaces' }, [
+    return () => props.workspaces.length ? h('div', { class: 'jbm-workspaces' }, [
       h('div', { class: 'jbm-workspaces__label' }, '应用工作区'),
-      h('div', { class: 'jbm-workspaces__grid' }, props.workspaces.map(item => h('a', {
+      h('div', { class: 'jbm-workspaces__grid', style: { gridTemplateColumns: `repeat(${props.workspaces.length}, minmax(0, 1fr))` } }, props.workspaces.map(item => h('a', {
         href: item.path,
         title: item.label,
         class: ['jbm-workspaces__item', item.key === props.currentKey && 'is-active'],
@@ -196,7 +196,7 @@ export const JbmWorkspaceNavigation = defineComponent({
         item.icon ? h(item.icon, { class: 'jbm-workspaces__icon', 'aria-hidden': 'true' }) : null,
         h('span', item.shortLabel || item.label),
       ]))),
-    ])
+    ]) : null
   },
 })
 

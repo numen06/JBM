@@ -107,3 +107,11 @@ test('shared shell navigation keeps only the most specific active menu item', as
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1)
   assert.match(html, /href="\/jbm\/messages\/webhook-configs" class="jbm-sidebar-nav__item is-active"/)
 })
+
+test('empty workspaces render nothing and remaining workspace buttons fill their row', async () => {
+  const render = (workspaces) => renderToString(createSSRApp({ render: () => h(JbmWorkspaceNavigation, { workspaces, currentKey: 'iot' }) }))
+  assert.ok(!(await render([])).includes('应用工作区'))
+  const html = await render([{ key: 'building', label: '建筑', path: '/dashboard' }, { key: 'iot', label: '物连', path: '/iot/console' }])
+  assert.match(html, /grid-template-columns:repeat\(2, minmax\(0, 1fr\)\)/)
+  assert.equal((html.match(/jbm-workspaces__item/g) || []).length, 2)
+})

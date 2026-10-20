@@ -79,6 +79,7 @@ export interface JbmAdminHostHandle {
     init(): Promise<void>
   }
   menu: {
+    readonly rawMenus: Array<Record<string, any>>
     readonly allowedMenuCodes: ReadonlySet<string>
     registerModules(modules: JbmFrontendModule[]): void
   }
@@ -128,3 +129,26 @@ export function mergeJbmTenantOptions(
   platformTenants?: Array<{ tenantId?: string | number; tenantName?: string; tenantCode?: string }>,
   delegations?: Array<{ ownerTenantId?: string | number; ownerTenantName?: string; purpose?: string }>,
 ): JbmTenantOption[]
+
+export type WorkspaceKey = 'building' | 'iot' | 'jbm'
+export type NavigationOverride = { label?: string; hidden?: boolean; order?: number }
+export type TenantNavigationPreferences = Record<'workspaces' | 'menus' | 'groups', Record<string, NavigationOverride>>
+export interface TenantNavigationContext { tenantId: string; canManage: boolean; revision: number; preferences: TenantNavigationPreferences }
+export interface NavigationCatalogItem { workspace: WorkspaceKey; group: string; path: string; label: string }
+export interface NavigationGroup { label: string; items: Array<{ path: string; label: string }> }
+export const workspaceNames: Record<WorkspaceKey, string>
+export const JbmNavigationSettings: Component
+export function emptyNavigation(): TenantNavigationPreferences
+export function isSystemBusinessMenu(path: string): boolean
+export function applyNavigation<T extends NavigationGroup>(groups: T[], preferences: TenantNavigationPreferences, workspace: WorkspaceKey): T[]
+export function navigationCatalog(local: NavigationCatalogItem[], raw: Array<Record<string, any>>): NavigationCatalogItem[]
+export function availableNavigationWorkspaces<T extends { key: WorkspaceKey; label: string; shortLabel?: string; path: string }>(definitions: T[], catalog: NavigationCatalogItem[], preferences: TenantNavigationPreferences): T[]
+export function useTenantNavigation(scope: () => string, client: () => JbmClient): {
+  settings: import('vue').Ref<TenantNavigationContext>
+  preferences: import('vue').ComputedRef<TenantNavigationPreferences>
+  loading: import('vue').Ref<boolean>
+  saving: import('vue').Ref<boolean>
+  error: import('vue').Ref<string>
+  load(): Promise<void>
+  save(preferences: TenantNavigationPreferences): Promise<boolean>
+}

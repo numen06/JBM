@@ -16,6 +16,14 @@ from jbm_cluster_py.platform.center.modules.governance.application.access import
 def build_governance_router(service: GovernanceService) -> APIRouter:
     router = APIRouter()
 
+    @router.get("/current/navigation")
+    async def navigation(request: Request) -> dict[str, Any]:
+        return ok(await service.navigation(request.state.identity, request.headers.get("X-Tenant-Id") or request.headers.get("tenantId")))
+
+    @router.put("/current/navigation")
+    async def save_navigation(request: Request, body: dict[str, Any]) -> dict[str, Any]:
+        return ok(await service.save_navigation(request.state.identity, body, request.headers.get("X-Tenant-Id") or request.headers.get("tenantId")))
+
     @router.get("/current/user")
     async def current_user(request: Request) -> dict[str, Any]:
         return ok(await service.current_user(request.state.identity))

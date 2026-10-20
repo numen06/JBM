@@ -21,6 +21,50 @@ class GovernanceService:
     def __init__(self, repository: GovernanceRepository) -> None:
         self.repository = repository
 
+    async def _navigation_scope(self, identity: Mapping[str, Any], requested: str | None) -> int:
+        from fastapi import HTTPException
+        own = tenant_id(identity)
+        if not requested:
+            return own
+        try:
+            target = int(requested)
+            if target <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            raise HTTPException(422, "请选择有效租户") from None
+        if target == own:
+            return own
+        if is_platform(identity):
+            if not await self.repository.navigation_tenant_exists(target):
+                raise HTTPException(404, "租户不存在")
+            return target
+        if await self.repository.has_navigation_delegation(target, own,
+                _identity_int(identity, "userId", "user_id", "sub"),
+                _identity_int(identity, "appId", "app_id")):
+            return target
+        raise HTTPException(403, "无权读取其他租户的菜单设置")
+
+    async def navigation(self, identity: Mapping[str, Any], requested: str | None = None) -> dict[str, Any]:
+        from .navigation import can_manage_navigation
+        target = await self._navigation_scope(identity, requested)
+        return {**await self.repository.get_navigation(target),
+                "canManage": await can_manage_navigation(self.repository, identity, target),
+                "tenantId": str(target)}
+
+    async def save_navigation(self, identity: Mapping[str, Any], body: Mapping[str, Any], requested: str | None = None) -> dict[str, Any]:
+        from fastapi import HTTPException
+        from .navigation import can_manage_navigation, validate_navigation
+        target = await self._navigation_scope(identity, requested)
+        if not await can_manage_navigation(self.repository, identity, target):
+            raise HTTPException(403, "仅本租户管理员可修改菜单设置")
+        revision = body.get("revision")
+        if type(revision) is not int or revision < 0:
+            raise HTTPException(422, "缺少有效的菜单版本，请刷新后重试")
+        preferences = validate_navigation(body.get("preferences"))
+        await self.repository.save_navigation(target, preferences, revision,
+                                             _identity_int(identity, "userId", "user_id", "sub"))
+        return await self.navigation(identity, requested)
+
     async def users(
         self,
         page: int,

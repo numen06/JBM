@@ -13,6 +13,40 @@ from jbm_cluster_py.integrations.database import configured_database_url
 
 
 class SqlGovernanceRepository:
+    async def navigation_tenant_exists(self, tenant_id: int) -> bool:
+        return bool(await self._one("SELECT 1 FROM base_org WHERE id=:tenant", {"tenant": tenant_id}))
+
+    async def has_navigation_delegation(self, target: int, actor_tenant: int, user: int | None, app: int | None) -> bool:
+        # Navigation names are metadata; a live business delegation allows reads only.
+        return bool(await self._one("""SELECT 1 FROM base_tenant_delegation
+            WHERE owner_tenant_id=:target AND operator_tenant_id=:actor AND app_id=:app
+            AND (operator_user_id IS NULL OR operator_user_id=:user) AND status=1
+            AND (valid_from IS NULL OR valid_from<=CURRENT_TIMESTAMP)
+            AND (valid_to IS NULL OR valid_to>CURRENT_TIMESTAMP) LIMIT 1""",
+            {"target": target, "actor": actor_tenant, "user": user, "app": app}))
+
+    async def get_navigation(self, tenant_id: int) -> dict[str, Any]:
+        row = await self._one("SELECT preferences, revision FROM base_tenant_navigation WHERE tenant_id=:tenant", {"tenant": tenant_id})
+        if not row:
+            return {"preferences": {"workspaces": {}, "menus": {}, "groups": {}}, "revision": 0}
+        value = row["preferences"]
+        return {"preferences": json.loads(value) if isinstance(value, str) else value, "revision": row["revision"]}
+
+    async def save_navigation(self, tenant_id: int, preferences: dict[str, Any], revision: int, user_id: int | None) -> None:
+        from fastapi import HTTPException
+        from sqlalchemy.exc import IntegrityError
+        params = {"tenant": tenant_id, "preferences": json.dumps(preferences, ensure_ascii=False), "revision": revision, "user": user_id}
+        try:
+            async with self.engine.begin() as conn:
+                if revision == 0:
+                    await conn.execute(text("INSERT INTO base_tenant_navigation (tenant_id, preferences, revision, updated_by) VALUES (:tenant, :preferences, 1, :user)"), params)
+                else:
+                    result = await conn.execute(text("UPDATE base_tenant_navigation SET preferences=:preferences, revision=revision+1, updated_by=:user WHERE tenant_id=:tenant AND revision=:revision"), params)
+                    if result.rowcount != 1:
+                        raise HTTPException(409, "菜单设置已更新，请刷新后重试")
+        except IntegrityError:
+            raise HTTPException(409, "菜单设置已更新，请刷新后重试") from None
+
     def __init__(self, database_config: Mapping[str, Any]) -> None:
         url = configured_database_url(database_config)
         if not url:

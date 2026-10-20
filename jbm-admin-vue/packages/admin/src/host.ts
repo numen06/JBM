@@ -75,3 +75,4 @@ export type JbmAdminHost = Awaited<ReturnType<typeof createJbmAdminHost>>
 export type { JbmClient }
 export type { JbmTenantOption } from './tenants'
 export { mergeJbmTenantOptions } from './tenants'
+export * from './navigation'
