@@ -1,7 +1,7 @@
 import { createJbmClient, type JbmClient, type JbmTokens } from '@jbm7/sdk'
 import type { Router } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { apiBaseUrl } from '@/runtimeConfig'
+import { apiBaseUrl, runtimeConfig } from '@/runtimeConfig'
 
 let platformClient: JbmClient | undefined
 
@@ -33,6 +33,7 @@ export function createAdminPlatformClient(router: Router) {
       return toSdkTokens(tokens)
     },
     onUnauthorized: async () => {
+      if (runtimeConfig.onSessionExpired) return runtimeConfig.onSessionExpired()
       if (router.currentRoute.value.name !== 'login') {
         await router.replace({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
       }

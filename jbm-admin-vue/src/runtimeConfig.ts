@@ -3,6 +3,8 @@ export interface JbmAdminRuntimeConfig {
   debug?: string | boolean
   oauthClientId?: string
   oauthAuthorizeBaseUrl?: string
+  /** Hosts with an inline login surface can keep their current route on session loss. */
+  onSessionExpired?: () => void | Promise<void>
 }
 
 declare global {

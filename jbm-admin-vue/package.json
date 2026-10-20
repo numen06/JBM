@@ -18,7 +18,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jbm7/admin": "7.3.0-beta.36",
+    "@jbm7/admin": "7.3.0-beta.37",
     "@jbm7/sdk": "7.3.0-beta.6",
     "@jbm7/vue-core": "7.3.0-beta.16",
     "@codemirror/commands": "^6.10.3",

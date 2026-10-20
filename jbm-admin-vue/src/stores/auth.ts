@@ -8,6 +8,7 @@ import type { CurrentUser } from '@/api/types'
 import { useMenuStore } from '@/stores/menu'
 import { JBM_DEFAULT_CLIENT_ID } from '@/constants/loginModes'
 import { isPlatformAdministrator, isSuperAdministrator } from '@/lib/adminAccess'
+import { runtimeConfig } from '@/runtimeConfig'
 
 const TOKEN_KEY = 'jbm_access_token'
 const REFRESH_KEY = 'jbm_refresh_token'
@@ -171,7 +172,8 @@ export const useAuthStore = defineStore('auth', () => {
       if (nextAccessToken) {
         init()
       } else if (event) {
-        window.location.replace(`${import.meta.env.BASE_URL}login`)
+        if (runtimeConfig.onSessionExpired) void runtimeConfig.onSessionExpired()
+        else window.location.replace(`${import.meta.env.BASE_URL}login`)
       }
     }
   }

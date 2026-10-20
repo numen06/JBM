@@ -10,6 +10,7 @@ export interface JbmAdminRuntimeConfig {
   debug?: string | boolean
   oauthClientId?: string
   oauthAuthorizeBaseUrl?: string
+  onSessionExpired?: () => void | Promise<void>
 }
 
 export interface JbmAdminRuntimeOptions {
@@ -76,6 +77,7 @@ export interface JbmAdminHostHandle {
     logout(): Promise<void>
     refreshAccessToken(): Promise<void>
     clearSession(): void
+    bindSessionStorageSync(): void
     init(): Promise<void>
   }
   menu: {
