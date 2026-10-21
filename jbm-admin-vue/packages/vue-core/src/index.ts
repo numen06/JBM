@@ -65,6 +65,7 @@ export interface JbmShellNavigationItem {
 export interface JbmShellNavigationGroup {
   label: string
   hint?: string
+  entryPath?: string
   items: JbmShellNavigationItem[]
 }
 
@@ -226,18 +227,28 @@ export const JbmSidebarNavigation = defineComponent({
     const toggle = (label: string) => {
       openLabels.value = isOpen(label) ? openLabels.value.filter(item => item !== label) : [...openLabels.value, label]
     }
-    return () => h('nav', { class: 'jbm-sidebar-nav', 'aria-label': '主菜单' }, props.groups.map(group => h('section', {
-      class: 'jbm-sidebar-nav__group',
-    }, [
-      h('button', {
+    return () => h('nav', { class: 'jbm-sidebar-nav', 'aria-label': '主菜单' }, props.groups.map(group => {
+      const entryPath = group.items.some(item => item.path === group.entryPath) ? group.entryPath : undefined
+      const heading = h('button', {
         type: 'button',
         class: ['jbm-sidebar-nav__group-button', group.items.some(isActive) && 'is-active'],
         'aria-expanded': isOpen(group.label),
-        onClick: () => toggle(group.label),
+        onClick: () => {
+          if (!entryPath) toggle(group.label)
+          else { if (!isOpen(group.label)) toggle(group.label); emit('navigate', entryPath) }
+        },
       }, [
         h('span', [h('strong', group.label), group.hint ? h('small', group.hint) : null]),
-        h('span', { class: ['jbm-sidebar-nav__chevron', isOpen(group.label) && 'is-open'], 'aria-hidden': 'true' }, '›'),
-      ]),
+        !entryPath ? h('span', { class: ['jbm-sidebar-nav__chevron', isOpen(group.label) && 'is-open'], 'aria-hidden': 'true' }, '›') : null,
+      ])
+      return h('section', {
+      class: 'jbm-sidebar-nav__group',
+    }, [
+      entryPath ? h('div', { class: 'jbm-sidebar-nav__group-heading' }, [heading, h('button', {
+        type: 'button', class: 'jbm-sidebar-nav__group-toggle',
+        'aria-label': `${isOpen(group.label) ? '收起' : '展开'}${group.label}`,
+        'aria-expanded': isOpen(group.label), onClick: () => toggle(group.label),
+      }, [h('span', { class: ['jbm-sidebar-nav__chevron', isOpen(group.label) && 'is-open'], 'aria-hidden': 'true' }, '›')])]) : heading,
       isOpen(group.label) ? h('div', { class: 'jbm-sidebar-nav__items' }, group.items.map(item => h('a', {
         href: item.path,
         class: ['jbm-sidebar-nav__item', isActive(item) && 'is-active'],
@@ -247,7 +258,7 @@ export const JbmSidebarNavigation = defineComponent({
         h('span', { class: 'jbm-sidebar-nav__icon' }, item.icon ? [h(item.icon, { 'aria-hidden': 'true' })] : []),
         h('span', { class: 'jbm-sidebar-nav__text' }, item.label),
       ]))) : null,
-    ])))
+    ]) }))
   },
 })
 

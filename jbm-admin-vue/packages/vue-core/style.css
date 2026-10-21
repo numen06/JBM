@@ -33,6 +33,10 @@
 .jbm-sidebar-nav__group + .jbm-sidebar-nav__group { margin-top: .25rem; }
 .jbm-sidebar-nav__group-button { display: flex; width: 100%; min-height: 2.25rem; align-items: center; justify-content: space-between; gap: .5rem; border: 0; border-radius: .375rem; padding: .375rem .5rem; color: hsl(var(--muted-foreground)); background: transparent; text-align: left; cursor: pointer; }
 .jbm-sidebar-nav__group-button:hover { background: hsl(var(--surface-hover)); }
+.jbm-sidebar-nav__group-heading { display: flex; align-items: center; }
+.jbm-sidebar-nav__group-heading .jbm-sidebar-nav__group-button { flex: 1; min-width: 0; }
+.jbm-sidebar-nav__group-toggle { display: grid; flex-shrink: 0; place-items: center; width: 2rem; height: 2.25rem; border: 0; border-radius: .375rem; color: hsl(var(--muted-foreground)); background: transparent; cursor: pointer; }
+.jbm-sidebar-nav__group-toggle:hover { background: hsl(var(--surface-hover)); }
 .jbm-sidebar-nav__group-button.is-active { color: hsl(var(--primary)); }
 .jbm-sidebar-nav__group-button strong { display: block; font-size: .6875rem; font-weight: 600; }
 .jbm-sidebar-nav__group-button small { display: block; margin-top: .125rem; color: hsl(var(--muted-foreground)); font-size: .625rem; font-weight: 400; }

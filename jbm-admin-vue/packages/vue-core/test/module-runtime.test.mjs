@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { createSSRApp, h } from 'vue'
+import { createSSRApp, h, effectScope } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { defineJbmModule, JbmProductHeader, JbmSidebarNavigation, JbmWorkspaceNavigation, JbmSegmentedControl, registerJbmModules } from '../dist/index.js'
 
@@ -106,6 +106,23 @@ test('shared shell navigation keeps only the most specific active menu item', as
   const html = await renderToString(app)
   assert.equal((html.match(/aria-current="page"/g) ?? []).length, 1)
   assert.match(html, /href="\/jbm\/messages\/webhook-configs" class="jbm-sidebar-nav__item is-active"/)
+})
+
+test('an opted-in group opens its authorized entry and keeps collapse as a separate action', () => {
+  const emitted = [], scope = effectScope()
+  const groups = [
+    { label: '多联机', entryPath: '/control', items: [{ path: '/control', label: '操作控制' }] },
+    { label: '未授权入口', entryPath: '/hidden', items: [{ path: '/allowed', label: '合法页面' }] },
+  ]
+  const render = scope.run(() => JbmSidebarNavigation.setup({ groups }, { emit: (...args) => emitted.push(args) }))
+  const tree = render(), group = tree.children[0], heading = group.children[0]
+  heading.children[0].props.onClick()
+  assert.deepEqual(emitted, [['navigate', '/control']])
+  heading.children[1].props.onClick()
+  assert.equal(emitted.length, 1)
+  tree.children[1].children[0].props.onClick()
+  assert.equal(emitted.length, 1)
+  scope.stop()
 })
 
 test('empty workspaces render nothing and remaining workspace buttons fill their row', async () => {
