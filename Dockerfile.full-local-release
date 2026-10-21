@@ -1,0 +1,7 @@
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:3aa6c1f9fcc51b84e2f642e30377e4c63b3c27a1bf8afc93a278c1e2046ebde0 AS center-update
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/api/router.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/api/router.py
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/service.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/application/service.py
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/application/navigation.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/application/navigation.py
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/domain/ports.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/domain/ports.py
+COPY jbm-python-cluster/center/src/jbm_cluster_py/platform/center/modules/governance/infrastructure/repository.py /app/center/src/jbm_cluster_py/platform/center/modules/governance/infrastructure/repository.py
+COPY jbm-python-cluster/center/migrations/versions/20261020_25_tenant_navigation.py /app/center/migrations/versions/20261020_25_tenant_navigation.py

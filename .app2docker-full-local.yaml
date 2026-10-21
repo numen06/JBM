@@ -1,0 +1,18 @@
+version: '1.0'
+build:
+  project_type: python
+  use_project_dockerfile: true
+  dockerfile_name: Dockerfile.full-local-release
+  platforms:
+  - linux/amd64
+  - linux/arm64
+  build_args: {}
+image:
+  name: jbm-cluster-platform-center
+  prefix: registry.cn-shanghai.aliyuncs.com/okc
+  tag: cloud-full-20261021.1
+  push: true
+push_mode: multi
+services:
+- name: center-update
+  image_name: registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center
