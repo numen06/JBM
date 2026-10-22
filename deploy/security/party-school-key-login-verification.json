@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-23",
+  "config_commit": "d6f0541a",
+  "release_tag": "party-key-login-config-20261023.1",
+  "cause": "最新版认证代码已发布；本地 auth-dev.yml 中的密钥开关与域名配置未同步到党校独立 auth-prod.yml。增量镜像保留了生产配置，因此接口返回 503。",
+  "before": {
+    "profile": "prod",
+    "effective": {
+      "enabled": false,
+      "rp-id": "",
+      "rp-name": "JBM 平台",
+      "origins": []
+    },
+    "nacos": {
+      "enabled": true,
+      "shared-dataids": "common-{profile}.yml,{app}-{profile}.yml",
+      "sharedDataids": null,
+      "group": "DEFAULT_GROUP",
+      "namespace": "jbm-py"
+    },
+    "env_override": {},
+    "source_hashes": {
+      "key_login.py": "f604e01814c02329f947de47d864743460f80acca8f2dce179bd238574945955",
+      "key_router.py": "d0a6b47b51d1f67871476c8156d00c73668bff4cf7cdc260c04583593be752fc",
+      "service.py": "c9de1700e190fbf17557fd5f183355e6264c39b291f7961e49d0ae637770e5c3"
+    },
+    "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:f61d9677006de35523b2a609aaf1f5ec66d2e762f4caf665c370350b7b6e26db",
+    "latest_source_matches": true
+  },
+  "deployment": {
+    "healthy": true,
+    "updated_config": "jbm-py/DEFAULT_GROUP/auth-prod.yml",
+    "changed_fields": [
+      "jbm.auth.key-login.enabled",
+      "jbm.auth.key-login.rp-id",
+      "jbm.auth.key-login.rp-name",
+      "jbm.auth.key-login.origins"
+    ],
+    "key_login": {
+      "enabled": true,
+      "rp-id": "jxdx.project.hz-aitech.com",
+      "rp-name": "中共江西省委党校节能监管平台",
+      "origins": [
+        "https://jxdx.project.hz-aitech.com"
+      ]
+    },
+    "image_unchanged": true,
+    "other_settings_preserved": true,
+    "only_restarted": "jbm73-standard-test-jbm-cluster-platform-auth-1",
+    "backup": "/home/opt/backups/party-key-login-20261023-024230",
+    "after_sha256": "159726f1d5871abfbbeefa8c77652719df529c1890c1a2ab38c9250098848ed7"
+  },
+  "public_checks": {
+    "challenge_status": 200,
+    "rpId": "jxdx.project.hz-aitech.com",
+    "expiresIn": 120,
+    "invalid_client_rejected": true,
+    "unauthenticated_registration_rejected": true,
+    "invalid_proof_rejected": true,
+    "registered_keys_created": 0,
+    "full_registered_file_login": "pending account owner generation"
+  },
+  "tests": {
+    "auth_key_login_file_key_regressions_passed": 28,
+    "party_settings_validated_with_real_service": true
+  },
+  "browser": {
+    "url": "https://jxdx.project.hz-aitech.com/jbm/profile",
+    "tab": "登录密钥",
+    "list_loaded": true,
+    "configuration_error_absent": true,
+    "registered_key_count": 0,
+    "generation_available": true,
+    "new_credentials_created_by_agent": 0,
+    "full_production_file_login": "未执行；当前没有绑定密钥，首次生成需由账号本人验证密码。"
+  },
+  "integrity": {
+    "checkedAt": "2026-10-23T02:43:11.470635+08:00",
+    "passed": true,
+    "errors": [],
+    "targets": 7,
+    "located": 7,
+    "online": 7,
+    "fieldRequests": 0,
+    "writes": 0
+  }
+}
