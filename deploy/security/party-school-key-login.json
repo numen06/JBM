@@ -1,0 +1,12 @@
+{
+  "jbm": {
+    "auth": {
+      "key-login": {
+        "enabled": true,
+        "rp-id": "jxdx.project.hz-aitech.com",
+        "rp-name": "中共江西省委党校节能监管平台",
+        "origins": ["https://jxdx.project.hz-aitech.com"]
+      }
+    }
+  }
+}
