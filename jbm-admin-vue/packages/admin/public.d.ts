@@ -5,6 +5,14 @@ import type { JbmClient } from '@jbm7/sdk'
 import type { JbmAccessProvider, JbmFrontendModule } from '@jbm7/vue-core'
 import type { Plugin } from 'vue'
 
+export const FileKeyLogin: import('vue').DefineComponent<{
+  authBase: string
+  clientId: string
+  disabled?: boolean
+  login: (proof: string, kind: string) => Promise<unknown>
+  onBusyChange?: (busy: boolean) => void
+}>
+
 export interface JbmAdminRuntimeConfig {
   apiBaseUrl?: string
   debug?: string | boolean

@@ -34,9 +34,22 @@ const avatarFile = ref<File | null>(null)
 const avatarPreviewUrl = ref('')
 const cropDialogOpen = ref(false)
 const cropSourceFile = ref<File | null>(null)
-const activeTab = ref<'information' | 'authentication'>('information')
-const informationTab = ref<HTMLButtonElement | null>(null)
-const authenticationTab = ref<HTMLButtonElement | null>(null)
+const profileTabs = [
+  { id: 'information', label: '个人资料', description: '管理头像、昵称和真实姓名' },
+  { id: 'authentication', label: '账号安全', description: '修改登录密码，绑定手机和邮箱' },
+  { id: 'keys', label: '登录密钥', description: '下载密钥文件，选择文件即可登录对应账号' },
+] as const
+const activeTab = ref<(typeof profileTabs)[number]['id']>('information')
+const tabButtons = ref<HTMLButtonElement[]>([])
+function navigateTabs(event: KeyboardEvent) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault()
+  const current = profileTabs.findIndex(tab => tab.id === activeTab.value)
+  const index = event.key === 'Home' ? 0 : event.key === 'End' ? profileTabs.length - 1
+    : (current + (event.key === 'ArrowRight' ? 1 : -1) + profileTabs.length) % profileTabs.length
+  activeTab.value = profileTabs[index]!.id
+  tabButtons.value[index]?.focus()
+}
 const saving = ref(false)
 const formError = ref('')
 const debugBypass = ref(false)
@@ -278,7 +291,7 @@ onBeforeUnmount(resetPendingAvatar)
 
 <template>
   <div class="profile-page">
-    <PageHeader title="用户中心" description="管理个人信息与账号认证">
+    <PageHeader title="个人中心" description="管理个人资料、账号安全与登录方式">
       <template v-if="activeTab === 'information'" #actions>
         <Button variant="outline" :disabled="saving" @click="fillFormFromUser">
           <RotateCcw class="h-4 w-4" />
@@ -286,14 +299,14 @@ onBeforeUnmount(resetPendingAvatar)
         </Button>
         <Button :disabled="saving" @click="saveProfile">
           <Save class="h-4 w-4" />
-          {{ saving ? '保存中...' : '保存' }}
+          {{ saving ? '保存中...' : '保存资料' }}
         </Button>
       </template>
     </PageHeader>
     <div class="profile-tabs" role="tablist" aria-label="用户中心功能">
-      <button id="profile-information-tab" ref="informationTab" type="button" role="tab" :aria-selected="activeTab === 'information'" aria-controls="profile-information-panel" :tabindex="activeTab === 'information' ? 0 : -1" @click="activeTab = 'information'" @keydown.right.prevent="activeTab = 'authentication'; authenticationTab?.focus()" @keydown.left.prevent="activeTab = 'authentication'; authenticationTab?.focus()" @keydown.end.prevent="activeTab = 'authentication'; authenticationTab?.focus()">个人信息</button>
-      <button id="profile-authentication-tab" ref="authenticationTab" type="button" role="tab" :aria-selected="activeTab === 'authentication'" aria-controls="profile-authentication-panel" :tabindex="activeTab === 'authentication' ? 0 : -1" @click="activeTab = 'authentication'" @keydown.right.prevent="activeTab = 'information'; informationTab?.focus()" @keydown.left.prevent="activeTab = 'information'; informationTab?.focus()" @keydown.home.prevent="activeTab = 'information'; informationTab?.focus()">认证管理</button>
+      <button v-for="tab in profileTabs" :id="`profile-${tab.id}-tab`" :key="tab.id" ref="tabButtons" type="button" role="tab" :aria-selected="activeTab === tab.id" :aria-controls="`profile-${tab.id}-panel`" :tabindex="activeTab === tab.id ? 0 : -1" @click="activeTab = tab.id" @keydown="navigateTabs">{{ tab.label }}</button>
     </div>
+    <p class="profile-tab-description">{{ profileTabs.find(tab => tab.id === activeTab)?.description }}</p>
     <p v-if="formError" class="mb-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
       {{ formError }}
     </p>
@@ -368,7 +381,7 @@ onBeforeUnmount(resetPendingAvatar)
             </FormField>
           </div>
           <p class="text-xs text-muted-foreground">
-            手机号和邮箱由用户管理或账号绑定流程维护，当前页面只保存个人资料。
+            绑定或更换手机号、邮箱，请前往“账号安全”。
           </p>
         </CardContent>
       </Card>
@@ -376,7 +389,8 @@ onBeforeUnmount(resetPendingAvatar)
 
     </section>
     <section v-show="activeTab === 'authentication'" id="profile-authentication-panel" role="tabpanel" aria-labelledby="profile-authentication-tab" tabindex="0">
-    <Card class="mb-5">
+    <div class="profile-security-grid">
+    <Card>
       <CardHeader><CardTitle>修改密码</CardTitle></CardHeader>
       <CardContent>
         <form class="max-w-xl space-y-4" @submit.prevent="changePassword">
@@ -402,7 +416,7 @@ onBeforeUnmount(resetPendingAvatar)
       </CardHeader>
       <CardContent class="space-y-6">
         <p class="text-sm text-muted-foreground">
-          手机和邮箱不参与用户名注册。首次绑定或更换时，必须输入发送到目标凭证的验证码。
+          绑定手机或邮箱后可用于账号验证。更换绑定时，请完成新手机或邮箱的验证码验证。
           <span v-if="debugBypass">当前为调试模式，验证码为 99999。</span>
         </p>
 
@@ -449,11 +463,25 @@ onBeforeUnmount(resetPendingAvatar)
         </div>
       </CardContent>
     </Card>
-
-    <div class="profile-credentials-grid">
-      <KeyCredentialsPanel kind="PASSKEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
-      <KeyCredentialsPanel kind="SSH_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
     </div>
+
+    </section>
+
+    <section v-show="activeTab === 'keys'" id="profile-keys-panel" role="tabpanel" aria-labelledby="profile-keys-tab" tabindex="0">
+    <div class="profile-key-overview">
+      <div><h2>密钥文件登录</h2><p>为不同账号分别保存密钥文件，在登录页选择文件即可进入对应账号。</p></div>
+      <span class="profile-account-badge">当前账号：{{ auth.user?.userName || '-' }}</span>
+    </div>
+    <div class="profile-file-key">
+      <KeyCredentialsPanel kind="FILE_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+    </div>
+    <details class="profile-advanced-keys">
+      <summary>其他登录方式 <span>通行密钥与 SSH 签名</span></summary>
+      <div class="profile-credentials-grid">
+        <KeyCredentialsPanel kind="PASSKEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+        <KeyCredentialsPanel kind="SSH_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" />
+      </div>
+    </details>
 
     </section>
 
@@ -468,12 +496,19 @@ onBeforeUnmount(resetPendingAvatar)
 
 <style scoped>
 .profile-page{min-width:0;container-type:inline-size}
-.profile-tabs{display:flex;gap:24px;border-bottom:1px solid var(--color-border);margin-bottom:20px}
+.profile-tabs{display:flex;gap:24px;border-bottom:1px solid var(--color-border);margin-bottom:12px;overflow-x:auto}
+.profile-tab-description{margin:0 0 20px;color:var(--color-muted-foreground);font-size:13px}
 .profile-tabs button{padding:12px 2px;border-bottom:2px solid transparent;color:var(--color-muted-foreground);font-size:14px;font-weight:500;white-space:nowrap}
 .profile-tabs button[aria-selected=true]{border-bottom-color:var(--color-primary);color:var(--color-primary)}
 .profile-tabs button:focus-visible{outline:2px solid var(--color-ring);outline-offset:3px;border-radius:4px}
-.profile-information-grid,.profile-credentials-grid,.profile-bindings-grid{display:grid;gap:16px;min-width:0}
+.profile-information-grid,.profile-credentials-grid,.profile-bindings-grid,.profile-security-grid{display:grid;gap:16px;min-width:0}
 .profile-information-grid>*{min-width:0}.profile-credentials-grid{margin-top:16px}.profile-credentials-grid :deep(section){margin:0;min-width:0}
 .profile-bindings-grid :deep(input){min-width:0}
+.profile-key-overview{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.profile-key-overview h2{font-size:16px;font-weight:600}.profile-key-overview p{margin-top:6px;font-size:13px;line-height:1.7;color:var(--color-muted-foreground)}
+.profile-account-badge{border:1px solid var(--color-border);border-radius:6px;padding:6px 10px;font-size:12px;white-space:nowrap}
+.profile-file-key :deep(section){margin:0;padding:24px}.profile-file-key :deep(label){max-width:480px}.profile-file-key :deep(ul){margin-top:20px}
+.profile-advanced-keys{margin-top:20px;border-top:1px solid var(--color-border);padding-top:16px}.profile-advanced-keys summary{cursor:pointer;font-size:13px;font-weight:500}.profile-advanced-keys summary span{margin-left:8px;color:var(--color-muted-foreground);font-weight:400}
 @container(min-width:760px){.profile-information-grid{grid-template-columns:280px minmax(0,1fr)}.profile-credentials-grid,.profile-bindings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container(min-width:1100px){.profile-security-grid{grid-template-columns:minmax(320px,.85fr) minmax(0,1.4fr)}}
 </style>

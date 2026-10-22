@@ -8,6 +8,12 @@ jbm:
     login-error-number: 5
     login-error-limit-minutes: 10
     max-sessions-per-user: 20
+    key-login:
+      enabled: true
+      rp-id: debug5175.feige.51jbm.cn
+      rp-name: "JBM 本地调试"
+      origins:
+        - https://debug5175.feige.51jbm.cn
     sms:
       registration-required: true
       push-service: jbm-cluster-platform-push

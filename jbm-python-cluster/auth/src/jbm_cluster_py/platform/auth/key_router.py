@@ -39,6 +39,8 @@ def build_key_router(service):
                     result = await keys.login_options(payload)
                 elif action == "register-options":
                     result = await keys.registration_options(token, payload)
+                elif action == "verify-password":
+                    result = await keys.verify_password(token, payload)
                 else:
                     result = await keys.register(token, payload)
             return JSONResponse(content=ok(result), headers={"Cache-Control": "no-store"})
@@ -57,6 +59,10 @@ def build_key_router(service):
     @router.post("/register-options")
     async def register_options(request: Request):
         return await run(request, "register-options")
+
+    @router.post("/verify-password")
+    async def verify_password(request: Request):
+        return await run(request, "verify-password")
 
     @router.post("/register")
     async def register(request: Request):

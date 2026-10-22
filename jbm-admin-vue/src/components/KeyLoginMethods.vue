@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import FileKeyLogin from './FileKeyLogin.vue'
 import { createKeyClient, downloadChallenge, keyLoginError, type SshChallenge } from '../lib/keyLogin'
 
-const props = defineProps<{ authBase: string; clientId: string; method: 'PASSKEY' | 'SSH_KEY'; disabled?: boolean;
+const props = defineProps<{ authBase: string; clientId: string; method: 'PASSKEY' | 'SSH_KEY' | 'FILE_KEY'; disabled?: boolean;
   login: (proof: string, kind: string) => Promise<unknown> }>()
 const busy = ref(false)
 const error = ref('')
@@ -31,7 +32,8 @@ const loginSsh = () => run(async () => {
 </script>
 
 <template>
-  <section class="my-4 space-y-3 rounded-lg border p-4" :aria-label="method === 'PASSKEY' ? 'Passkey 登录' : 'SSH 签名登录'">
+  <FileKeyLogin v-if="method === 'FILE_KEY'" :auth-base="authBase" :client-id="clientId" :disabled="disabled" :login="login" />
+  <section v-else class="my-4 space-y-3 rounded-lg border p-4" :aria-label="method === 'PASSKEY' ? 'Passkey 登录' : 'SSH 签名登录'">
     <template v-if="method === 'PASSKEY'">
       <p class="text-sm font-medium">使用 Passkey 登录</p>
       <p class="text-xs opacity-70">使用已绑定的通行密钥，通过指纹、面容或设备 PIN 验证身份。</p>

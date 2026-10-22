@@ -55,6 +55,8 @@ const activeTab = ref<LoginTabId>('PASSWORD')
 const visibleLoginTabs = computed(() =>
   LOGIN_TABS.filter((tab) => tab.id !== 'AUTH_CODE' || authCodeDebugEnabled),
 )
+const secondaryLoginTabs = computed(() => visibleLoginTabs.value.filter(tab => ['FILE_KEY', 'PASSKEY', 'SSH_KEY'].includes(tab.id)))
+const primaryLoginTabs = computed(() => visibleLoginTabs.value.filter(tab => !secondaryLoginTabs.value.includes(tab)))
 const activeMeta = computed(() => visibleLoginTabs.value.find((t) => t.id === activeTab.value) ?? visibleLoginTabs.value[0])
 
 function selectLoginTab(tab: LoginTabId) {
@@ -623,7 +625,7 @@ onUnmounted(() => {
           aria-label="登录方式"
         >
           <button
-            v-for="tab in visibleLoginTabs"
+            v-for="tab in primaryLoginTabs"
             :key="tab.id"
             type="button"
             role="tab"
@@ -640,7 +642,7 @@ onUnmounted(() => {
           </button>
         </div>
 
-        <KeyLoginMethods v-if="activeTab === 'PASSKEY' || activeTab === 'SSH_KEY'" :auth-base="keyAuthUrl('')" :client-id="clientId" :method="activeTab" :disabled="loading" :login="loginWithKey" />
+        <KeyLoginMethods v-if="activeTab === 'PASSKEY' || activeTab === 'SSH_KEY' || activeTab === 'FILE_KEY'" :auth-base="keyAuthUrl('')" :client-id="clientId" :method="activeTab" :disabled="loading" :login="loginWithKey" />
 
         <div v-if="localDevLoginEnabled" class="mt-4 rounded-md border bg-muted/20 p-3">
           <div class="mb-3 flex items-center justify-between gap-3">
@@ -696,7 +698,7 @@ onUnmounted(() => {
         </div>
 
         <form
-          v-if="activeTab !== 'SCAN' && activeTab !== 'THIRD_PARTY' && activeTab !== 'AUTH_CODE' && activeTab !== 'PASSKEY' && activeTab !== 'SSH_KEY'"
+          v-if="activeTab !== 'SCAN' && activeTab !== 'THIRD_PARTY' && activeTab !== 'AUTH_CODE' && activeTab !== 'PASSKEY' && activeTab !== 'SSH_KEY' && activeTab !== 'FILE_KEY'"
           class="mt-4 space-y-4"
           @submit.prevent="onSubmit($event)"
         >
@@ -953,7 +955,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div v-else class="space-y-4">
+        <div v-else-if="activeTab === 'THIRD_PARTY'" class="space-y-4">
           <p class="text-sm text-muted-foreground">
             使用已在 bootstrap 中配置的第三方 IdP（如 local），将回调中的 code 交给 Auth 服务映射为系统用户。
           </p>
@@ -984,6 +986,12 @@ onUnmounted(() => {
             {{ error }}
           </div>
         </div>
+        <details class="mt-4 text-center text-xs text-muted-foreground">
+          <summary class="cursor-pointer rounded py-1 focus-visible:outline-2 focus-visible:outline-offset-2">其他登录方式</summary>
+          <div class="mt-2 flex flex-wrap justify-center gap-3">
+            <button v-for="tab in secondaryLoginTabs" :key="tab.id" type="button" class="rounded px-2 py-1 hover:text-foreground" :aria-pressed="activeTab === tab.id" @click="selectLoginTab(tab.id)">{{ tab.label }}</button>
+          </div>
+        </details>
       </div>
     </div>
   </div>

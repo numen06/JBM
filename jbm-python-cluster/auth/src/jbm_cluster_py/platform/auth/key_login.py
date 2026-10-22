@@ -10,6 +10,8 @@ import time
 from typing import Any
 from urllib.parse import urlsplit
 
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 from sqlalchemy import (
     BigInteger,
     Column,
@@ -65,6 +67,35 @@ def decode(value: str) -> bytes:
     return base64.b64decode(value + "=" * (-len(value) % 4), altchars=b"-_", validate=True)
 
 
+def file_public_key(value: str) -> str:
+    if not isinstance(value, str) or len(value) > 4096 or "PRIVATE" in value:
+        raise ValueError("请提供有效的 RSA 公钥")
+    key = serialization.load_pem_public_key(value.encode("ascii"))
+    if (
+        not isinstance(key, rsa.RSAPublicKey)
+        or not 2048 <= key.key_size <= 4096
+        or key.public_numbers().e != 65537
+    ):
+        raise ValueError("密钥文件需要 2048–4096 位 RSA 公钥")
+    return key.public_bytes(
+        serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
+    ).decode()
+
+
+def file_key_id(public_key: str) -> str:
+    return hashlib.sha256(("FILE_KEY\0" + public_key).encode()).hexdigest()
+
+
+def verify_file_signature(public_key: str, message: str, signature: str) -> None:
+    key = serialization.load_pem_public_key(public_key.encode())
+    key.verify(
+        base64.b64decode(signature, validate=True),
+        message.encode(),
+        padding.PKCS1v15(),
+        hashes.SHA256(),
+    )
+
+
 class KeyLoginService:
     def __init__(self, auth: Any) -> None:
         self.auth = auth
@@ -110,9 +141,11 @@ class KeyLoginService:
         elif not await self.auth.repository.has_table(credentials.name):
             raise RuntimeError("Apply Center migration 20260928_24 before enabling key-login")
 
-    async def owner(self, token: str) -> tuple[dict, dict]:
+    async def owner(self, token: str, *, allow_password_update: bool = False) -> tuple[dict, dict]:
         identity = await self.auth.userinfo(token)
-        if identity.get("userId") is None or identity.get("mustChangePassword"):
+        if identity.get("userId") is None or (
+            identity.get("mustChangePassword") and not allow_password_update
+        ):
             raise AuthError("请先完成账号验证和密码更新", 403)
         return await self.account(int(identity["userId"]))
 
@@ -154,7 +187,7 @@ class KeyLoginService:
 
     async def list(self, token: str) -> list[dict]:
         self.require_enabled()
-        _, user = await self.owner(token)
+        _, user = await self.owner(token, allow_password_update=True)
         async with self.engine.connect() as conn:
             rows = (
                 (
@@ -172,7 +205,7 @@ class KeyLoginService:
 
     async def remove(self, token: str, key_id: str) -> None:
         self.require_enabled()
-        _, user = await self.owner(token)
+        _, user = await self.owner(token, allow_password_update=True)
         async with self.cache.lock("credential:" + key_id):
             async with self.engine.begin() as conn:
                 await conn.execute(
@@ -181,13 +214,41 @@ class KeyLoginService:
                     )
                 )
 
+    async def password_verification(self, token: str) -> dict:
+        state = await self.cache.get_json(
+            "key-password:" + hashlib.sha256(token.encode()).hexdigest()
+        )
+        if not state or state.get("expiresAt", 0) <= time.time():
+            raise AuthError("密码验证已过期，请重新验证当前账号密码", 403)
+        return {"expiresIn": max(0, int(state["expiresAt"] - time.time()))}
+
+    async def verify_password(self, token: str, payload: dict) -> dict:
+        self.require_enabled()
+        account, _ = await self.owner(token, allow_password_update=True)
+        if "password" not in payload:
+            return await self.password_verification(token)
+        await self.auth.verify_key_password(token, account, payload.get("password"))
+        await self.cache.set_json(
+            "key-password:" + hashlib.sha256(token.encode()).hexdigest(),
+            {"expiresAt": time.time() + 60},
+            60,
+        )
+        return {"expiresIn": 60}
+
     async def registration_options(self, token: str, payload: dict) -> dict:
         self.require_enabled()
-        account, user = await self.owner(token)
         kind = str(payload.get("kind") or "PASSKEY")
-        if kind not in {"PASSKEY", "SSH_KEY"}:
+        if kind not in {"PASSKEY", "SSH_KEY", "FILE_KEY"}:
             raise AuthError("不支持的密钥类型", 400)
+        account, user = await self.owner(token, allow_password_update=kind == "FILE_KEY")
+        if kind == "FILE_KEY":
+            await self.password_verification(token)
         existing = await self.list(token)
+        name = str(payload.get("name") or "我的密钥").strip() or "我的密钥"
+        if len(name) > 80:
+            raise AuthError("密钥名称不能超过 80 个字符", 400)
+        if any(str(row["name"]).strip().casefold() == name.casefold() for row in existing):
+            raise AuthError("密钥名称已存在，请下载已有密钥或使用其他名称", 409)
         if len(existing) >= 20:
             raise AuthError("最多绑定 20 个密钥，请先移除旧密钥", 400)
         data = {
@@ -195,12 +256,20 @@ class KeyLoginService:
             "kind": kind,
             "userId": int(user["user_id"]),
             "session": hashlib.sha256(token.encode()).hexdigest(),
-            "name": str(payload.get("name") or "我的密钥")[:80],
+            "name": name,
             "handle": encode(secrets.token_bytes(32)),
         }
         if kind == "SSH_KEY":
             data["publicKey"] = canonical_public_key(str(payload.get("publicKey") or ""))
+        elif kind == "FILE_KEY":
+            data["publicKey"] = file_public_key(payload.get("publicKey"))
         state = await self.challenge(data)
+        if kind == "FILE_KEY":
+            return {
+                **self.file_options(state),
+                "account": str(account["account"]),
+                "keyId": file_key_id(state["publicKey"]),
+            }
         if kind == "SSH_KEY":
             return self.ssh_options(state)
         async with self.engine.connect() as conn:
@@ -254,16 +323,39 @@ class KeyLoginService:
             "expiresIn": 120,
         }
 
+    def file_options(self, state: dict) -> dict:
+        message = (
+            "jbm-file-key-v1\n"
+            + json.dumps(
+                {
+                    key: state.get(key)
+                    for key in ("purpose", "kind", "challenge", "clientId", "userId", "publicKey")
+                },
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            + "\n"
+            + self.rp_id
+        )
+        return {
+            "challengeId": state.get("challengeId"),
+            "message": message,
+            "rpId": self.rp_id,
+            "expiresIn": 120,
+        }
+
     async def register(self, token: str, payload: dict) -> None:
         self.require_enabled()
-        _, user = await self.owner(token)
         kind = str(payload.get("kind") or "PASSKEY")
+        _, user = await self.owner(token, allow_password_update=kind == "FILE_KEY")
         state = await self.consume(payload, "register", kind)
         if (
             state["userId"] != user["user_id"]
             or state["session"] != hashlib.sha256(token.encode()).hexdigest()
         ):
             raise AuthError("密钥绑定会话不匹配", 401)
+        if kind == "FILE_KEY":
+            await self.password_verification(token)
         try:
             if kind == "PASSKEY":
                 verified = verify_registration_response(
@@ -287,23 +379,51 @@ class KeyLoginService:
                 data = {"publicKey": state["publicKey"]}
                 key_id = hashlib.sha256(state["publicKey"].encode()).hexdigest()
                 count = 0
+            elif kind == "FILE_KEY":
+                verify_file_signature(
+                    state["publicKey"], self.file_options(state)["message"], payload["signature"]
+                )
+                data = {"publicKey": state["publicKey"]}
+                key_id = file_key_id(state["publicKey"])
+                count = 0
             else:
                 raise ValueError("Unsupported key")
         except Exception as exc:
             raise AuthError("密钥验证失败", 401) from exc
         try:
-            async with self.engine.begin() as conn:
-                await conn.execute(
-                    insert(credentials).values(
-                        id=key_id,
-                        user_id=user["user_id"],
-                        kind=kind,
-                        name=state["name"],
-                        data=json.dumps(data),
-                        sign_count=count,
-                        created_at=int(time.time()),
+            name_lock = (
+                str(user["user_id"])
+                + ":"
+                + hashlib.sha256(state["name"].casefold().encode()).hexdigest()
+            )
+            async with self.cache.lock("credential-name:" + name_lock):
+                async with self.engine.begin() as conn:
+                    names = (
+                        (
+                            await conn.execute(
+                                select(credentials.c.name).where(
+                                    credentials.c.user_id == user["user_id"]
+                                )
+                            )
+                        )
+                        .scalars()
+                        .all()
                     )
-                )
+                    if any(
+                        str(name).strip().casefold() == state["name"].casefold() for name in names
+                    ):
+                        raise AuthError("密钥名称已存在，请下载已有密钥或使用其他名称", 409)
+                    await conn.execute(
+                        insert(credentials).values(
+                            id=key_id,
+                            user_id=user["user_id"],
+                            kind=kind,
+                            name=state["name"],
+                            data=json.dumps(data),
+                            sign_count=count,
+                            created_at=int(time.time()),
+                        )
+                    )
         except IntegrityError as exc:
             raise AuthError("该密钥已绑定账号", 409) from exc
 
@@ -311,11 +431,15 @@ class KeyLoginService:
         self.require_enabled()
         kind = str(payload.get("kind") or "PASSKEY")
         client_id = str(payload.get("client_id") or "")
-        if kind not in {"PASSKEY", "SSH_KEY"} or not await self.auth.repository.find_client(
-            client_id
-        ):
+        if kind not in {
+            "PASSKEY",
+            "SSH_KEY",
+            "FILE_KEY",
+        } or not await self.auth.repository.find_client(client_id):
             raise AuthError("无效的登录请求", 400)
         state = await self.challenge({"purpose": "login", "kind": kind, "clientId": client_id})
+        if kind == "FILE_KEY":
+            return self.file_options(state)
         if kind == "SSH_KEY":
             return self.ssh_options(state)
         options = generate_authentication_options(
@@ -342,6 +466,8 @@ class KeyLoginService:
                 raise ValueError("Client mismatch")
             if kind == "PASSKEY":
                 key_id = hashlib.sha256(decode(payload["credential"]["id"])).hexdigest()
+            elif kind == "FILE_KEY":
+                key_id = file_key_id(file_public_key(payload.get("publicKey")))
             else:
                 public_key = canonical_public_key(payload["publicKey"])
                 key_id = hashlib.sha256(public_key.encode()).hexdigest()
@@ -370,6 +496,12 @@ class KeyLoginService:
                             require_user_verification=True,
                         )
                         count = verified.new_sign_count
+                    elif kind == "FILE_KEY":
+                        verify_file_signature(
+                            data["publicKey"],
+                            self.file_options(state)["message"],
+                            payload["signature"],
+                        )
                     else:
                         verify_ssh_signature(
                             data["publicKey"],

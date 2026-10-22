@@ -18,7 +18,7 @@ from jbm_cluster_py.platform.auth.key_login import encode
 from jbm_cluster_py.platform.auth.main import create_app
 from jbm_cluster_py.platform.auth.ssh_signature import verify_ssh_signature
 from sqlalchemy import text
-from test_auth_compat import auth_config, seed_database
+from test_auth_compat import auth_config, rsa_pair_base64, seed_database
 
 ORIGIN = "https://admin.test"
 VERIFIER = "p" * 64
@@ -28,7 +28,7 @@ PKCE = encode(hashlib.sha256(VERIFIER.encode()).digest())
 @pytest.fixture
 def client(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'keys.db'}"
-    asyncio.run(seed_database(url))
+    asyncio.run(seed_database(url, *rsa_pair_base64()))
     config = auth_config(url)
     config.raw["jbm"]["auth"]["key-login"] = {
         "enabled": True,

@@ -593,7 +593,7 @@ class AuthService:
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
         login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
-        if login_type in {"PASSKEY", "SSH_KEY"}:
+        if login_type in {"PASSKEY", "SSH_KEY", "FILE_KEY"}:
             return await self.key_login.authenticate(client, form)
         if login_type in {"PASSWORD", "SMS"} and (
             self.login_captcha_required or form.get("vcode")
@@ -657,6 +657,26 @@ class AuthService:
             raise AuthError("用户已被禁用", 403)
         await self.cache.clear_login_error(username)
         return dict(account), dict(user), str(form.get("scope") or "all")
+
+    async def verify_key_password(self, token: str, account: Mapping[str, Any], encrypted: Any) -> None:
+        username = str(account["account"])
+        if await self.cache.login_error_count(username) >= self.max_errors:
+            raise AuthError("密码验证失败次数过多，请%s分钟后重试" % self.lock_minutes, 423)
+        if not isinstance(encrypted, str) or not encrypted or len(encrypted) > 4096:
+            raise AuthError("请输入当前账号密码", 400)
+        claims = self.signer.verify(token)
+        client = await self.repository.find_client(str(claims.get("client_id") or ""))
+        if not client:
+            raise AuthError("登录应用已失效，请重新登录", 401)
+        try:
+            password = _decrypt_password(encrypted, str(client.get("privateKey") or ""))
+        except (AuthError, ValueError):
+            await self.cache.add_login_error(username, self.lock_minutes)
+            raise AuthError("当前账号密码错误", 403) from None
+        if not _secret_matches(password, str(account.get("password") or ""), self.allow_plaintext_secrets):
+            await self.cache.add_login_error(username, self.lock_minutes)
+            raise AuthError("当前账号密码错误", 403)
+        await self.cache.clear_login_error(username)
 
     async def _auto_register_sms_account(self, client: Mapping[str, Any], mobile: str) -> None:
         registration = dict(client.get("registration") or {})
