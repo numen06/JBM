@@ -44,7 +44,7 @@ export const coreModule = defineJbmModule({
 export const systemModule = defineJbmModule({
   id: 'jbm.system',
   version: VERSION,
-  navigation: navigation('系统管理'),
+  navigation: navigation('系统管理', '系统运维'),
   routes: [
     { path: 'system/users', name: 'users', component: () => import('@/views/system/UserList.vue'), meta: { title: '用户管理', menuCode: 'users' } },
     { path: 'system/users/new', name: 'user-new', component: () => import('@/views/system/UserEditPage.vue'), meta: { title: '新建用户', menuCode: 'users' } },
@@ -59,6 +59,7 @@ export const systemModule = defineJbmModule({
     { path: 'system/tenant-delegations', name: 'tenant-delegations', component: () => import('@/views/system/TenantDelegationList.vue'), meta: { title: '委托运营', menuCode: 'iot_delegations' } },
     { path: 'system/operator-applications', name: 'operator-applications', component: () => import('@/views/system/OperatorApplicationList.vue'), meta: { title: '运营申请审核', menuCode: 'operator_applications' } },
     { path: 'system/tenant-features', name: 'tenant-features', component: () => import('@/views/system/TenantFeaturePage.vue'), meta: { title: '功能权益' } },
+    { path: 'system/database-backups', name: 'database-backups', component: () => import('@/views/system/DatabaseBackupPage.vue'), meta: { title: '数据库运维', menuCode: 'database_backups' } },
   ],
 })
 

@@ -1,4 +1,6 @@
-from contextlib import asynccontextmanager
+import asyncio
+import os
+from contextlib import asynccontextmanager, suppress
 from typing import Any, Optional
 
 import uvicorn
@@ -14,6 +16,8 @@ from jbm_cluster_py.integrations.nacos import NacosRegistrar
 from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.job.router import build_job_router
 from jbm_cluster_py.platform.job.service import JobService
+from jbm_cluster_py.platform.job.database_backups import DatabaseBackups
+from jbm_cluster_py.platform.job.database_backup_router import build_database_backup_router
 
 
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
@@ -29,10 +33,19 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         app.state.config = app_config
         app.state.job_service = job_service
         app.state.nacos = nacos
+        database_config = AppConfig.load(profile=app_config.profile, app="center").database
+        backups = DatabaseBackups(os.getenv("JBM_DB_BACKUP_ROOT", "/app/data/database-backups"), database_config)
+        app.state.database_backups = backups
+        await asyncio.to_thread(backups.test_source, "jbm-default")
+        backup_worker = asyncio.create_task(backups.worker())
         await nacos.start()
         try:
             yield
         finally:
+            backup_worker.cancel()
+            with suppress(asyncio.CancelledError):
+                await backup_worker
+            backups.worker_lock.close()
             await nacos.stop()
 
     openapi = app_config.openapi
@@ -49,6 +62,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
     install_api_protection(app, app_config)
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_job_router(job_service))
+    app.include_router(build_database_backup_router())
     return app
 
 

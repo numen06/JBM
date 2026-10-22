@@ -1,0 +1,9 @@
+ARG MYSQL_CLIENT_IMAGE=mysql:8.4
+ARG JBM_JOB_BASE_IMAGE=jbm73-python-cluster:local
+FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
+FROM ${JBM_JOB_BASE_IMAGE}
+COPY --from=mysql-client /usr/bin/mysql /usr/bin/mysqldump /usr/local/bin/
+RUN mysql --version && mysqldump --version
+COPY job/src/jbm_cluster_py/platform/job/main.py /app/job/src/jbm_cluster_py/platform/job/main.py
+COPY job/src/jbm_cluster_py/platform/job/database_backups.py /app/job/src/jbm_cluster_py/platform/job/database_backups.py
+COPY job/src/jbm_cluster_py/platform/job/database_backup_router.py /app/job/src/jbm_cluster_py/platform/job/database_backup_router.py

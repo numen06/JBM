@@ -30,6 +30,7 @@ import {
   Files,
   Webhook,
   MonitorUp,
+  Database,
 } from '@lucide/vue'
 
 /** 后端菜单 path 与前端路由对齐 */
@@ -115,6 +116,12 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         to: '/system/extend-fields',
         menuCodes: ['extend_fields'],
       },
+    ],
+  },
+  {
+    label: '系统运维',
+    items: [
+      { name: 'database-backups', title: '数据库运维', icon: Database, to: '/system/database-backups', menuCodes: ['database_backups'] },
     ],
   },
   {

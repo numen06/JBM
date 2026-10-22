@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isPlatformAdministrator, isSuperAdministrator, isPlatformAdminPath } from '../../../src/lib/adminAccess.ts'
+import { isPlatformAdministrator, isSuperAdministrator, isPlatformAdminPath, platformMenuCodes } from '../../../src/lib/adminAccess.ts'
 
 test('a numeric role ID cannot turn a tenant account into a platform administrator', () => {
   const tenant = { userName: 'tenant_admin', roles: [{ roleId: 1, roleCode: 'tenant_admin' }] }
@@ -15,10 +15,14 @@ test('verified platform roles retain administration access', () => {
 })
 
 test('platform governance routes are restricted while business and member routes remain available', () => {
-  for (const path of ['/system/apps', '/jbm/system/apps/1', '/api/docs', '/authority/roles', '/gateway/routes']) {
+  for (const path of ['/system/apps', '/jbm/system/apps/1', '/system/database-backups', '/jbm/system/database-backups', '/api/docs', '/authority/roles', '/gateway/routes']) {
     assert.equal(isPlatformAdminPath(path), true)
   }
   for (const path of ['/dashboard', '/system/users', '/documents', '/building-energy', '/iot/console']) {
     assert.equal(isPlatformAdminPath(path), false)
   }
+})
+
+test('database maintenance is a platform permission', () => {
+  assert.equal(platformMenuCodes.has('database_backups'), true)
 })

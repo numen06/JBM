@@ -257,11 +257,17 @@ services:
 
   jbm-cluster-platform-job:
     <<: *python-service
+    image: jbm73-python-db-operations:local
+    build:
+      context: ./jbm-python-cluster
+      dockerfile: Dockerfile.database-backups
     environment:
       <<: *python-environment
       JBM_APP: job
       JBM_HEALTH_PORT: "4444"
+      JBM_DB_BACKUP_ROOT: /app/data/database-backups
     command: ["python", "-m", "jbm_cluster_py.platform.job.main"]
+    volumes: ["database-backups:/app/data/database-backups"]
     ports: ["127.0.0.1:4444:4444"]
     depends_on:
       jbm-cluster-platform-center: {condition: service_healthy}
@@ -331,6 +337,7 @@ networks:
     internal: true
 
 volumes:
+  database-backups:
   mysql-data:
   redis-data:
   rabbitmq-data:
