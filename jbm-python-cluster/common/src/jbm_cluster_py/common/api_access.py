@@ -415,6 +415,14 @@ SERVICE_RULES["building"] = tuple(
     (frozenset({"all", "iot.platform.read", "iot.platform.operate", "building.platform.read", "building.platform.operate"}),),
 ),)
 SERVICE_RULES["building"] += (
+    *(
+        ApiRule(
+            "/batch/" + endpoint,
+            (menu_codes("building_calculation_completeness", *BUILDING_FAMILIES["energy"]),),
+            (menu_codes("building_calculation_completeness"), frozenset({"building.platform.operate"})),
+        )
+        for endpoint in ("reCount", "reCountJobs", "reCountStatus", "autoRepairStatus")
+    ),
     ApiRule("/api/v1/building/master-data/icons", authenticated=True),
     ApiRule(
         "/associationDeviceStructure/usagePoints",
