@@ -83,5 +83,23 @@
     "online": 7,
     "fieldRequests": 0,
     "writes": 0
+  },
+  "file_login_follow_up": {
+    "base": "https://jxdx.project.hz-aitech.com",
+    "account": "admin",
+    "privateKeyTransmissions": 0,
+    "systemCredentialCalls": 0,
+    "sessionsCleaned": true,
+    "interruptedUnusedKeyRemoved": "2d3b64d09007ee19655048a9acf231ceae3d046599110aa16eed20dcfc63d5fa",
+    "intendedName": "本地维护-20261023054551",
+    "keyId": "9d24be65f5e3c25345e63791b0927a7a31ce5a6b98737df15c51e3726202a3a6",
+    "name": "本地维护-20261023054551",
+    "file": "C:\\Users\\admin\\Documents\\JBM登录密钥\\jxdx.project.hz-aitech.com-admin-本地维护-20261023054551-9d24be65.jbmkey",
+    "registered": true,
+    "savedLocally": true,
+    "fileLogin": true,
+    "sameAccountAndPermissions": true,
+    "lastUsedRecorded": true,
+    "keyRetained": true
   }
 }
