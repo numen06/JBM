@@ -3,7 +3,6 @@
 import hashlib
 from pathlib import Path
 from urllib.request import urlopen
-from urllib.error import URLError
 
 COMMIT = "f8b0792b0cd729f5b2593f690aeed225e49c1967"
 FILES = {
@@ -22,12 +21,9 @@ if __name__ == "__main__":
         target = directory / name
         if target.exists() and hashlib.sha256(target.read_bytes()).hexdigest() == expected:
             continue
-        try:
-            data = urlopen(
-                f"https://raw.githubusercontent.com/lionsoul2014/ip2region/{COMMIT}/data/{name}", timeout=15,
-            ).read()
-        except URLError:
-            data = urlopen(MIRROR[name], timeout=60).read()
+        # A controlled mirror avoids unbounded upstream DNS resolution in BuildKit.
+        # These bytes are still validated against the pinned upstream commit hashes.
+        data = urlopen(MIRROR[name], timeout=60).read()
         if hashlib.sha256(data).hexdigest() != expected:
             raise RuntimeError("IP region data checksum mismatch: " + name)
         temporary = target.with_suffix(".download")
