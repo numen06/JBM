@@ -1,5 +1,9 @@
 ARG AUTH_RUNTIME=registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:a54e04e368e6385c5a60933d66ec8ecb400b3ff9c119ca2cfcfd11b525173878
 ARG ADMIN_RUNTIME=registry.cn-shanghai.aliyuncs.com/okc/jbm-admin@sha256:e685d26e28cef97ac3378adc3f3981cdfe124110c475df7b905f17d5db70a1e9
+FROM --platform=$BUILDPLATFORM m.daocloud.io/docker.io/python:3.12-slim AS ip-data
+COPY jbm-python-cluster/auth/fetch_ip_regions.py /data/fetch_ip_regions.py
+RUN python /data/fetch_ip_regions.py
+
 FROM ${AUTH_RUNTIME} AS jbm-python-cluster
 USER root
 RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple/ py-ip2region==3.0.6
@@ -7,7 +11,7 @@ COPY --chown=appuser:appuser jbm-python-cluster/auth/src /app/auth/src
 COPY --chown=appuser:appuser jbm-python-cluster/auth/fetch_ip_regions.py /app/auth/fetch_ip_regions.py
 COPY --chown=appuser:appuser jbm-python-cluster/auth/data/README.md jbm-python-cluster/auth/data/IP2REGION_LICENSE.md /app/auth/data/
 COPY --chown=appuser:appuser jbm-python-cluster/center/migrations/versions/20261023_26_login_security.py /app/center/migrations/versions/20261023_26_login_security.py
-RUN python /app/auth/fetch_ip_regions.py
+COPY --from=ip-data /data/data/ /app/auth/data/
 USER appuser
 
 FROM --platform=$BUILDPLATFORM m.daocloud.io/docker.io/node:22-alpine AS builder
