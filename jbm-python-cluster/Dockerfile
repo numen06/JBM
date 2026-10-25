@@ -39,6 +39,7 @@ RUN pip install -r requirements.txt
 COPY --chown=appuser:appuser common ./common
 COPY --chown=appuser:appuser integrations ./integrations
 COPY --chown=appuser:appuser auth ./auth
+RUN python auth/fetch_ip_regions.py
 COPY --chown=appuser:appuser doc ./doc
 COPY --chown=appuser:appuser push ./push
 COPY --chown=appuser:appuser job ./job

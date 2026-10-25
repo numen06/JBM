@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import base64
+import calendar
 import hashlib
 import json
 import secrets
 import time
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -41,7 +43,7 @@ from webauthn.helpers.structs import (
 )
 
 from .repository import user_is_active
-from .service import AuthError
+from .service import AuthError, _account_version
 from .ssh_signature import canonical_public_key, verify_ssh_signature
 
 metadata = MetaData()
@@ -94,6 +96,22 @@ def verify_file_signature(public_key: str, message: str, signature: str) -> None
         padding.PKCS1v15(),
         hashes.SHA256(),
     )
+
+
+def six_months_after(created_at: int) -> int:
+    issued = datetime.fromtimestamp(created_at, UTC)
+    month = issued.month + 6
+    year = issued.year + (month - 1) // 12
+    month = (month - 1) % 12 + 1
+    return int(
+        issued.replace(
+            year=year, month=month, day=min(issued.day, calendar.monthrange(year, month)[1])
+        ).timestamp()
+    )
+
+
+def credential_expiration(row: Any) -> int | None:
+    return json.loads(row["data"]).get("expiresAt", six_months_after(int(row["created_at"])))
 
 
 class KeyLoginService:
@@ -187,7 +205,7 @@ class KeyLoginService:
 
     async def list(self, token: str) -> list[dict]:
         self.require_enabled()
-        _, user = await self.owner(token, allow_password_update=True)
+        account, user = await self.owner(token, allow_password_update=True)
         async with self.engine.connect() as conn:
             rows = (
                 (
@@ -198,10 +216,20 @@ class KeyLoginService:
                 .mappings()
                 .all()
             )
-        return [
-            {key: row[key] for key in ("id", "kind", "name", "created_at", "last_used_at")}
-            for row in rows
-        ]
+        result = []
+        for row in rows:
+            item = {
+                **{key: row[key] for key in ("id", "kind", "name", "created_at", "last_used_at")},
+                "expires_at": credential_expiration(row),
+                "is_valid": True,
+                "invalid_reason": "",
+            }
+            try:
+                self.require_current_key(row, account)
+            except (AuthError, ValueError) as exc:
+                item.update(is_valid=False, invalid_reason=str(exc))
+            result.append(item)
+        return result
 
     async def remove(self, token: str, key_id: str) -> None:
         self.require_enabled()
@@ -251,6 +279,10 @@ class KeyLoginService:
             raise AuthError("密钥名称已存在，请下载已有密钥或使用其他名称", 409)
         if len(existing) >= 20:
             raise AuthError("最多绑定 20 个密钥，请先移除旧密钥", 400)
+        validity = payload.get("validity", "six_months")
+        if validity not in ("six_months", "permanent"):
+            raise AuthError("请选择半年或长期有效", 400)
+        created_at = int(time.time())
         data = {
             "purpose": "register",
             "kind": kind,
@@ -258,6 +290,8 @@ class KeyLoginService:
             "session": hashlib.sha256(token.encode()).hexdigest(),
             "name": name,
             "handle": encode(secrets.token_bytes(32)),
+            "createdAt": created_at,
+            "expiresAt": six_months_after(created_at) if validity == "six_months" else None,
         }
         if kind == "SSH_KEY":
             data["publicKey"] = canonical_public_key(str(payload.get("publicKey") or ""))
@@ -269,6 +303,8 @@ class KeyLoginService:
                 **self.file_options(state),
                 "account": str(account["account"]),
                 "keyId": file_key_id(state["publicKey"]),
+                "createdAt": state["createdAt"],
+                "expiresAt": state["expiresAt"],
             }
         if kind == "SSH_KEY":
             return self.ssh_options(state)
@@ -347,7 +383,7 @@ class KeyLoginService:
     async def register(self, token: str, payload: dict) -> None:
         self.require_enabled()
         kind = str(payload.get("kind") or "PASSKEY")
-        _, user = await self.owner(token, allow_password_update=kind == "FILE_KEY")
+        account, user = await self.owner(token, allow_password_update=kind == "FILE_KEY")
         state = await self.consume(payload, "register", kind)
         if (
             state["userId"] != user["user_id"]
@@ -390,6 +426,8 @@ class KeyLoginService:
                 raise ValueError("Unsupported key")
         except Exception as exc:
             raise AuthError("密钥验证失败", 401) from exc
+        data["accountVersion"] = _account_version(account)
+        data["expiresAt"] = state["expiresAt"]
         try:
             name_lock = (
                 str(user["user_id"])
@@ -421,7 +459,7 @@ class KeyLoginService:
                             name=state["name"],
                             data=json.dumps(data),
                             sign_count=count,
-                            created_at=int(time.time()),
+                            created_at=state["createdAt"],
                         )
                     )
         except IntegrityError as exc:
@@ -453,7 +491,125 @@ class KeyLoginService:
             "publicKey": json.loads(options_to_json(options)),
         }
 
+    def credential_id(self, form: dict) -> str:
+        try:
+            raw = str(form.get("password") or "")
+            if len(raw) > 32768:
+                return ""
+            payload = json.loads(raw)
+            kind = str(form.get("loginType") or form.get("login_type")).upper()
+            if kind == "PASSKEY":
+                return hashlib.sha256(decode(payload["credential"]["id"])).hexdigest()
+            public_key = (
+                file_public_key(payload.get("publicKey"))
+                if kind == "FILE_KEY"
+                else canonical_public_key(payload["publicKey"])
+            )
+            return (
+                file_key_id(public_key)
+                if kind == "FILE_KEY"
+                else hashlib.sha256(public_key.encode()).hexdigest()
+            )
+        except (ValueError, TypeError, KeyError, AttributeError):
+            return ""
+
+    @staticmethod
+    def require_current_key(row: Any, account: dict) -> None:
+        expires_at = credential_expiration(row)
+        if expires_at is not None and expires_at <= time.time():
+            raise AuthError("登录密钥已到期，请使用账号密码登录后重新生成", 401)
+        data = json.loads(row["data"])
+        version = data.get("accountVersion")
+        if version:
+            valid = version == _account_version(account)
+        else:
+            # Legacy keys predate password-version binding. A later account update
+            # still invalidates them, without revoking unchanged existing keys.
+            changed = account.get("update_time")
+            valid = not changed or datetime.fromisoformat(str(changed)).timestamp() <= int(
+                row["created_at"]
+            )
+        if not valid:
+            raise AuthError("密钥已失效，请使用账号密码登录后重新生成", 401)
+
+    async def require_active_session(self, state: dict, account: dict) -> None:
+        key_id = state.get("credentialId")
+        if not key_id:
+            return
+        async with self.engine.connect() as conn:
+            row = (
+                (await conn.execute(select(credentials).where(credentials.c.id == key_id)))
+                .mappings()
+                .first()
+            )
+        if not row or int(row["user_id"]) != int(state["userId"]):
+            raise AuthError("登录密钥已移除，请重新登录", 401, "invalid_grant")
+        self.require_current_key(row, account)
+
+    async def attempt_identity(self, key_id: str, ip: str) -> tuple[str, dict]:
+        audit = {"credential_id": key_id, "username": "", "account_type": "username"}
+        subject = "key-source:" + hashlib.sha256(str(ip or "unknown").encode()).hexdigest()
+        if key_id:
+            async with self.engine.connect() as conn:
+                row = (
+                    (await conn.execute(select(credentials).where(credentials.c.id == key_id)))
+                    .mappings()
+                    .first()
+                )
+            if row:
+                accounts = await self.auth.repository.password_accounts_for_user(
+                    int(row["user_id"])
+                )
+                account = next(
+                    (a for a in accounts if a.get("domain") == self.auth.account_domain), None
+                )
+                if account:
+                    subject = str(account["account"])
+                    audit.update(username=subject, account_type=account["account_type"])
+        return subject, audit
+
+    async def report_file_failure(self, payload: dict, context: dict) -> None:
+        self.require_enabled()
+        client_id = str(payload.get("client_id") or "")
+        if not await self.auth.repository.find_client(client_id):
+            raise AuthError("无效的登录应用", 400)
+        try:
+            key_id = file_key_id(file_public_key(payload.get("publicKey")))
+        except (ValueError, TypeError):
+            key_id = ""
+        subject, audit = await self.attempt_identity(key_id, context.get("login_ip", ""))
+        async with self.cache.lock("login-attempt:" + hashlib.sha256(subject.encode()).hexdigest()):
+            if await self.cache.login_error_count(subject) >= self.auth.max_errors:
+                error = AuthError(f"登录失败次数过多，帐户锁定{self.auth.lock_minutes}分钟", 423)
+            else:
+                await self.cache.add_login_error(subject, self.auth.lock_minutes)
+                error = AuthError("密钥文件验证失败", 401)
+            await self.auth._record_login(
+                {**context, **audit, "loginType": "FILE_KEY", "client_id": client_id},
+                status=0,
+                message=str(error),
+            )
+        raise error
+
     async def authenticate(self, client: dict, form: dict) -> tuple[dict, dict, str]:
+        self.require_enabled()
+        key_id = self.credential_id(form)
+        subject, audit = await self.attempt_identity(key_id, form.get("login_ip", ""))
+        async with self.cache.lock("login-attempt:" + hashlib.sha256(subject.encode()).hexdigest()):
+            try:
+                if await self.cache.login_error_count(subject) >= self.auth.max_errors:
+                    raise AuthError(f"登录失败次数过多，帐户锁定{self.auth.lock_minutes}分钟", 423)
+                result = await self._authenticate(client, form)
+            except AuthError as exc:
+                if exc.code in (400, 401, 403):
+                    await self.cache.add_login_error(subject, self.auth.lock_minutes)
+                exc.login_audit = audit
+                raise
+            await self.cache.clear_login_error(subject)
+            account, user, scope = result
+            return {**account, "credential_id": key_id}, user, scope
+
+    async def _authenticate(self, client: dict, form: dict) -> tuple[dict, dict, str]:
         self.require_enabled()
         try:
             raw = str(form.get("password") or "")
@@ -509,6 +665,7 @@ class KeyLoginService:
                             payload["signature"],
                         )
                     account, user = await self.account(int(row["user_id"]))
+                    self.require_current_key(row, account)
                     await conn.execute(
                         update(credentials)
                         .where(credentials.c.id == key_id)

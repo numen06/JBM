@@ -382,6 +382,8 @@ class AuthService:
         self.sms_interval = max(int(sms_config.get("interval") or 60), 1)
         from .key_login import KeyLoginService
         self.key_login = KeyLoginService(self)
+        from .login_security import LoginSecurity
+        self.login_security = LoginSecurity(self.repository, dict(self.config.get("login-security") or {}))
 
     async def password_token(self, form: Mapping[str, Any]) -> dict[str, Any]:
         if not self.legacy_password_grant_enabled:
@@ -392,11 +394,12 @@ class AuthService:
             )
         client = await self._resolve_user_flow_client(form)
         try:
-            token = await self._password_login_for_client(client, form)
+            account, user, scope = await self._authenticate_user_for_client(client, form)
+            token = await self._issue_user_token(client, account, user, scope)
         except AuthError as exc:
-            await self._record_login(form, status=0, message=str(exc))
+            await self._record_login({**form, **getattr(exc, "login_audit", {})}, status=0, message=str(exc))
             raise
-        await self._record_login(form)
+        await self._record_login({**form, "username": account.get("account"), "account_type": account.get("account_type"), "credential_id": account.get("credential_id", "")})
         return token
 
     async def validate_authorization_request(self, form: Mapping[str, Any]) -> None:
@@ -427,11 +430,12 @@ class AuthService:
         try:
             account, user, scope = await self._authenticate_user_for_client(client, form)
         except AuthError as exc:
-            await self._record_login(form, status=0, message=str(exc))
+            await self._record_login({**form, **getattr(exc, "login_audit", {})}, status=0, message=str(exc))
             raise
         audit = dict(form)
         audit["username"] = account.get("account") or user.get("user_name")
         audit["account_type"] = account.get("account_type")
+        audit["credential_id"] = account.get("credential_id", "")
         await self._record_login(audit)
         return await self._authorization_redirect(
             client,
@@ -442,6 +446,7 @@ class AuthService:
                 "account": account.get("account"),
                 "accountType": account.get("account_type"),
                 "accountVersion": _account_version(account),
+                "credentialId": account.get("credential_id"),
                 "mustChangePassword": bool(account.get("must_change_password")),
                 "scope": scope,
                 "codeChallenge": code_challenge,
@@ -486,6 +491,7 @@ class AuthService:
                 "account": account.get("account"),
                 "accountType": account.get("account_type"),
                 "accountVersion": _account_version(account),
+                "credentialId": account.get("credential_id"),
                 "mustChangePassword": bool(account.get("must_change_password")),
                 "scope": scope,
                 "codeChallenge": code_challenge,
@@ -508,7 +514,7 @@ class AuthService:
                 str(form.get("account_type") or infer_account_type(username)),
                 self.account_domain,
             )
-            await self.repository.record_login(
+            await self.login_security.record(
                 user_id=int(account["user_id"]) if account and account.get("user_id") is not None else None,
                 account=username,
                 login_type=str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper(),
@@ -516,6 +522,9 @@ class AuthService:
                 user_agent=str(form.get("user_agent") or ""),
                 status=status,
                 message=message,
+                client_id=str(form.get("client_id") or form.get("clientId") or ""),
+                credential_id=str(form.get("credential_id") or ""),
+                request_id=str(form.get("request_id") or ""),
             )
         except Exception as exc:
             logger.warning("Login audit persistence failed: %s", exc)
@@ -572,6 +581,7 @@ class AuthService:
             "account": cached.get("account") or cached.get("username") or user.get("user_name"),
             "account_type": cached.get("accountType"),
             "credential_version": cached.get("accountVersion"),
+            "credential_id": cached.get("credentialId"),
             "user_id": user_id,
             "must_change_password": cached.get("mustChangePassword"),
         }
@@ -863,6 +873,7 @@ class AuthService:
             "account": state.get("account") or state.get("username") or user.get("user_name"),
             "account_type": state.get("accountType"),
             "credential_version": state.get("accountVersion"),
+            "credential_id": state.get("credentialId"),
         }
         return await self._issue_user_token(
             client,
@@ -1184,6 +1195,7 @@ class AuthService:
             raise AuthError("帐号已被禁用", 403)
         if state.get("accountVersion") and not hmac.compare_digest(str(state["accountVersion"]), _account_version(account)):
             raise AuthError("帐号凭证已变更，请重新登录", 401, "invalid_grant")
+        await self.key_login.require_active_session(state, account)
         return dict(account)
 
     def openid_configuration(self) -> dict[str, Any]:
@@ -1634,6 +1646,7 @@ class AuthService:
                 "account": source_session.get("account"),
                 "accountType": source_session.get("accountType"),
                 "accountVersion": source_session.get("accountVersion"),
+                "credentialId": source_session.get("credentialId"),
                 "mustChangePassword": bool(claims.get("must_change_password")),
                 "scope": str(claims.get("scope") or "all"),
                 "codeChallenge": cached.get("codeChallenge"),
@@ -1798,6 +1811,7 @@ class AuthService:
             "accountVersion": account.get("credential_version") or (
                 _account_version(account) if "password" in account or "update_time" in account else None
             ),
+            "credentialId": account.get("credential_id"),
             "clientId": client.get("clientId"),
             "scope": scope,
             "mustChangePassword": bool(account.get("must_change_password")),
@@ -1915,6 +1929,7 @@ class AuthService:
             "account": (refresh_state or {}).get("account"),
             "accountType": (refresh_state or {}).get("accountType"),
             "accountVersion": (refresh_state or {}).get("accountVersion"),
+            "credentialId": (refresh_state or {}).get("credentialId"),
         }
         token_hash = _hash_token(access_token)
         await self.cache.set_json("access:" + token_hash, row, ttl)

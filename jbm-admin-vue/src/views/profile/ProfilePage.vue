@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import KeyCredentialsPanel from '@/components/KeyCredentialsPanel.vue'
 import { authCenterUrl } from '@/api/auth'
+import { useRoute } from 'vue-router'
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { Camera, Mail, RotateCcw, Save, Smartphone } from '@lucide/vue'
 import AvatarCropDialog from '@/components/profile/AvatarCropDialog.vue'
@@ -40,6 +41,7 @@ const profileTabs = [
   { id: 'keys', label: '登录密钥', description: '下载密钥文件，选择文件即可登录对应账号' },
 ] as const
 const activeTab = ref<(typeof profileTabs)[number]['id']>('information')
+if (useRoute().query.tab === 'authentication') activeTab.value = 'authentication'
 const tabButtons = ref<HTMLButtonElement[]>([])
 function navigateTabs(event: KeyboardEvent) {
   if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return

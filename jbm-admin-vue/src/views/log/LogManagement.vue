@@ -353,6 +353,7 @@ onUnmounted(stopAutoRefresh)
             <th class="h-10 px-4 text-left font-medium">登录方式</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-left font-medium">来源 IP</th>
+            <th class="h-10 px-4 text-left font-medium">登录属地</th>
             <th class="h-10 px-4 text-left font-medium">浏览器</th>
             <th class="h-10 px-4 text-left font-medium">操作系统</th>
             <th class="h-10 px-4 text-right font-medium">操作</th>
@@ -366,13 +367,14 @@ onUnmounted(stopAutoRefresh)
           >
             <td class="p-4 text-sm text-muted-foreground">{{ accountLoginTime(row) }}</td>
             <td class="p-4">{{ row.account || row.userName || '-' }}</td>
-            <td class="p-4">{{ row.accountType || '-' }}</td>
+            <td class="p-4">{{ row.loginType || row.accountType || '-' }}<span v-if="row.riskLevel === 'warning'" class="ml-2 text-xs text-amber-600">异地登录</span></td>
             <td class="p-4">
               <Badge :variant="row.loginStatus === false ? 'destructive' : 'secondary'">
                 {{ accountLoginStatus(row) }}
               </Badge>
             </td>
             <td class="p-4 font-mono text-sm">{{ accountLoginIp(row) }}</td>
+            <td class="p-4 text-sm">{{ row.loginLocation || '未知' }}</td>
             <td class="max-w-[180px] truncate p-4 text-sm">{{ row.browser || '-' }}</td>
             <td class="max-w-[160px] truncate p-4 text-sm">{{ row.os || '-' }}</td>
             <td class="p-4 text-right">
@@ -456,7 +458,7 @@ onUnmounted(stopAutoRefresh)
         </div>
         <div>
           <div class="text-muted-foreground">登录方式</div>
-          <div>{{ selectedAccountLog.accountType || '-' }}</div>
+          <div>{{ selectedAccountLog.loginType || selectedAccountLog.accountType || '-' }}</div>
         </div>
         <div>
           <div class="text-muted-foreground">状态</div>
@@ -486,6 +488,9 @@ onUnmounted(stopAutoRefresh)
           <div class="text-muted-foreground">备注</div>
           <div>{{ selectedAccountLog.message }}</div>
         </div>
+        <div><div class="text-muted-foreground">登录应用</div><div class="break-all">{{ selectedAccountLog.clientId || '-' }}</div></div>
+        <div><div class="text-muted-foreground">密钥指纹</div><div class="break-all font-mono text-xs">{{ selectedAccountLog.credentialId || '-' }}</div></div>
+        <div class="md:col-span-2"><div class="text-muted-foreground">请求编号</div><div class="break-all font-mono text-xs">{{ selectedAccountLog.requestId || '-' }}</div></div>
       </div>
     </Dialog>
 

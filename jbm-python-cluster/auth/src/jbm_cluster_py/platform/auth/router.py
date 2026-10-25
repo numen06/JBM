@@ -591,9 +591,10 @@ async def _request_params(request: Request) -> dict[str, Any]:
 
 
 def _add_login_context(form: dict[str, Any], request: Request) -> None:
-    forwarded = request.headers.get("x-forwarded-for", "").split(",", 1)[0].strip()
-    form["login_ip"] = forwarded or (request.client.host if request.client else "")
-    form["user_agent"] = request.headers.get("user-agent", "")
+    from .login_security import add_login_context
+    # Server-derived fields must never be supplied by login form parameters.
+    form.pop("credential_id", None)
+    add_login_context(form, request)
 
 
 def _bearer_token(request: Request) -> str:

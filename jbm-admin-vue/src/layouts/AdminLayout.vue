@@ -10,6 +10,8 @@ import { useMessageStore } from '@/stores/messages'
 import { updatePassword } from '@/api/current'
 import Button from '@/components/ui/Button.vue'
 import Dialog from '@/components/ui/Dialog.vue'
+import LoginSecurityNotice from '@/components/LoginSecurityNotice.vue'
+import { authCenterUrl } from '@/api/auth'
 import Input from '@/components/ui/Input.vue'
 import Label from '@/components/ui/Label.vue'
 import JbmLogo from '@/components/JbmLogo.vue'
@@ -27,6 +29,7 @@ const messageStore = useMessageStore()
 const messagesOpen = ref(false)
 const mobileSidebarOpen = ref(false)
 const passwordReminderDismissed = ref(false)
+const loginSecurityOpen = ref(false)
 const passwordForm = ref({
   originPassword: '',
   currentPassword: '',
@@ -46,7 +49,7 @@ const unreadLabel = computed(() =>
   messageStore.unreadCount > 99 ? '99+' : String(messageStore.unreadCount),
 )
 const showPasswordReminder = computed(
-  () => auth.mustChangePassword && !passwordReminderDismissed.value,
+  () => auth.mustChangePassword && !passwordReminderDismissed.value && !loginSecurityOpen.value,
 )
 
 const pageTitle = computed(() => (route.meta.title as string) || 'JBM 管理后台')
@@ -317,6 +320,7 @@ watch(
         </div>
       </form>
     </Dialog>
+    <LoginSecurityNotice :auth-base="authCenterUrl('')" :access-token="auth.accessToken" @active-change="loginSecurityOpen = $event" />
     </template>
   </JbmWorkspaceShell>
 </template>

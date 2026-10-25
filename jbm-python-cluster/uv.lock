@@ -1375,6 +1375,7 @@ dependencies = [
     { name = "nacos-sdk-python" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
     { name = "opentelemetry-instrumentation-fastapi" },
+    { name = "py-ip2region" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "pyjwt", extra = ["crypto"] },
@@ -1423,6 +1424,7 @@ requires-dist = [
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = ">=1.25.0" },
     { name = "opentelemetry-instrumentation-fastapi", specifier = ">=0.46b0" },
     { name = "playwright", marker = "extra == 'browser'", specifier = ">=1.58,<2" },
+    { name = "py-ip2region", specifier = "==3.0.6" },
     { name = "pydantic", specifier = ">=2.7.0" },
     { name = "pydantic-settings", specifier = ">=2.3.0" },
     { name = "pyjwt", extras = ["crypto"], specifier = ">=2.10.1,<3" },
@@ -2098,6 +2100,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/9f/acd02338235a3e7d03168c4303478347b7624fc8189ff4e7f0d2654bbe86/protobuf-7.36.0-cp310-abi3-win32.whl", hash = "sha256:7326fd717bdc419162a735938d89d4032332bcc3408804012b24ff3a37086071", size = 440216, upload-time = "2026-08-20T16:33:57.99Z" },
     { url = "https://files.pythonhosted.org/packages/0e/4e/12cb93270967a2affff5b3f720694700d4d87712a67afd05c8cb3f6fa52c/protobuf-7.36.0-cp310-abi3-win_amd64.whl", hash = "sha256:1781cc1de61249b750848029bca452c0a8b7e990080316b9bbc2518b2117b488", size = 453731, upload-time = "2026-08-20T16:33:58.951Z" },
     { url = "https://files.pythonhosted.org/packages/01/c3/629999e78d46c1115c11886d51c6bd68c17ce4a944f1ea3e153a91316a33/protobuf-7.36.0-py3-none-any.whl", hash = "sha256:53374d53fc29a67f7dbbf0ade47d7526a0f0137bf0f9c90e48d8a60790ef748c", size = 177024, upload-time = "2026-08-20T16:34:00.053Z" },
+]
+
+[[package]]
+name = "py-ip2region"
+version = "3.0.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ff/f0/eb0391aa7412f74bccd39a8c206b46f0e21c0b556e5d073a75381ed70455/py_ip2region-3.0.6.tar.gz", hash = "sha256:d02e5731adb64aa640701ba8ca62273055b4f8ee4e19d8fe57d56865e2878d8c", size = 17946, upload-time = "2026-10-18T02:37:10.904Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/35/bd/458c269892659b7ebdfe3b27b32bc7980d8aeb0ff759fc93873f805dc45b/py_ip2region-3.0.6-py3-none-any.whl", hash = "sha256:c39ecbe7a5a34a5fac902551c8e718dfe8256b79980ef91ec61d509178a0f03e", size = 13664, upload-time = "2026-10-18T02:37:09.351Z" },
 ]
 
 [[package]]

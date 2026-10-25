@@ -303,6 +303,11 @@ export interface GatewayIpLimit {
 }
 
 export interface BaseAccountLog {
+  loginType?: string
+  clientId?: string
+  credentialId?: string
+  requestId?: string
+  riskLevel?: string
   id?: number | string
   logId?: number | string
   userId?: number | string

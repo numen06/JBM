@@ -82,3 +82,7 @@ __pycache__/
 .pytest_cache/
 
 /.tmp/
+
+jbm-python-cluster/auth/data/*.xdb
+jbm-python-cluster/auth/data/*.download
+/.artifacts

@@ -4,7 +4,7 @@ import json
 import logging
 import secrets
 import time
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Mapping, Optional
 from urllib.parse import urlsplit
@@ -143,10 +143,11 @@ class AuthRepository:
         user_agent: str,
         status: int = 1,
         message: str = "登录成功",
+        details: Mapping[str, Any] | None = None,
     ) -> None:
         if not await self.has_table("base_account_logs"):
             return
-        now = datetime.now()
+        now = datetime.now(UTC).replace(tzinfo=None)
         async with self.engine.begin() as conn:
             await _insert_available(
                 conn,
@@ -166,8 +167,44 @@ class AuthRepository:
                     "message": str(message or "")[:512],
                     "create_time": now,
                     "update_time": now,
+                    **dict(details or {}),
                 },
             )
+
+    async def require_login_security_schema(self) -> None:
+        async with self.engine.connect() as conn:
+            columns = {row["name"] for row in await conn.run_sync(lambda sync: inspect(sync).get_columns("base_account_logs"))}
+        if not {"login_location", "client_id", "credential_id", "request_id", "risk_level", "risk_detail", "risk_ack_time"} <= columns:
+            raise RuntimeError("Apply Center migration 20261023_26 before enabling login security")
+
+    async def _login_columns(self):
+        async with self.engine.connect() as conn:
+            columns = {row["name"] for row in await conn.run_sync(lambda sync: inspect(sync).get_columns("base_account_logs"))}
+        primary = next((name for name in ("id", "account_log_id", "log_id") if name in columns), None)
+        if not primary:
+            raise RuntimeError("Login log primary key is missing")
+        return columns, primary
+
+    async def recent_successful_logins(self, user_id: int) -> list[dict]:
+        columns, primary = await self._login_columns()
+        ip = "login_ip" if "login_ip" in columns else "ip"
+        status = "login_status" if "login_status" in columns else "status"
+        kind = "login_type" if "login_type" in columns else "account_type"
+        async with self.engine.connect() as conn:
+            rows = (await conn.execute(text(f"SELECT {ip} AS ip, login_time FROM base_account_logs WHERE user_id=:user_id AND {status}=1 AND COALESCE({kind},'') NOT LIKE 'ADMIN_KEY_%' ORDER BY login_time DESC, {primary} DESC LIMIT 20"), {"user_id": user_id})).mappings().all()
+        return [{"ip": str(row["ip"] or ""), "time": str(row["login_time"] or "")} for row in rows]
+
+    async def login_alerts(self, user_id: int) -> list[dict]:
+        _, primary = await self._login_columns()
+        async with self.engine.connect() as conn:
+            rows = (await conn.execute(text(f"SELECT {primary} AS id, login_time, risk_detail, client_id FROM base_account_logs WHERE user_id=:user_id AND risk_level='warning' AND risk_ack_time IS NULL ORDER BY {primary} DESC LIMIT 20"), {"user_id": user_id})).mappings().all()
+        return [{"id": str(row["id"]), "time": str(row["login_time"]), "clientId": row["client_id"], **json.loads(row["risk_detail"] or "{}")} for row in rows]
+
+    async def acknowledge_login_alerts(self, user_id: int, ids: list[int]) -> None:
+        from sqlalchemy import bindparam
+        _, primary = await self._login_columns()
+        async with self.engine.begin() as conn:
+            await conn.execute(text(f"UPDATE base_account_logs SET risk_ack_time=:now WHERE user_id=:user_id AND {primary} IN :ids AND risk_level='warning'").bindparams(bindparam("ids", expanding=True)), {"user_id": user_id, "ids": ids, "now": datetime.now()})
 
     async def find_client(self, client_id: str) -> Optional[dict[str, Any]]:
         client_id = str(client_id or "").strip()
@@ -1146,6 +1183,13 @@ SQLITE_DDL = [
       user_agent VARCHAR(512),
       status INTEGER,
       message VARCHAR(512),
+      login_location VARCHAR(256),
+      client_id VARCHAR(128),
+      credential_id VARCHAR(64),
+      request_id VARCHAR(64),
+      risk_level VARCHAR(16),
+      risk_detail TEXT,
+      risk_ack_time DATETIME,
       create_time VARCHAR(64),
       update_time VARCHAR(64)
     )

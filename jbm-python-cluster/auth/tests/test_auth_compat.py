@@ -189,6 +189,7 @@ def auth_config(database_url: str) -> AppConfig:
                     "require-https-redirects": False,
                     "dev-bypass-enabled": True,
                     "allow-plaintext-secrets": True,
+                    "login-security": {"geo-enabled": False},
                     "legacy-password-grant-enabled": True,
                     "login-providers": {
                         "face": {

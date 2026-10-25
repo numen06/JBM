@@ -1,13 +1,14 @@
 import JSEncrypt from 'jsencrypt'
 
 // Only public keys and signatures are sent to JBM Auth /oauth2/keys.
-export type KeyRecord = { id: string; kind: string; name: string; created_at: number; last_used_at: number | null }
+export type KeyRecord = { id: string; kind: string; name: string; created_at: number; expires_at: number | null; last_used_at: number | null; is_valid?: boolean; invalid_reason?: string }
 export type SshChallenge = { challengeId: string; message: string; namespace: string }
 type FileChallenge = { challengeId: string; message: string; rpId: string }
 type PasswordVerification = { expiresIn: number }
 export type LoginKeyFile = {
   format: 'jbm-login-key'; version: 1; account: string; name: string;
   origin: string; rpId: string; keyId: string; publicKey: string; privateKey: string;
+  createdAt?: number; expiresAt?: number | null;
 }
 
 export function loginKeyFilename(key: LoginKeyFile) {
@@ -74,7 +75,7 @@ export function keyLoginError(error: unknown): string {
   return error instanceof Error ? error.message : '密钥操作失败'
 }
 
-export function createKeyClient(base: string, token: () => string) {
+export function createKeyClient(base: string, token: () => string, adminUserId?: string) {
   async function authRequest<T>(path: string, body?: unknown, method = 'POST'): Promise<T> {
     const accessToken = token()
     const response = await fetch(`${base.replace(/\/$/, '')}${path}`, {
@@ -82,10 +83,19 @@ export function createKeyClient(base: string, token: () => string) {
       body: body === undefined ? undefined : JSON.stringify(body),
     })
     const result = await response.json()
-    if (!response.ok || !result.success) throw new Error(result.message || '密钥操作失败')
+    if (!response.ok || !result.success) throw Object.assign(new Error(result.message || '密钥操作失败'), { status: response.status })
     return result.result as T
   }
-  const request = <T>(path: string, body?: unknown, method = 'POST') => authRequest<T>(`/oauth2/keys${path}`, body, method)
+  const prefix = adminUserId ? `/admin/users/${encodeURIComponent(adminUserId)}` : ''
+  const request = <T>(path: string, body?: unknown, method = 'POST') => authRequest<T>(`/oauth2/keys${prefix}${path}`, body, method)
+  async function localFileFailure(reason: unknown, clientId: string, publicKey?: string): Promise<never> {
+    try { await request('/login-failure', { client_id: clientId, publicKey }) }
+    catch (reported) {
+      const status = (reported as { status?: number }).status || 0
+      if (status === 423 || status >= 500) throw reported
+    }
+    throw reason
+  }
   return {
     list: () => request<KeyRecord[]>('', undefined, 'GET'),
     remove: (id: string) => request(`/${encodeURIComponent(id)}`, undefined, 'DELETE'),
@@ -100,7 +110,7 @@ export function createKeyClient(base: string, token: () => string) {
       if (!encrypted) throw new Error('密码加密失败，请重试')
       return request<PasswordVerification>('/verify-password', { password: encrypted })
     },
-    async registerFileKey(name: string): Promise<LoginKeyFile> {
+    async registerFileKey(name: string, validity: 'six_months' | 'permanent' = 'six_months', reason?: string): Promise<LoginKeyFile> {
       if (!window.crypto?.getRandomValues) throw new Error('当前浏览器不支持安全生成密钥')
       // Paint the busy state first; JSEncrypt's timer-based generation is heavily
       // throttled in background tabs. Generate locally without system credentials.
@@ -112,20 +122,26 @@ export function createKeyClient(base: string, token: () => string) {
         // Keep Auth's 2048-bit minimum rather than relaxing public-key validation.
       } while ((key.getKey() as unknown as { n: { bitLength(): number } }).n.bitLength() !== 2048)
       const publicKey = key.getPublicKey()
-      const data = await request<FileChallenge & { account: string; keyId: string }>('/register-options', { kind: 'FILE_KEY', name, publicKey })
+      const data = await request<FileChallenge & { account: string; keyId: string; createdAt: number; expiresAt: number | null }>('/register-options', { kind: 'FILE_KEY', name, publicKey, validity, ...(adminUserId ? { reason } : {}) })
       await request('/register', { kind: 'FILE_KEY', challengeId: data.challengeId, signature: fileSignature(key, data.message) })
       return { format: 'jbm-login-key', version: 1, account: data.account, name,
-        origin: window.location.origin, rpId: data.rpId, keyId: data.keyId, publicKey, privateKey: key.getPrivateKey() }
+        origin: window.location.origin, rpId: data.rpId, keyId: data.keyId, publicKey, privateKey: key.getPrivateKey(), createdAt: data.createdAt, expiresAt: data.expiresAt }
     },
     async fileKeyProof(file: File, clientId: string): Promise<string> {
-      const keyFile = await readLoginKey(file)
+      let keyFile: LoginKeyFile | undefined
       const key = new JSEncrypt()
       try {
-        key.setPrivateKey(keyFile.privateKey)
-        if (key.getPublicKey().replace(/\s/g, '') !== keyFile.publicKey.replace(/\s/g, '')) throw new Error('mismatch')
-      } catch { throw new Error('密钥文件已损坏，公私钥不匹配') }
+        keyFile = await readLoginKey(file)
+        try {
+          key.setPrivateKey(keyFile.privateKey)
+          if (key.getPublicKey().replace(/\s/g, '') !== keyFile.publicKey.replace(/\s/g, '')) throw new Error('mismatch')
+        } catch { throw new Error('密钥文件已损坏，公私钥不匹配') }
+      } catch (reason) {
+        const publicKey = keyFile?.publicKey && !keyFile.publicKey.includes('PRIVATE') ? keyFile.publicKey : undefined
+        return localFileFailure(reason, clientId, publicKey)
+      }
       const data = await request<FileChallenge>('/login-options', { kind: 'FILE_KEY', client_id: clientId })
-      if (keyFile.rpId !== data.rpId) throw new Error('此密钥文件不属于当前平台')
+      if (keyFile.rpId !== data.rpId) return localFileFailure(new Error('此密钥文件不属于当前平台'), clientId, keyFile.publicKey)
       return JSON.stringify({ challengeId: data.challengeId, publicKey: keyFile.publicKey, signature: fileSignature(key, data.message) })
     },
     async registerPasskey(name: string) {

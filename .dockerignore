@@ -1,4 +1,12 @@
 .git
+.artifacts
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/*.jbmkey
+**/*.private.json
+**/node_modules
+**/.npm-cache
 .idea
 .vscode
 .cursor/logs

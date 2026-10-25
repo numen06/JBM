@@ -16,8 +16,14 @@ import { listUsers, closeUser } from '@/api/user'
 import { usePermission } from '@/composables/usePermission'
 import { toSnowflakeIdString } from '@/lib/snowflakeId'
 import type { BaseUser } from '@/api/types'
+import Dialog from '@/components/ui/Dialog.vue'
+import KeyCredentialsPanel from '@/components/KeyCredentialsPanel.vue'
+import { authCenterUrl } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 
-const { hasAction, isPlatformAdmin } = usePermission()
+const { hasAction, isPlatformAdmin, isSuperAdmin } = usePermission()
+const auth = useAuthStore()
+const keyUser = ref<BaseUser>()
 const feedback = useFeedback()
 const router = useRouter()
 const { orgLabel, loadOrgs } = useOrgTree()
@@ -100,6 +106,7 @@ async function handleClose(row: BaseUser) {
               </Badge>
             </td>
             <td class="p-4 text-right space-x-1">
+              <Button v-if="isSuperAdmin && row.userId" variant="outline" size="sm" @click="keyUser = row">登录密钥</Button>
               <Button
                 v-if="hasAction('users_edit')"
                 variant="outline"
@@ -122,5 +129,9 @@ async function handleClose(row: BaseUser) {
       </Table>
       <PaginationBar :page="page" :total="total" :page-size="pageSize" @change="load" />
     </DataTableShell>
+    <Dialog :open="!!keyUser" :title="`用户登录密钥 · ${keyUser?.userName || ''}`" @update:open="value => { if (!value) keyUser = undefined }">
+      <p class="text-sm text-muted-foreground">仅超级管理员可操作。签发与撤销会记录操作者、目标用户和用途；密钥沿用用户现有权限。</p>
+      <KeyCredentialsPanel v-if="keyUser?.userId" :key="String(keyUser.userId)" kind="FILE_KEY" :auth-base="authCenterUrl('')" :access-token="auth.accessToken" :admin-user-id="toSnowflakeIdString(keyUser.userId)" />
+    </Dialog>
   </div>
 </template>

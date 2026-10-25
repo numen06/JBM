@@ -265,6 +265,9 @@ def build_oidc_router(auth_service: Any, config: Mapping[str, Any]) -> APIRouter
                         key: form.get(key, "") for key in ("username", "password", "vcode")
                     }
                     credentials["loginType"] = "PASSWORD"
+                    credentials["client_id"] = p["client_id"]
+                    from .login_security import add_login_context
+                    add_login_context(credentials, request)
                     try:
                         account, user, _ = await auth_service._authenticate_user_for_client(
                             client, credentials

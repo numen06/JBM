@@ -61,6 +61,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             stack.push_async_callback(repository.stop)
             await repository.start()
             await auth_service.key_login.start()
+            await auth_service.login_security.start()
             if oidc_enabled:
                 await repository.require_oidc_schema()
             stack.push_async_callback(cache.stop)
@@ -89,6 +90,10 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     app.include_router(build_auth_router(auth_service))
     from .key_router import build_key_router
     app.include_router(build_key_router(auth_service))
+    from .admin_key_router import build_admin_key_router
+    app.include_router(build_admin_key_router(auth_service))
+    from .login_security_router import build_login_security_router
+    app.include_router(build_login_security_router(auth_service))
     if oidc_enabled:
         from jbm_cluster_py.platform.auth.oidc_router import build_oidc_router
 

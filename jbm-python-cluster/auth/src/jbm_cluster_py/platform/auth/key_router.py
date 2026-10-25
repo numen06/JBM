@@ -31,12 +31,18 @@ def build_key_router(service):
                 payload = json.loads(raw)
                 if not isinstance(payload, dict):
                     raise ValueError("Invalid request")
-                if action.endswith("options"):
+                if action.endswith("options") or action == "login-failure":
                     address = request.client.host if request.client else "unknown"
                     if await service.cache.add_login_error("key-options:" + address, 1) > 60:
                         raise AuthError("请求过于频繁，请稍后再试", 429)
                 if action == "login-options":
                     result = await keys.login_options(payload)
+                elif action == "login-failure":
+                    from .login_security import add_login_context
+
+                    context = {}
+                    add_login_context(context, request)
+                    result = await keys.report_file_failure(payload, context)
                 elif action == "register-options":
                     result = await keys.registration_options(token, payload)
                 elif action == "verify-password":
@@ -59,6 +65,10 @@ def build_key_router(service):
     @router.post("/register-options")
     async def register_options(request: Request):
         return await run(request, "register-options")
+
+    @router.post("/login-failure")
+    async def login_failure(request: Request):
+        return await run(request, "login-failure")
 
     @router.post("/verify-password")
     async def verify_password(request: Request):

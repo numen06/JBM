@@ -12,6 +12,12 @@ export const FileKeyLogin: import('vue').DefineComponent<{
   login: (proof: string, kind: string) => Promise<unknown>
   onBusyChange?: (busy: boolean) => void
 }>
+export const LoginSecurityNotice: import('vue').DefineComponent<{
+  authBase: string
+  accessToken: string
+  securityUrl?: string
+  onActiveChange?: (active: boolean) => void
+}>
 
 export interface JbmAdminRuntimeConfig {
   apiBaseUrl?: string
