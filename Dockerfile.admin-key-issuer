@@ -7,11 +7,13 @@ RUN python /data/fetch_ip_regions.py
 FROM ${AUTH_RUNTIME} AS jbm-python-cluster
 USER root
 RUN pip install --no-cache-dir --index-url https://mirrors.aliyun.com/pypi/simple/ py-ip2region==3.0.6
+COPY --chown=appuser:appuser jbm-python-cluster/common/src /app/common/src
 COPY --chown=appuser:appuser jbm-python-cluster/auth/src /app/auth/src
 COPY --chown=appuser:appuser jbm-python-cluster/auth/fetch_ip_regions.py /app/auth/fetch_ip_regions.py
 COPY --chown=appuser:appuser jbm-python-cluster/auth/data/README.md jbm-python-cluster/auth/data/IP2REGION_LICENSE.md /app/auth/data/
 COPY --chown=appuser:appuser jbm-python-cluster/center/migrations/versions/20261023_26_login_security.py /app/center/migrations/versions/20261023_26_login_security.py
 COPY --from=ip-data /data/data/ /app/auth/data/
+RUN python -c "from jbm_cluster_py.common.auth import install_api_protection; from jbm_cluster_py.platform.auth.admin_key_router import build_admin_key_router"
 USER appuser
 
 FROM --platform=$BUILDPLATFORM m.daocloud.io/docker.io/node:22-alpine AS builder
