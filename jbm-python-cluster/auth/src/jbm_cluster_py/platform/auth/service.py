@@ -54,10 +54,11 @@ APP_SECRET_AES_KEY = hashlib.md5(b"jbm-app-client-secret").hexdigest().encode("u
 
 
 class AuthError(ValueError):
-    def __init__(self, message: str, code: int = 401, oauth_error: str | None = None) -> None:
+    def __init__(self, message: str, code: int = 401, oauth_error: str | None = None, *, captcha_required: bool = False) -> None:
         super().__init__(message)
         self.code = code
         self.oauth_error = oauth_error
+        self.captcha_required = captcha_required
 
 
 class TokenCache:
@@ -605,7 +606,7 @@ class AuthService:
         login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
         if login_type in {"PASSKEY", "SSH_KEY", "FILE_KEY"}:
             return await self.key_login.authenticate(client, form)
-        if login_type in {"PASSWORD", "SMS"} and (
+        if login_type == "SMS" and (
             self.login_captcha_required or form.get("vcode")
         ):
             await self.verify_captcha(str(form.get("vcode") or ""))
@@ -619,6 +620,11 @@ class AuthService:
             count = await self.cache.login_error_count(username)
             if count >= self.max_errors:
                 raise AuthError("登录失败次数过多，帐户锁定%s分钟" % self.lock_minutes, 423)
+            if login_type == "PASSWORD" and (count > 0 or form.get("vcode")):
+                try:
+                    await self.verify_captcha(str(form.get("vcode") or ""))
+                except AuthError as exc:
+                    raise AuthError("请输入正确的图形验证码", 400, "captcha_required", captcha_required=True) from exc
         if login_type == "SMS":
             try:
                 await self.verify_phone_code(username, password)
@@ -659,7 +665,7 @@ class AuthService:
             self.allow_plaintext_secrets,
         ):
             await self.cache.add_login_error(username, self.lock_minutes)
-            raise AuthError("用户名或密码错误", 401)
+            raise AuthError("用户名或密码错误", 401, "invalid_grant", captcha_required=True)
         if int(account.get("status") or 0) != 1:
             raise AuthError("帐号已被禁用", 403)
         user = await self.repository.find_user(int(account["user_id"]))

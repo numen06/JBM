@@ -281,7 +281,9 @@ def test_login_captcha_can_be_required_for_password_and_sms() -> None:
             TokenCache(RedisClient({"enabled": False})),
             {"login-captcha-required": True},
         )  # type: ignore[arg-type]
-        with pytest.raises(AuthError, match="验证码不能为空"):
+        if login_type == "PASSWORD":
+            await service.cache.add_login_error("tester", 10)
+        with pytest.raises(AuthError, match="验证码"):
             await service._authenticate_user_for_client(
                 {},
                 {"loginType": login_type, "username": "tester", "password": "secret"},
@@ -1388,6 +1390,7 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
 
     with TestClient(create_app(auth_config(database_url))) as client:
         for _ in range(5):
+            client.portal.call(client.app.state.auth_service.cache.set_json, "captcha:system:test5", {"code": "TEST5"}, 60)
             failed = client.post(
                 "/oauth2/token",
                 data={
@@ -1396,6 +1399,7 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
                     "client_secret": "demo-secret",
                     "username": "admin",
                     "password": "bad",
+                    "vcode": "TEST5",
                 },
             ).json()
             assert failed["error"] == "invalid_grant"

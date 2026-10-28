@@ -33,6 +33,8 @@ APP 接入使用 `iot_platform-98dc2cbb2a528b0e:app`，使用登记回调和 PKC
 
 本地验证（在 `jbm-python-cluster` 目录运行）：
 
+密码登录首次无需图形验证码。密码错误后，服务端按账号保存失败状态，并返回 `captcha_required=true`；后续密码请求必须先通过验证码校验，不能通过重启客户端或省略字段绕过。成功认证清除失败状态，恢复首次免验证码。原有密码错误次数上限与账号锁定仍然生效。SMS 与密钥登录保留各自既有验证规则。
+
 ```powershell
 # 指向独立测试 Redis；测试使用随机命名空间并只清理自己的数据。
 $env:JBM_AUTH_TEST_REDIS_URL = 'redis://127.0.0.1:<测试端口>/0'

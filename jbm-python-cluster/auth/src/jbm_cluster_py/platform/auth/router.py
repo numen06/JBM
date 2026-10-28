@@ -58,7 +58,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             )
             return JSONResponse(
                 status_code=503 if exc.code >= 500 else 401 if error == "invalid_client" else 400,
-                content={"error": error, "error_description": message},
+                content={"error": error, "error_description": message, **({"captcha_required": True} if exc.captcha_required else {})},
                 headers={
                     "Cache-Control": "no-store",
                     "Pragma": "no-cache",
@@ -106,7 +106,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.authorize_code_login(form)))
         except AuthError as exc:
-            return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
+            return JSONResponse(status_code=exc.code, content={**fail(None, str(exc), exc.code), **({"captcha_required": True} if exc.captcha_required else {})})
 
     @router.get("/oauth2/apps")
     async def oauth_apps() -> JSONResponse:

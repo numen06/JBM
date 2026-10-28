@@ -20,6 +20,8 @@ key = file_key_fixture
 
 
 def password_login(client, password="admin123", ip="114.114.114.114"):
+    # These tests exercise password/key lockout, so supply a valid challenge.
+    client.portal.call(client.app.state.auth_service.cache.set_json, "captcha:system:test5", {"code": "TEST5"}, 60)
     return client.post(
         "/oauth2/doLogin",
         data={
@@ -31,6 +33,7 @@ def password_login(client, password="admin123", ip="114.114.114.114"):
             "username": "admin",
             "password": password,
             "loginType": "PASSWORD",
+            "vcode": "TEST5",
         },
         headers={"X-Forwarded-For": ip},
     )
