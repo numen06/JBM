@@ -1,0 +1,233 @@
+{
+  "releaseId": "2026-10-29-online-session-audit",
+  "status": "deployed-and-verified",
+  "verifiedAtUtc": "2026-10-28T18:45:28.858867+00:00",
+  "latestSource": {
+    "repository": "JBM7",
+    "branch": "7.3-python",
+    "tag": "py-7.3.44",
+    "commit": "1ae2bbc4a85e42ca7a574c1eedcb246579e27a7d"
+  },
+  "sharedAdminPackage": "7.3.0-beta.55",
+  "services": [
+    {
+      "service": "jbm7_jbm-cluster-platform-auth",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:8a46f14bcc5e59f3e1f2ad006e95fd807aa80e41ffe56fc15b463a203ba191a6",
+      "task": "07105f84-d134-4663-8a92-60dad95db91a",
+      "tag": "py-7.3.43",
+      "commit": "487f9bd81434c78209e07b2130ac4a4e72faed0c",
+      "expected": "sha256:8a46f14bcc5e59f3e1f2ad006e95fd807aa80e41ffe56fc15b463a203ba191a6",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "container": "826b2a72f85f",
+      "healthy": true,
+      "onlyImageChanged": true
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-center",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center@sha256:7bbc312f022578d27eb81845e1899d07466f493af02505fa94aacb9d7c7a9203",
+      "task": "3d5a0326-e047-4699-9ebd-22a421495bd1",
+      "tag": "py-7.3.44",
+      "commit": "1ae2bbc4a85e42ca7a574c1eedcb246579e27a7d",
+      "expected": "sha256:4af4f44f49a0fe7fc20534b37bc64bb27c07d1ee2b0e6fbae0a4fee14a7371f6",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "container": "f210e24a3b77",
+      "healthy": true,
+      "onlyImageChanged": true
+    },
+    {
+      "service": "jbm7_jbm-admin",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin@sha256:abaf641d6eb095db148e0a437d3cb2d3a9854f27d612e88b8ce9d9485a20439b",
+      "task": "07105f84-d134-4663-8a92-60dad95db91a",
+      "tag": "py-7.3.43",
+      "commit": "487f9bd81434c78209e07b2130ac4a4e72faed0c",
+      "expected": "sha256:04fc6473cba613f1a21c77280dc23d1120a2675a4e2add9621557e0586f54fda",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "container": "d9a0b53d4ded",
+      "healthy": true,
+      "onlyImageChanged": true
+    },
+    {
+      "service": "smart_building_smart-building-web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web@sha256:31c3cafd6419dbaaf20c514e49e65aae34e09d0b4f283615d812371a45a3c13e",
+      "task": "9969d91d-a6e4-4bdc-808e-280491a2492b",
+      "tag": "cloud-online-sessions-20261029.1",
+      "commit": "81cdf3e3030c303108a505fd7623b9f185cab3e2",
+      "expected": "sha256:ef4dbf4d93190091029c98ee46a866d3e2ee2e989ed3bac79febde3842334564",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "container": "830e878962c5",
+      "healthy": true,
+      "onlyImageChanged": true
+    }
+  ],
+  "iotWebPreserved": {
+    "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:cloud-control-readback-7d01e5d@sha256:958d70cb5ea15cc4448df922bbd6143161fb814d49b1c07b28009cf76374992e",
+    "sourceCommit": "7d01e5d5e2b1fc43b4f5b528080d8867cccd4a44",
+    "newSessionAndAuditUiVerified": true
+  },
+  "backups": [
+    "/home/opt/backups/online-details-20261029-023224",
+    "/home/opt/backups/online-details-20261029-023707",
+    "/home/opt/backups/auth-proxy-attribution-20261029-024010",
+    "/home/opt/backups/nginx-client-ip-20261029-024358"
+  ],
+  "database": {
+    "revision": "20261029_27",
+    "newMigrationForThisRelease": false,
+    "backupChecksumsVerified": true
+  },
+  "verification": {
+    "authSuite": {
+      "passed": 229,
+      "skippedOptionalBrowserTests": 2,
+      "realRedisTwoWorkers": true
+    },
+    "centerSuite": {
+      "passed": 130
+    },
+    "frontendProductionBuilds": [
+      "JBM",
+      "IoT",
+      "smart-building"
+    ],
+    "localActualDebugBrowser": {
+      "origin": "http://debug5175.feige.51jbm.cn",
+      "url": "http://debug5175.feige.51jbm.cn/jbm/system/online-users",
+      "onlineCount": 11,
+      "currentTerminal": "web",
+      "reauthRequiredAt": "2026-11-04T18:39:15Z",
+      "accessTokenExpiresAt": "2026-10-28T19:09:15Z",
+      "realBrowserDeadlineVisible": true,
+      "loginCompletionAuditFound": true,
+      "screenshot": "C:\\Users\\admin\\.codex\\private\\online-sessions-20261029\\local-online.png",
+      "loginAuditUiVerified": true
+    },
+    "cloudFormalOAuthAndBrowser": {
+      "origin": "https://feige.hz-aitech.com",
+      "checks": [],
+      "terminalTypes": [
+        "app",
+        "miniapp",
+        "web"
+      ],
+      "mobileRollingDays": 30,
+      "stableFirstLoginTime": true,
+      "refreshDeadlineExtended": true,
+      "auditEvents": [
+        "FILE_KEY",
+        "LOGIN:SSH_KEY",
+        "LOGOUT",
+        "REFRESH",
+        "SSH_KEY"
+      ],
+      "auditIpAgentRequestIdPresent": true,
+      "realClientIpVerified": true,
+      "forgedForwardedIpRejected": true,
+      "noTokenLeakInAudit": true,
+      "onlineUiVerified": true,
+      "loginAuditUiVerified": true,
+      "screenshots": [
+        "C:\\Users\\admin\\.codex\\private\\online-sessions-20261029\\cloud-online.png",
+        "C:\\Users\\admin\\.codex\\private\\online-sessions-20261029\\cloud-login-audit.png"
+      ],
+      "miniappSessionPreserved": true
+    },
+    "miniapp": {
+      "environment": "WeChat developer tools and production APIs",
+      "sourceCommit": "6c029f45a57f263a832f428ef97b55cfea2fbdcd",
+      "authenticatedPageCount": 11,
+      "pageRoutes": [
+        "pages/category/category",
+        "pages/control/control",
+        "pages/device-list/device-list",
+        "pages/device/device",
+        "pages/devices/devices",
+        "pages/group-edit/group-edit",
+        "pages/groups/groups",
+        "pages/home/home",
+        "pages/profile/profile",
+        "pages/support/support",
+        "pages/system/system"
+      ],
+      "checkCount": 26,
+      "checks": [
+        "项目、设备类型、机组、内机和分组真实接口",
+        "设备分类页",
+        "多联机楼层房间页",
+        "机组与所属内机",
+        "真实内机控制面板只读加载",
+        "内机设定范围、当前模式和权限",
+        "控制分组列表",
+        "已有分组编辑页只读加载",
+        "分组成员与不可用引用展示",
+        "新建分组表单只读加载",
+        "空分组保存校验（禁止发送写入）",
+        "个人中心",
+        "账号、组织与项目权限展示",
+        "使用帮助",
+        "关于",
+        "返回首页",
+        "项目切换并恢复原项目",
+        "首页恢复并刷新数据",
+        "内机设备列表",
+        "列表搜索、运行筛选与重置",
+        "外机设备列表",
+        "网关设备列表",
+        "网关数据与详情路由",
+        "网关详情真实属性读取",
+        "拉取刷新网关详情",
+        "恢复首页"
+      ],
+      "sessionAfterDeployment": {
+        "project": "江西省民政厅",
+        "total": 13,
+        "sessionStillActive": true
+      },
+      "performedRealDeviceControl": false,
+      "performedGroupWrites": false,
+      "notVerified": [
+        "Real device power, temperature, mode, fan-speed commands and hardware readback",
+        "Batch device commands",
+        "Group creation/edit/deletion persistence",
+        "Real-phone privacy authorization dialog",
+        "Streetlight control without mounted devices",
+        "Native APP binary; APP terminal verified through formal OAuth APIs"
+      ]
+    }
+  },
+  "configuration": {
+    "authTrustedProxyNetworks": [
+      "127.0.0.0/8",
+      "::1/128",
+      "172.16.0.0/12",
+      "10.0.1.0/24"
+    ],
+    "nginxPublicHttpHttpsPublishMode": "host",
+    "nginxImageAndConfigurationPreserved": true,
+    "otherPublishedPortsPreserved": [
+      8000,
+      18080
+    ],
+    "localSeedRepeatedPasswordResetDisabled": true,
+    "localKeyLoginSurvivedCenterRestart": true
+  },
+  "fixed": [
+    "Terminal type and rolling reauthentication deadline are visible, including refreshable sessions after access expiry",
+    "Login completion, refresh, failure, replacement, logout, administrative expiry/revocation, and client revocation audit paths",
+    "Legacy account-log aliases, MySQL BIT status values, filtering and latest-first ordering",
+    "Original client IP attribution through the production reverse proxy, with forged-forwarded-IP rejection"
+  ],
+  "auditDurability": "Database writes are best-effort; failures are logged by the service. Database-outage buffering and zero-loss delivery are not implemented or verified.",
+  "scope": "Read-only miniapp and authenticated API/browser acceptance does not establish full real-device functional coverage."
+}
