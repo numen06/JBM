@@ -16,4 +16,6 @@ COPY --from=admin-builder /jbm/dist /usr/share/nginx/html
 
 FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center@sha256:7fb1b7983fb37f3c1e2211a7f7c6093bc7cd073d9a942581dc79dd224a7612f5 AS jbm-cluster-platform-center
 COPY jbm-python-cluster/deploy/patch_online_session_logs.py /tmp/patch_online_session_logs.py
+USER root
 RUN python /tmp/patch_online_session_logs.py
+USER appuser
