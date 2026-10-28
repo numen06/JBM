@@ -115,7 +115,6 @@
     },
     "cloudFormalOAuthAndBrowser": {
       "origin": "https://feige.hz-aitech.com",
-      "checks": [],
       "terminalTypes": [
         "app",
         "miniapp",
@@ -190,7 +189,6 @@
         "恢复首页"
       ],
       "sessionAfterDeployment": {
-        "project": "江西省民政厅",
         "total": 13,
         "sessionStillActive": true
       },
@@ -204,7 +202,17 @@
         "Streetlight control without mounted devices",
         "Native APP binary; APP terminal verified through formal OAuth APIs"
       ]
-    }
+    },
+    "publicEntryRegression": [
+      {
+        "url": "https://feige.hz-aitech.com/",
+        "status": 200
+      },
+      {
+        "url": "https://jxdx.project.hz-aitech.com/",
+        "status": 200
+      }
+    ]
   },
   "configuration": {
     "authTrustedProxyNetworks": [
