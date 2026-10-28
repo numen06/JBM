@@ -1039,11 +1039,13 @@ class CompatibilityService:
                 rows = [
                     {
                         **row,
-                        "accountType": row.get("loginType"),
-                        "loginIp": row.get("ip"),
-                        "loginStatus": int(row.get("status") or 0) == 1,
-                        "loginAgent": row.get("userAgent"),
-                        "browser": row.get("userAgent"),
+                        "loginType": row.get("loginType") or row.get("accountType"),
+                        "accountType": row.get("loginType") or row.get("accountType"),
+                        "loginIp": row.get("ip") or row.get("loginIp"),
+                        "loginStatus": int(row.get("status", row.get("loginStatus")) or 0) == 1,
+                        "userAgent": row.get("userAgent") or row.get("loginAgent"),
+                        "loginAgent": row.get("userAgent") or row.get("loginAgent"),
+                        "browser": row.get("userAgent") or row.get("loginAgent"),
                     }
                     for row in rows
                 ]

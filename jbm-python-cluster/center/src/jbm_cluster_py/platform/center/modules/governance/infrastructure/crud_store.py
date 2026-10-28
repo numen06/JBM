@@ -66,6 +66,9 @@ class CrudStore:
         params: dict[str, Any] = {}
         for key, value in (filters or {}).items():
             column = _snake(key)
+            if resource == "accountLogs" and column not in columns:
+                column = {"login_type": "account_type", "ip": "login_ip", "status": "login_status",
+                          "user_agent": "login_agent"}.get(column, column)
             if value in (None, "") or column not in columns or column in {"page", "page_size"}:
                 continue
             if isinstance(value, str) and column not in {pk, "status", "app_id", "parent_id", "user_id", "role_id", "policy_id"}:
@@ -79,11 +82,12 @@ class CrudStore:
         where = " WHERE " + " AND ".join(clauses) if clauses else ""
         page = max(int(page), 1)
         size = min(max(int(size), 1), 100)
+        order = f"login_time DESC, {pk} DESC" if resource == "accountLogs" and "login_time" in columns else pk
         async with self.engine.connect() as conn:
             total = int((await conn.execute(text(f"SELECT COUNT(*) FROM {table}{where}"), params)).scalar() or 0)
             rows = (
                 await conn.execute(
-                    text(f"SELECT * FROM {table}{where} ORDER BY {pk} LIMIT :limit OFFSET :offset"),
+                    text(f"SELECT * FROM {table}{where} ORDER BY {order} LIMIT :limit OFFSET :offset"),
                     {**params, "limit": size, "offset": (page - 1) * size},
                 )
             ).mappings().all()

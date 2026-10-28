@@ -30,6 +30,9 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
             },
         ).json()
         assert current["access_token"] != first["access_token"]
+        assert client.post('/oauth2/refresh', data={
+            'client_id': 'JBM', 'refresh_token': 'invalid-refresh-alias',
+        }).status_code == 400
         second = client.post("/oauth2/token", data=form).json()
         assert "access_token" in second
         assert (
@@ -107,6 +110,15 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
         completed = [row for row in logs if row["login_type"].startswith("LOGIN:")]
         assert len(completed) == 2
         assert all(row["user_id"] == 2057849052900044802 for row in completed)
+
+        third = client.post('/oauth2/token', data=form).json()
+        # The previous failed attempt now requires the existing test CAPTCHA.
+        if 'access_token' not in third:
+            third = client.post('/oauth2/token', data={**form, 'vcode': '9999'}).json()
+        assert client.post('/oauth2/revoke', data={
+            'client_id': 'JBM', 'token': third['refresh_token'], 'token_type_hint': 'refresh_token',
+        }).status_code == 200
+        assert any(row['login_type'] == 'REVOKE' for row in client.portal.call(read))
 
 
 def test_early_login_client_failure_is_not_silently_omitted(tmp_path):

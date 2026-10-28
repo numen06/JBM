@@ -501,6 +501,7 @@ class AuthService:
                 "username": account.get("account") or user.get("user_name"),
                 "account": account.get("account"),
                 "accountType": account.get("account_type"),
+                "loginType": "THIRD_PARTY",
                 "accountVersion": _account_version(account),
                 "credentialId": account.get("credential_id"),
                 "mustChangePassword": bool(account.get("must_change_password")),
@@ -989,6 +990,7 @@ class AuthService:
             if state:
                 state = await self._resolve_refresh_owner(state)
             if state and str(state.get("clientId") or "") == client_id:
+                await self.record_session_event("REVOKE", state, form, message="客户端撤销登录会话")
                 if state.get("familyId"):
                     await self._revoke_refresh_family(str(state["familyId"]))
                 return
@@ -998,6 +1000,8 @@ class AuthService:
             except JwtError:
                 return
             if str(claims.get("client_id") or "") == client_id:
+                state = await self.cache.get_json("access:" + token_hash) or {}
+                await self.record_session_event("REVOKE", state, form, message="客户端撤销访问凭证")
                 await self.revoke_access_token(token)
 
     async def introspect_token(self, form: Mapping[str, Any]) -> dict[str, Any]:

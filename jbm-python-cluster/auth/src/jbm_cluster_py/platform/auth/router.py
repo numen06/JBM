@@ -118,10 +118,12 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     @router.post("/oauth2/refresh")
     async def refresh(request: Request) -> JSONResponse:
         form = await _request_params(request)
+        _add_login_context(form, request)
         form.setdefault("grant_type", "refresh_token")
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.refresh_token(form)))
         except AuthError as exc:
+            await auth_service.record_token_failure(form, exc)
             return JSONResponse(status_code=exc.code, content=fail(None, str(exc), exc.code))
 
     @router.post("/oauth2/client_token")
@@ -263,6 +265,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     @router.post("/oauth2/revoke")
     async def revoke(request: Request) -> JSONResponse:
         form = await _request_params(request)
+        _add_login_context(form, request)
         try:
             await auth_service.revoke_token(form)
             return JSONResponse(
