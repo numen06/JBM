@@ -56,6 +56,8 @@
     "sameAccountWebMiniappAppCoexist": true,
     "eachTerminalRefreshedTwiceWithoutKickingOthers": true,
     "eachTerminalNewLoginRevokesOldAccessAndRefresh": true,
+    "supersededSessionRealEndpointStatuses": {"auth": 401, "center": 401, "building": 401, "iot": 401},
+    "replacementSessionRealEndpointStatuses": {"auth": 200, "center": 200, "building": 200, "iot": 200},
     "crossClientRefreshRejectedWithoutConsumingValidRefresh": true,
     "logoutAffectsOnlyCurrentTerminal": true,
     "appValidation": "actual public client protocol endpoints; no native APP binary was available or claimed tested",
@@ -72,6 +74,8 @@
     "devices": 13,
     "onlineDevices": 13,
     "deviceControlWrites": 0,
+    "temporaryPasswordAndApiSessionFilesRemoved": true,
+    "testWebAndAppSessionsRevokedAndMiniappRemainsLoggedIn": true,
     "thirtyDayInactivity": "server response and effective configuration verified; rolling 87-day use and inactivity expiry verified with a controlled clock in automated tests, not a 30-day real-time wait"
   },
   "environmentImages": {
