@@ -9,13 +9,14 @@ from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.platform.auth.router import build_auth_router
 from jbm_cluster_py.platform.auth.service import TokenCache, _hash_token
 from test_session_lifecycle import Repository, issue, service
+from test_terminal_sessions import Terminals, login
 
 
 @pytest.mark.parametrize('path', ['/online/pageList', '/online/expire', '/online/expireImmediately', '/online/kickout/', '/online/logout/'])
 def test_unprivileged_user_cannot_enumerate_or_modify_sessions(path):
-    auth = service(TokenCache(RedisClient({'enabled': False})))
-    caller = asyncio.run(issue(auth))
-    target = asyncio.run(issue(auth))
+    auth = service(TokenCache(RedisClient({'enabled': False})), Terminals())
+    caller = asyncio.run(login(auth, 'web'))
+    target = asyncio.run(login(auth, 'app'))
     target_id = _hash_token(target['access_token'])
     app = FastAPI()
     app.include_router(build_auth_router(auth))

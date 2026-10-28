@@ -210,6 +210,34 @@ class AuthRepository:
         client_id = str(client_id or "").strip()
         if not client_id:
             return None
+        # Mobile clients are explicit registrations under the same application,
+        # so roles/tenant entitlements stay shared while sessions stay separate.
+        parent_id, separator, terminal = client_id.rpartition(":")
+        if separator and terminal in {"miniapp", "app"}:
+            parent = await self.find_client(parent_id)
+            registrations = (parent or {}).get("terminalClients")
+            registration = (
+                registrations.get(terminal) if isinstance(registrations, Mapping) else None
+            )
+            if not isinstance(registration, Mapping) or registration.get("enabled") is not True:
+                return None
+            redirects = registration.get("redirectUris")
+            if (
+                not isinstance(redirects, list)
+                or not redirects
+                or not all(isinstance(uri, str) and uri.strip() for uri in redirects)
+            ):
+                return None
+            return {
+                **parent,
+                "clientId": client_id,
+                "terminalType": terminal,
+                "publicClient": True,
+                "clientSecret": None,
+                "redirectUris": redirects,
+                "terminalClients": {},
+                "oidc": {"enabled": False},
+            }
         async with self.engine.connect() as conn:
             if await conn.run_sync(lambda sync_conn: inspect(sync_conn).has_table("base_app")):
                 columns = {
@@ -244,6 +272,8 @@ class AuthRepository:
                         "publicKey": data.get("public_key"),
                         "privateKey": data.get("private_key"),
                         "publicClient": bool(oauth.get("publicClient")),
+                        "terminalType": "web",
+                        "terminalClients": oauth.get("terminalClients", {}),
                         "allowedScopes": oauth.get("allowedScopes") or ["all"],
                         "redirectUris": list(oauth.get("redirectUris") or []),
                         "registration": registration,
@@ -1022,6 +1052,7 @@ def _client_oauth_settings(data: Mapping[str, Any]) -> dict[str, Any]:
         "publicClient": bool(oauth.get("publicClient") or oauth.get("public_client")),
         "allowedScopes": oauth.get("allowedScopes") or ["all"],
         "redirectUris": [str(item) for item in redirect_uris if str(item).strip()],
+        **({"terminalClients": oauth["terminalClients"]} if "terminalClients" in oauth else {}),
     }
 
 

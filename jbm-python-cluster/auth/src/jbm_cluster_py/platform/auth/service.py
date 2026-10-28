@@ -357,13 +357,13 @@ class AuthService:
         )
         self.issuer = issuer.rstrip("/")
         self.audience = audience
-        self.access_seconds = int(jwt_config.get("access-token-seconds") or 7200)
+        self.access_seconds = int(jwt_config.get("access-token-seconds") or 1800)
         self.refresh_seconds = int(jwt_config.get("refresh-token-seconds") or 604800)
+        self.mobile_refresh_seconds = int(jwt_config.get("mobile-refresh-token-seconds") or 2592000)
         self.account_domain = str(self.config.get("account-domain") or "@admin.com")
         self.max_errors = int(self.config.get("login-error-number") or 5)
         self.lock_minutes = int(self.config.get("login-error-limit-minutes") or 10)
         self.login_captcha_required = _truthy(self.config.get("login-captcha-required", False))
-        self.max_sessions_per_user = max(int(self.config.get("max-sessions-per-user") or 5), 1)
         self.require_pkce = _truthy(self.config.get("require-pkce", True))
         self.require_https_redirects = _truthy(self.config.get("require-https-redirects", True))
         self.legacy_password_grant_enabled = _truthy(
@@ -851,7 +851,9 @@ class AuthService:
             raise AuthError("客户端无效", 401)
         self._validate_token_client(client, form)
         # Authentication must precede every mutation, including replay revocation.
-        state, reused = await self.cache.consume_refresh(token_hash, self.refresh_seconds)
+        state, reused = await self.cache.consume_refresh(
+            token_hash, int(state.get("refreshSeconds") or self.refresh_seconds)
+        )
         if not state:
             raise AuthError("refresh_token无效或已过期", 400, "invalid_grant")
         family_id = str(state.get("familyId") or secrets.token_urlsafe(24))
@@ -1100,7 +1102,7 @@ class AuthService:
         await self.cache.set_json(
             "refresh_family_revoked:" + family_id,
             {"revoked": True},
-            max(self.refresh_seconds, self.access_seconds) + 120,
+            max(self.refresh_seconds, self.mobile_refresh_seconds, self.access_seconds) + 120,
         )
         family = await self.cache.pop_json("refresh_family:" + family_id)
         await self.cache.delete("family_session:" + family_id)
@@ -1758,6 +1760,12 @@ class AuthService:
     ) -> dict[str, Any]:
         user_id = int(user["user_id"])
         app_id = int(client.get("appId") or 0)
+        terminal = str(client.get("terminalType") or "web")
+        if terminal not in {"web", "miniapp", "app"}:
+            raise AuthError("客户端终端类型无效", 400, "invalid_client")
+        refresh_seconds = (
+            self.mobile_refresh_seconds if terminal in {"miniapp", "app"} else self.refresh_seconds
+        )
         username = str(user.get("user_name") or account.get("account") or user_id)
         tenant_id = int(user.get("company_id") or 0)
         if username != "admin" and not await self.repository.tenant_app_enabled(tenant_id, app_id):
@@ -1790,6 +1798,7 @@ class AuthService:
             "tenant_id": user.get("company_id"),
             "department_id": user.get("department_id"),
             "client_id": client.get("clientId"),
+            "terminal_type": terminal,
             "app_id": app_id,
             "user_type": user.get("user_type"),
             "roles": role_codes,
@@ -1813,6 +1822,8 @@ class AuthService:
             ),
             "credentialId": account.get("credential_id"),
             "clientId": client.get("clientId"),
+            "terminalType": terminal,
+            "refreshSeconds": refresh_seconds,
             "scope": scope,
             "mustChangePassword": bool(account.get("must_change_password")),
             "familyId": family_id,
@@ -1826,7 +1837,7 @@ class AuthService:
         await self.cache.set_json(
             "refresh:" + refresh_hash,
             refresh_state,
-            self.refresh_seconds,
+            refresh_seconds,
         )
         await self.cache.set_json(
             "refresh_family:" + family_id,
@@ -1836,7 +1847,7 @@ class AuthService:
                 "accessJti": jti,
                 "accessExpiresAt": now + self.access_seconds,
             },
-            self.refresh_seconds,
+            refresh_seconds,
         )
         await self._record_online_session(access_token, claims, user, client, family_id, refresh_state)
         if await self.cache.get_json("refresh_family_revoked:" + family_id):
@@ -1852,6 +1863,8 @@ class AuthService:
                 "user_id": user_id,
                 "roles": role_codes,
                 "permissions": permissions,
+                "terminal_type": terminal,
+                "refresh_expires_in": refresh_seconds,
             },
         )
 
@@ -1897,12 +1910,21 @@ class AuthService:
         if ttl <= 0:
             return
         existing = []
+        # A superseded family may have been rotating before the new login.
+        # Check under the same application lock BEFORE it can evict the winner.
+        if await self.cache.get_json("refresh_family_revoked:" + family_id):
+            raise AuthError("登录会话已失效，请重新登录", 400, "invalid_grant")
+        terminal = str(claims.get("terminal_type") or "web")
         for member in await self.cache.index_members(index_key):
             row = await self.cache.get_json("family_session:" + member)
-            if row and member != family_id and not await self.cache.get_json("refresh_family_revoked:" + member):
+            if (
+                row
+                and member != family_id
+                and str(row.get("terminalType") or "web") == terminal
+                and not await self.cache.get_json("refresh_family_revoked:" + member)
+            ):
                 existing.append(row)
-        existing.sort(key=lambda row: str(row.get("loginTime") or ""), reverse=True)
-        for stale in existing[self.max_sessions_per_user - 1 :]:
+        for stale in existing:
             stale_family = str(stale.get("familyId") or "")
             if stale_family:
                 await self._revoke_refresh_family(stale_family)
@@ -1916,6 +1938,7 @@ class AuthService:
             "companyId": claims.get("tenant_id"),
             "appId": claims.get("app_id"),
             "appName": client.get("clientId"),
+            "terminalType": terminal,
             "userName": claims.get("username"),
             "loginLocation": "",
             "browser": "",
@@ -1933,8 +1956,10 @@ class AuthService:
         }
         token_hash = _hash_token(access_token)
         await self.cache.set_json("access:" + token_hash, row, ttl)
-        await self.cache.set_json("session_family:" + token_hash, {"familyId": family_id}, max(ttl, self.refresh_seconds))
-        session_ttl = max(ttl, self.refresh_seconds)
+        session_ttl = max(
+            ttl, int((refresh_state or {}).get("refreshSeconds") or self.refresh_seconds)
+        )
+        await self.cache.set_json("session_family:" + token_hash, {"familyId": family_id}, session_ttl)
         await self.cache.set_json("family_session:" + family_id, row, session_ttl)
         await self.cache.index_add(index_key, family_id, now + session_ttl)
         await self.cache.index_add("client_sessions:" + str(client.get("clientId") or ""), family_id, now + session_ttl)

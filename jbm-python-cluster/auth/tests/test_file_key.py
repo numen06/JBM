@@ -108,6 +108,8 @@ def test_file_key_oauth_identity_replay_and_revoke(client, key):
         "/oauth2/userinfo", headers={"Authorization": "Bearer " + tokens.json()["access_token"]}
     )
     assert identity.json()["result"]["username"] == "admin"
+    # The key login superseded the fixture's password-based Web session.
+    client.headers["Authorization"] = "Bearer " + tokens.json()["access_token"]
     assert login(client, payload, "FILE_KEY").status_code == 401
     assert client.get("/oauth2/keys").json()["result"][0]["last_used_at"] is not None
     assert client.delete("/oauth2/keys/" + options["keyId"]).status_code == 200
@@ -224,7 +226,7 @@ def test_registration_is_bound_to_session_and_duplicate_key_rejected(client, key
         },
     )
     assert response.status_code == 401
-    assert client.get("/oauth2/keys").json()["result"][0]["id"] == options["keyId"]
+    assert client.get("/oauth2/keys", headers={"Authorization": "Bearer " + tokens.json()["access_token"]}).json()["result"][0]["id"] == options["keyId"]
 
 
 def test_file_key_requires_current_password_and_limits_retries(client, key):

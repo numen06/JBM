@@ -714,6 +714,8 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
         ).json()
         assert public_refresh["success"] is True
         assert public_refresh["result"]["access_token"].count(".") == 2
+        # A second Web login supersedes both credentials of the first session.
+        assert client.get("/oauth2/userinfo", headers={"Authorization": "Bearer " + refreshed.json()["result"]["access_token"]}).json()["success"] is False
 
         client_token = client.post(
             "/oauth2/token",
@@ -749,7 +751,7 @@ def test_password_refresh_userinfo_and_client_credentials(tmp_path: Path) -> Non
 
         allowed = client.delete(
             "/online/kickout/" + online_body["result"]["contents"][0]["tokenId"],
-            headers={"Authorization": "Bearer " + refreshed.json()["result"]["access_token"]},
+            headers={"Authorization": "Bearer " + public_refresh["result"]["access_token"]},
         )
         assert allowed.json()["success"] is True
 

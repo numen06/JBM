@@ -116,7 +116,7 @@ def test_key_login_access_and_refresh_are_invalidated_together(client, key, inva
     headers = {"Authorization": "Bearer " + tokens["access_token"]}
     assert client.get("/oauth2/userinfo", headers=headers).status_code == 200
     if invalidate == "remove":
-        assert client.delete("/oauth2/keys/" + options["keyId"]).status_code == 200
+        assert client.delete("/oauth2/keys/" + options["keyId"], headers=headers).status_code == 200
     else:
 
         async def alter():

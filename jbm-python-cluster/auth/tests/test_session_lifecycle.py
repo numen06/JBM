@@ -185,7 +185,6 @@ def test_login_limit_uses_user_index_and_ends_evicted_family():
     async def exercise():
         async with backends() as (cache, _):
             auth = service(cache)
-            auth.max_sessions_per_user = 1
 
             async def forbid_scan(*args):
                 raise AssertionError("login must not scan global sessions")
