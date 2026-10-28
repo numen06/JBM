@@ -502,6 +502,8 @@ async def test_expired_authorization_code_and_backend_unavailable(oidc, monkeypa
 async def test_captcha_required_and_no_login_mode_override(oidc, monkeypatch):
     browser, service, _, _ = oidc
     service.auth.login_captcha_required = True
+    # After a password failure, changing loginType must not bypass CAPTCHA.
+    await service.cache.add_login_error("alice", 10)
 
     async def challenge():
         await service.cache.set_json("captcha:system:abc12", {"code": "ABC12"}, 60)
