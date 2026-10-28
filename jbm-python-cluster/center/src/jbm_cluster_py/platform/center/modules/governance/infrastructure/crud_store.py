@@ -590,6 +590,8 @@ def _row(row: Mapping[str, Any], include_secrets: bool = False) -> dict[str, Any
             continue
         if isinstance(value, datetime):
             value = value.isoformat()
+        elif key in {"status", "login_status"} and isinstance(value, (bytes, bytearray)):
+            value = int.from_bytes(value, byteorder="big")
         elif isinstance(value, int) and abs(value) > 9_007_199_254_740_991:
             value = str(value)
         result[_camel(key)] = value

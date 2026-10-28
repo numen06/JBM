@@ -6,7 +6,13 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 
 from jbm_cluster_py.platform.center.modules.governance.application.compatibility_service import CompatibilityService
-from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import CrudStore
+from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import CrudStore, _row
+
+
+def test_mysql_bit_statuses_are_numeric():
+    assert _row({'login_status': b'\x00'}) == {'loginStatus': 0}
+    assert _row({'login_status': b'\x01'}) == {'loginStatus': 1}
+    assert _row({'status': bytearray(b'\x01')}) == {'status': 1}
 
 
 @pytest.mark.asyncio
