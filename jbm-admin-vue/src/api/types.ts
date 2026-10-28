@@ -469,6 +469,11 @@ export interface SysUserOnline {
   loginTime?: string
   expiredTime?: string
   activityTime?: string
+  terminalType?: 'web' | 'miniapp' | 'app' | string
+  lastRefreshTime?: string | null
+  accessTokenExpiresAt?: string | null
+  reauthRequiredAt?: string | null
+  sessionStatus?: 'active' | 'refreshable'
 }
 
 export interface OnlineUserSearchForm {

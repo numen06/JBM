@@ -1,0 +1,15 @@
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:ca9eaf18c6a7ddf50a05b89542ef182c3bb4179c38ce77892d3b3da00c16d144 AS jbm-python-cluster
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/service.py /app/auth/src/jbm_cluster_py/platform/auth/service.py
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/repository.py /app/auth/src/jbm_cluster_py/platform/auth/repository.py
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py /app/auth/src/jbm_cluster_py/platform/auth/router.py
+
+FROM --platform=$BUILDPLATFORM m.daocloud.io/docker.io/library/node:22-alpine AS admin-builder
+WORKDIR /jbm
+COPY jbm-admin-vue/package*.json ./
+COPY jbm-admin-vue/packages ./packages
+RUN npm ci
+COPY jbm-admin-vue ./
+RUN JBM_ADMIN_BASE_PATH=/jbm/ npm run build
+
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-admin@sha256:04fc6473cba613f1a21c77280dc23d1120a2675a4e2add9621557e0586f54fda AS jbm-admin
+COPY --from=admin-builder /jbm/dist /usr/share/nginx/html

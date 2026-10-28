@@ -191,7 +191,7 @@ class AuthRepository:
         status = "login_status" if "login_status" in columns else "status"
         kind = "login_type" if "login_type" in columns else "account_type"
         async with self.engine.connect() as conn:
-            rows = (await conn.execute(text(f"SELECT {ip} AS ip, login_time FROM base_account_logs WHERE user_id=:user_id AND {status}=1 AND COALESCE({kind},'') NOT LIKE 'ADMIN_KEY_%' ORDER BY login_time DESC, {primary} DESC LIMIT 20"), {"user_id": user_id})).mappings().all()
+            rows = (await conn.execute(text(f"SELECT {ip} AS ip, login_time FROM base_account_logs WHERE user_id=:user_id AND {status}=1 AND COALESCE({kind},'') NOT LIKE 'ADMIN_KEY_%' AND COALESCE({kind},'') NOT LIKE 'LOGIN:%' AND COALESCE({kind},'') NOT IN ('REFRESH','LOGOUT','SESSION_REPLACED','ADMIN_REVOKE','ADMIN_EXPIRE','REVOKE') ORDER BY login_time DESC, {primary} DESC LIMIT 20"), {"user_id": user_id})).mappings().all()
         return [{"ip": str(row["ip"] or ""), "time": str(row["login_time"] or "")} for row in rows]
 
     async def login_alerts(self, user_id: int) -> list[dict]:

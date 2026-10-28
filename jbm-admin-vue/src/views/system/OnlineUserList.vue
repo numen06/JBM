@@ -94,7 +94,7 @@ const activeFilters = computed(() => {
 })
 
 const pageStats = computed(() => {
-  const browserCount = new Set(items.value.map((row) => row.browser).filter(Boolean)).size
+  const browserCount = new Set(items.value.map((row) => row.terminalType).filter(Boolean)).size
   const current = items.value.some((row) => isCurrentSession(row))
   return { browserCount, current }
 })
@@ -127,18 +127,22 @@ function parseTime(t?: string) {
 function formatTime(t?: string) {
   const time = parseTime(t)
   if (typeof time !== 'number') return time
-  return new Date(time).toLocaleString()
+  return new Date(time).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })
 }
 
 function effectiveExpiredAt(row: SysUserOnline) {
-  const time = parseTime(row.expiredTime)
+  const time = parseTime(row.reauthRequiredAt ?? row.expiredTime)
   return typeof time === 'number' ? time : undefined
 }
 
 function formatEffectiveExpiredTime(row: SysUserOnline) {
   const time = effectiveExpiredAt(row)
   if (time == null) return '-'
-  return new Date(time).toLocaleString()
+  return formatTime(new Date(time).toISOString())
+}
+
+function terminalLabel(row: SysUserOnline) {
+  return ({ web: 'Web', miniapp: '小程序', app: 'APP' } as Record<string, string>)[row.terminalType ?? ''] ?? '未记录'
 }
 
 function isExpired(row: SysUserOnline) {
@@ -194,8 +198,8 @@ async function handleLogout(row: SysUserOnline) {
 async function handleExpire(row: SysUserOnline) {
   if (!row.tokenId) return
   const raw = await feedback.prompt({
-    title: '设置过期时间',
-    message: `让 ${row.userName ?? row.tokenId} 的会话在多少分钟后过期？`,
+    title: '调整访问凭证有效期',
+    message: `让 ${row.userName ?? row.tokenId} 的访问凭证在多少分钟后过期？客户端仍可自动续期；需要重新登录请使用踢下线。`,
     defaultValue: '30',
     placeholder: '分钟',
   })
@@ -224,7 +228,7 @@ async function handleExpireImmediately(row: SysUserOnline) {
   <div class="space-y-4">
     <PageHeader
       title="在线用户"
-      description="查看当前登录会话，按用户、IP、应用和组织定位异常会话，并执行踢出、注销或过期控制。"
+      description="查看各终端登录状态与免登录截止时间。活跃会话自动续期，截止时间随之顺延；时间均为北京时间。"
     >
       <template #actions>
         <OrgTreeSelect
@@ -258,10 +262,10 @@ async function handleExpireImmediately(row: SysUserOnline) {
     </PageHeader>
 
     <div class="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm">
-      <span>共 {{ total }} 个在线会话</span>
+      <span>共 {{ total }} 个有效登录会话</span>
       <Badge variant="secondary">当前页 {{ items.length }} 条</Badge>
       <Badge v-if="pageStats.current" variant="outline">包含我的会话</Badge>
-      <Badge v-if="pageStats.browserCount" variant="outline">{{ pageStats.browserCount }} 种客户端</Badge>
+      <Badge v-if="pageStats.browserCount" variant="outline">{{ pageStats.browserCount }} 种终端</Badge>
       <span v-if="activeFilters.length" class="text-muted-foreground">
         筛选：{{ activeFilters.join(' / ') }}
       </span>
@@ -277,9 +281,9 @@ async function handleExpireImmediately(row: SysUserOnline) {
             <tr class="border-b bg-muted/50">
               <th class="h-10 px-4 text-left font-medium">用户</th>
               <th class="h-10 px-4 text-left font-medium">来源</th>
-              <th class="h-10 px-4 text-left font-medium">客户端</th>
-              <th class="h-10 px-4 text-left font-medium">登录时间</th>
-              <th class="h-10 px-4 text-left font-medium">生效过期时间</th>
+              <th class="h-10 px-4 text-left font-medium">登录终端</th>
+              <th class="h-10 px-4 text-left font-medium">首次登录 / 最近续期</th>
+              <th class="h-10 px-4 text-left font-medium">免登录截止时间</th>
               <th class="h-10 px-4 text-left font-medium">Token</th>
               <th class="h-10 px-4 text-right font-medium">操作</th>
             </tr>
@@ -296,7 +300,7 @@ async function handleExpireImmediately(row: SysUserOnline) {
                 <div class="mt-1 flex flex-wrap gap-1">
                   <Badge v-if="isCurrentSession(row)" variant="default">我的会话</Badge>
                   <Badge v-if="isExpired(row)" variant="destructive">已过期</Badge>
-                  <Badge v-else variant="secondary">在线</Badge>
+                  <Badge v-else variant="secondary">{{ row.sessionStatus === 'refreshable' ? '待自动续期' : '凭证有效' }}</Badge>
                 </div>
                 <div class="mt-1 text-xs text-muted-foreground">
                   {{ row.companyName ?? '-' }} / {{ row.deptName ?? '-' }}
@@ -308,13 +312,17 @@ async function handleExpireImmediately(row: SysUserOnline) {
                 <div class="mt-1 text-xs text-muted-foreground">应用：{{ appLabel(row) }}</div>
               </td>
               <td class="p-4 text-sm">
-                <div>{{ row.browser ?? '-' }}</div>
-                <div class="text-xs text-muted-foreground">{{ row.os ?? '-' }}</div>
+                <Badge variant="outline">{{ terminalLabel(row) }}</Badge>
+                <div v-if="row.browser || row.os" class="mt-1 text-xs text-muted-foreground">{{ row.browser }} {{ row.os }}</div>
               </td>
-              <td class="p-4 text-sm text-muted-foreground">{{ formatTime(row.loginTime) }}</td>
               <td class="p-4 text-sm text-muted-foreground">
-                <div class="text-foreground">有效至：{{ formatEffectiveExpiredTime(row) }}</div>
-                <div v-if="row.activityTime" class="mt-1 text-xs">最后活动：{{ formatTime(row.activityTime) }}</div>
+                <div>{{ formatTime(row.loginTime) }}</div>
+                <div class="mt-1 text-xs">最近续期：{{ formatTime(row.lastRefreshTime ?? undefined) }}</div>
+              </td>
+              <td class="p-4 text-sm text-muted-foreground">
+                <div class="text-foreground">{{ row.reauthRequiredAt ? formatEffectiveExpiredTime(row) : '下次续期后显示' }}</div>
+                <div class="mt-1 text-xs">不再续期时需重新登录，活跃时顺延</div>
+                <div class="mt-1 text-xs">访问凭证到期：{{ formatTime(row.accessTokenExpiresAt ?? row.expiredTime) }}</div>
               </td>
               <td class="p-4 font-mono text-xs text-muted-foreground" :title="row.tokenId">
                 {{ shortToken(row.tokenId) }}
@@ -344,11 +352,11 @@ async function handleExpireImmediately(row: SysUserOnline) {
                   <Button
                     variant="outline"
                     size="sm"
-                    :disabled="actionLoading"
-                    title="设置几分钟后过期"
+                    :disabled="actionLoading || row.sessionStatus === 'refreshable'"
+                    title="仅调整访问凭证有效期，客户端仍可自动续期"
                     @click="handleExpire(row)"
                   >
-                    定时过期
+                    调整凭证有效期
                   </Button>
                   <Button
                     variant="outline"

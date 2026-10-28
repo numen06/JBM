@@ -46,6 +46,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
             )
         except AuthError as exc:
+            await auth_service.record_token_failure(form, exc)
             message = str(exc)
             error = exc.oauth_error or (
                 "unsupported_grant_type"
@@ -106,6 +107,8 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
         try:
             return JSONResponse(status_code=200, content=ok(await auth_service.authorize_code_login(form)))
         except AuthError as exc:
+            if not getattr(exc, "login_audited", False):
+                await auth_service.record_session_event("LOGIN_FAILED", {}, form, status=0, message=str(exc))
             return JSONResponse(status_code=exc.code, content={**fail(None, str(exc), exc.code), **({"captcha_required": True} if exc.captcha_required else {})})
 
     @router.get("/oauth2/apps")
@@ -252,9 +255,10 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
     @router.post("/oauth2/logout")
     async def logout(request: Request) -> JSONResponse:
         params = await _request_params(request)
+        _add_login_context(params, request)
         token = _bearer_token(request) or str(params.get("access_token") or "")
         refresh_token = str(params.get("refresh_token") or "")
-        return JSONResponse(status_code=200, content=ok(await auth_service.logout(token, refresh_token)))
+        return JSONResponse(status_code=200, content=ok(await auth_service.logout(token, refresh_token, params)))
 
     @router.post("/oauth2/revoke")
     async def revoke(request: Request) -> JSONResponse:
@@ -462,6 +466,11 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 raise AuthError("tokenId不能为空", 400)
             minutes = max(int(params.get("minutes") or 30), 1)
             await auth_service.expire_access_session(token_id, minutes * 60)
+            state = await auth_service.cache.get_json("access:" + token_id) or {}
+            context = {}
+            _add_login_context(context, request)
+            actor = auth_service.signer.verify(_bearer_token(request)).get("user_id")
+            await auth_service.record_session_event("ADMIN_EXPIRE", state, context, message="调整访问凭证有效期为" + str(minutes) + "分钟，执行者ID=" + str(actor))
             return JSONResponse(status_code=200, content=ok("设置成功"))
         except (AuthError, JwtError) as exc:
             code = getattr(exc, "code", 401)
@@ -475,7 +484,14 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             await _require_session_management(request, auth_service, "monitor:online:forceLogout", "monitor:online:logout")
             if not token_id:
                 raise AuthError("tokenId不能为空", 400)
+            state = await auth_service.cache.get_json("access:" + token_id) or await auth_service.cache.get_json("session_family:" + token_id) or {}
+            if state.get("familyId"):
+                state = await auth_service.cache.get_json("family_session:" + str(state["familyId"])) or state
             await auth_service.revoke_access_session(token_id)
+            context = {}
+            _add_login_context(context, request)
+            actor = auth_service.signer.verify(_bearer_token(request)).get("user_id")
+            await auth_service.record_session_event("ADMIN_REVOKE", state, context, message="管理员立即下线会话，执行者ID=" + str(actor))
             return JSONResponse(status_code=200, content=ok("设置成功"))
         except (AuthError, JwtError) as exc:
             code = getattr(exc, "code", 401)
@@ -626,10 +642,17 @@ async def _online_revoke(
     *permissions: str,
 ) -> JSONResponse:
     try:
-        await _require_session_management(request, auth_service, *permissions)
+        actor_token = await _require_session_management(request, auth_service, *permissions)
         if not token_id:
             raise AuthError("tokenId不能为空", 400)
+        state = await auth_service.cache.get_json("access:" + token_id) or await auth_service.cache.get_json("session_family:" + token_id) or {}
+        if state.get("familyId"):
+            state = await auth_service.cache.get_json("family_session:" + str(state["familyId"])) or state
+        context = {}
+        _add_login_context(context, request)
+        actor = auth_service.signer.verify(actor_token).get("user_id")
         await auth_service.revoke_access_session(token_id)
+        await auth_service.record_session_event("ADMIN_REVOKE", state, context, message="管理员撤销会话，执行者ID=" + str(actor))
         return JSONResponse(status_code=200, content=ok(None))
     except (AuthError, JwtError) as exc:
         code = getattr(exc, "code", 401)

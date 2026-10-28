@@ -249,6 +249,13 @@ class TokenCache:
         value, expires_at = item
         return dict(value) if expires_at > int(time.time()) else None
 
+    async def remaining_ttl(self, key: str) -> int:
+        self._require_backend()
+        if self.redis_client.client is not None:
+            return max(0, int(await self.redis_client.client.ttl(self._key(key))))
+        item = self._memory.get(self._key(key))
+        return max(0, item[1] - int(time.time())) if item else 0
+
     async def delete(self, key: str) -> None:
         self._require_backend()
         full_key = self._key(key)
@@ -396,9 +403,10 @@ class AuthService:
         client = await self._resolve_user_flow_client(form)
         try:
             account, user, scope = await self._authenticate_user_for_client(client, form)
-            token = await self._issue_user_token(client, account, user, scope)
+            token = await self._issue_user_token(client, {**account, "login_type": form.get("loginType") or "PASSWORD"}, user, scope, login_context=form)
         except AuthError as exc:
             await self._record_login({**form, **getattr(exc, "login_audit", {})}, status=0, message=str(exc))
+            exc.login_audited = True
             raise
         await self._record_login({**form, "username": account.get("account"), "account_type": account.get("account_type"), "credential_id": account.get("credential_id", "")})
         return token
@@ -432,12 +440,13 @@ class AuthService:
             account, user, scope = await self._authenticate_user_for_client(client, form)
         except AuthError as exc:
             await self._record_login({**form, **getattr(exc, "login_audit", {})}, status=0, message=str(exc))
+            exc.login_audited = True
             raise
         audit = dict(form)
         audit["username"] = account.get("account") or user.get("user_name")
         audit["account_type"] = account.get("account_type")
         audit["credential_id"] = account.get("credential_id", "")
-        await self._record_login(audit)
+        await self._record_login(audit, message="身份验证通过，待完成授权")
         return await self._authorization_redirect(
             client,
             redirect_uri,
@@ -450,6 +459,7 @@ class AuthService:
                 "credentialId": account.get("credential_id"),
                 "mustChangePassword": bool(account.get("must_change_password")),
                 "scope": scope,
+                "loginType": str(form.get("loginType") or "PASSWORD").upper(),
                 "codeChallenge": code_challenge,
                 "codeChallengeMethod": code_challenge_method,
             },
@@ -530,6 +540,41 @@ class AuthService:
         except Exception as exc:
             logger.warning("Login audit persistence failed: %s", exc)
 
+    async def record_session_event(self, event: str, state: Mapping[str, Any], context: Mapping[str, Any] | None = None, *, status: int = 1, message: str = "") -> None:
+        """Audit only explicit fields. Never persist request bodies or credentials."""
+        if not hasattr(self.repository, "record_login"):
+            return
+        context = context or {}
+        account = str(state.get("account") or state.get("username") or state.get("userName") or context.get("username") or "")
+        try:
+            ip = str(context.get("login_ip") or context.get("loginIp") or state.get("loginIp") or state.get("ipaddr") or "")
+            location = self.login_security.geo.lookup(ip)
+            client_id = str(state.get("clientId") or state.get("appName") or context.get("client_id") or "")
+            family_id = str(state.get("familyId") or "")
+            trace = "（会话：" + _hash_token(family_id)[:16] + "）" if family_id else ""
+            await self.repository.record_login(
+                user_id=state.get("userId", state.get("user_id")), account=account,
+                login_type=event[:32], ip=ip, user_agent=str(context.get("user_agent") or context.get("userAgent") or state.get("userAgent") or ""),
+                status=status, message=message + trace,
+                details={"login_location": location.get("label", ""), "client_id": client_id[:128],
+                         "credential_id": str(state.get("credentialId") or "")[:64],
+                         "request_id": str(context.get("request_id") or secrets.token_hex(16))[:64],
+                         "risk_level": "normal"},
+            )
+        except Exception:
+            logger.exception("Session audit persistence failed: event=%s", event)
+
+    async def record_token_failure(self, form: Mapping[str, Any], error: AuthError) -> None:
+        if getattr(error, "login_audited", False):
+            return
+        grant = str(form.get("grant_type") or "")
+        state = {}
+        if grant == "refresh_token":
+            key = _hash_token(str(form.get("refresh_token") or ""))
+            state = await self.cache.get_json("refresh:" + key) or await self.cache.get_json("refresh_used:" + key) or {}
+        event = "REFRESH_FAILED" if grant == "refresh_token" else "AUTH_CODE_FAILED" if grant == "authorization_code" else "LOGIN_FAILED"
+        await self.record_session_event(event, state, form, status=0, message=str(error))
+
     async def _authorization_redirect(
         self,
         client: Mapping[str, Any],
@@ -585,8 +630,9 @@ class AuthService:
             "credential_id": cached.get("credentialId"),
             "user_id": user_id,
             "must_change_password": cached.get("mustChangePassword"),
+            "login_type": cached.get("loginType") or "PASSWORD",
         }
-        return await self._issue_user_token(client, account, user, str(cached.get("scope") or "all"))
+        return await self._issue_user_token(client, account, user, str(cached.get("scope") or "all"), login_context=form)
 
     async def _password_login_for_client(
         self,
@@ -865,6 +911,7 @@ class AuthService:
         family_id = str(state.get("familyId") or secrets.token_urlsafe(24))
         if reused:
             await self._revoke_refresh_family(family_id)
+            await self.record_session_event("REFRESH_REPLAY", state, form, status=0, message="刷新凭证重复使用，已撤销会话")
             raise AuthError("refresh_token已被使用", 400, "invalid_grant")
         if await self.cache.get_json("refresh_family_revoked:" + family_id):
             raise AuthError("登录会话已失效", 400, "invalid_grant")
@@ -882,6 +929,7 @@ class AuthService:
             "account_type": state.get("accountType"),
             "credential_version": state.get("accountVersion"),
             "credential_id": state.get("credentialId"),
+            "login_type": state.get("loginType"),
         }
         return await self._issue_user_token(
             client,
@@ -889,14 +937,18 @@ class AuthService:
             user,
             str(state.get("scope") or "all"),
             family_id=family_id,
+            login_context=form,
         )
 
-    async def logout(self, token: str | None = None, refresh_token: str | None = None) -> dict[str, bool]:
+    async def logout(self, token: str | None = None, refresh_token: str | None = None, context: Mapping[str, Any] | None = None) -> dict[str, bool]:
+        audited = set()
         if refresh_token:
             token_hash = _hash_token(refresh_token)
             state = (await self.cache.get_json("refresh:" + token_hash)
                      or await self.cache.get_json("refresh_used:" + token_hash))
             if state and state.get("familyId"):
+                await self.record_session_event("LOGOUT", state, context, message="用户退出登录")
+                audited.add(str(state["familyId"]))
                 await self._revoke_refresh_family(str(state["familyId"]))
         if token:
             # Keep the session-to-family reference beyond access expiry, so logout
@@ -904,6 +956,9 @@ class AuthService:
             state = (await self.cache.get_json("access:" + _hash_token(token))
                      or await self.cache.get_json("session_family:" + _hash_token(token)))
             if state and state.get("familyId"):
+                family = await self.cache.get_json("family_session:" + str(state["familyId"])) or state
+                if str(state["familyId"]) not in audited:
+                    await self.record_session_event("LOGOUT", family, context, message="用户退出登录")
                 await self._revoke_refresh_family(str(state["familyId"]))
             await self.revoke_access_token(token)
         return {"logout": True}
@@ -1030,8 +1085,31 @@ class AuthService:
         page_form = dict(search.get("pageForm") or search.get("page_form") or {})
         curr_page = max(int(page_form.get("currPage") or page_form.get("curr_page") or 1), 1)
         page_size = max(int(page_form.get("pageSize") or page_form.get("page_size") or 10), 1)
-        rows = await self.cache.list_json("access:")
-        rows = [row for row in rows if not await self._is_revoked(row)]
+        access = {row["tokenId"]: row for row in await self.cache.list_json("access:")}
+        families = await self.cache.list_json("family_session:")
+        represented = {row["tokenId"] for row in families}
+        candidates = families + [row for key, row in access.items() if key not in represented]
+        rows = []
+        now = int(time.time())
+        for row in candidates:
+            family_id = str(row.get("familyId") or "")
+            if family_id and await self.cache.get_json("refresh_family_revoked:" + family_id):
+                continue
+            current_access = access.get(row.get("tokenId"))
+            active = bool(current_access and not await self._is_revoked(current_access))
+            refresh_ttl = await self.cache.remaining_ttl("refresh_family:" + family_id) if family_id else 0
+            if not active and refresh_ttl <= 0:
+                continue
+            access_expiry = int((current_access or row).get("accessExpiresAt") or 0)
+            # Read actual cache TTL for upgraded sessions which predate expiry metadata.
+            refresh_expiry = int(row.get("refreshExpiresAt") or now + refresh_ttl) if refresh_ttl > 0 else 0
+            row.update(
+                terminalType=row.get("terminalType") or "web",
+                accessTokenExpiresAt=_timestamp(access_expiry) if access_expiry else None,
+                reauthRequiredAt=_timestamp(max(access_expiry if active else 0, refresh_expiry)),
+                sessionStatus="active" if active else "refreshable",
+            )
+            rows.append(row)
         rows = self._filter_online_rows(rows, search)
         rows.sort(key=lambda row: str(row.get("loginTime") or ""), reverse=True)
         current_session_id = _hash_token(current_token) if current_token else ""
@@ -1043,6 +1121,7 @@ class AuthService:
             row.pop("accessExpiresAt", None)
             row.pop("familyId", None)
             row.pop("accountVersion", None)
+            row.pop("refreshExpiresAt", None)
         total = len(rows)
         start = (curr_page - 1) * page_size
         return {
@@ -1093,6 +1172,12 @@ class AuthService:
         state["accessExpiresAt"] = expires_at
         state["expiredTime"] = _timestamp(expires_at)
         await self.cache.set_json("access:" + session_key, state, ttl)
+        family_key = "family_session:" + str(state.get("familyId") or "")
+        family = await self.cache.get_json(family_key)
+        if family and family.get("tokenId") == session_key:
+            family_ttl = await self.cache.remaining_ttl(family_key)
+            if family_ttl > 0:
+                await self.cache.set_json(family_key, {**family, "accessExpiresAt": expires_at, "expiredTime": _timestamp(expires_at)}, family_ttl)
 
     async def _revoke_access_state(self, state: Mapping[str, Any]) -> None:
         jti = str(state.get("accessJti") or "")
@@ -1763,6 +1848,7 @@ class AuthService:
         user: Mapping[str, Any],
         scope: str,
         family_id: str | None = None,
+        login_context: Mapping[str, Any] | None = None,
     ) -> dict[str, Any]:
         user_id = int(user["user_id"])
         app_id = int(client.get("appId") or 0)
@@ -1784,6 +1870,7 @@ class AuthService:
         now = int(time.time())
         refresh_token = secrets.token_urlsafe(36)
         refresh_hash = _hash_token(refresh_token)
+        refreshing = family_id is not None
         family_id = family_id or secrets.token_urlsafe(24)
         if await self.cache.get_json("refresh_family_revoked:" + family_id):
             raise AuthError("登录会话已失效，请重新登录", 401)
@@ -1827,6 +1914,9 @@ class AuthService:
                 _account_version(account) if "password" in account or "update_time" in account else None
             ),
             "credentialId": account.get("credential_id"),
+            "loginType": account.get("login_type") or "PASSWORD",
+            "loginIp": str((login_context or {}).get("login_ip") or ""),
+            "userAgent": str((login_context or {}).get("user_agent") or ""),
             "clientId": client.get("clientId"),
             "terminalType": terminal,
             "refreshSeconds": refresh_seconds,
@@ -1840,6 +1930,7 @@ class AuthService:
         current_account = await self._require_account_active(refresh_state)
         if current_account:
             refresh_state["accountVersion"] = _account_version(current_account)
+        refresh_state["refreshExpiresAt"] = int(time.time()) + refresh_seconds
         await self.cache.set_json(
             "refresh:" + refresh_hash,
             refresh_state,
@@ -1849,6 +1940,7 @@ class AuthService:
             "refresh_family:" + family_id,
             {
                 "refreshHash": refresh_hash,
+                "refreshExpiresAt": refresh_state["refreshExpiresAt"],
                 "accessKey": access_key,
                 "accessJti": jti,
                 "accessExpiresAt": now + self.access_seconds,
@@ -1859,6 +1951,8 @@ class AuthService:
         if await self.cache.get_json("refresh_family_revoked:" + family_id):
             await self._revoke_refresh_family(family_id)
             raise AuthError("登录会话已失效", 400, "invalid_grant")
+        event = "REFRESH" if refreshing else "LOGIN:" + str(refresh_state["loginType"])
+        await self.record_session_event(event, refresh_state, login_context, message="凭证自动续期" if refreshing else "登录完成")
         return self._token_response(
             access_token,
             refresh_token,
@@ -1934,8 +2028,10 @@ class AuthService:
             stale_family = str(stale.get("familyId") or "")
             if stale_family:
                 await self._revoke_refresh_family(stale_family)
+                await self.record_session_event("SESSION_REPLACED", stale, refresh_state, message="同一终端新登录，原会话已下线")
             elif stale.get("tokenId"):
                 await self.revoke_access_session(str(stale["tokenId"]))
+        previous = await self.cache.get_json("family_session:" + family_id) or {}
         row = {
             "tokenId": _hash_token(access_token),
             "userId": claims.get("user_id"),
@@ -1946,10 +2042,14 @@ class AuthService:
             "appName": client.get("clientId"),
             "terminalType": terminal,
             "userName": claims.get("username"),
+            "ipaddr": (refresh_state or {}).get("loginIp") or previous.get("ipaddr") or "",
+            "userAgent": (refresh_state or {}).get("userAgent") or previous.get("userAgent") or "",
             "loginLocation": "",
             "browser": "",
             "os": "",
-            "loginTime": _timestamp(now),
+            "loginTime": previous.get("loginTime") or _timestamp(now),
+            "lastRefreshTime": _timestamp(now) if previous else None,
+            "refreshExpiresAt": (refresh_state or {}).get("refreshExpiresAt"),
             "expiredTime": _timestamp(expires_at),
             "activityTime": _timestamp(now),
             "jti": claims.get("jti"),

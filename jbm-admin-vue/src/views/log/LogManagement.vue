@@ -44,7 +44,7 @@ const loginList = usePagedList<BaseAccountLog>((p, s) => listAccountLogs(p, s, c
 const activeList = computed(() => (isLoginLogs.value ? loginList : gatewayList))
 const pageTitle = computed(() => (isLoginLogs.value ? '登录日志' : '访问日志'))
 const pageDescription = computed(() =>
-  isLoginLogs.value ? '用户登录成功记录（账号、IP、终端）' : '网关访问记录',
+  isLoginLogs.value ? '登录成功、失败及会话续期、退出、下线审计，记录账号、终端、IP 与请求编号。' : '网关访问记录',
 )
 const detailTitle = computed(() => {
   if (isLoginLogs.value) {
@@ -167,7 +167,7 @@ function formatTime(value?: string | number) {
   const normalized = typeof value === 'string' && /^\d{11,}$/.test(value) ? Number(value) : value
   const time = new Date(normalized)
   if (Number.isNaN(time.getTime())) return String(value)
-  return time.toLocaleString()
+  return time.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false })
 }
 
 function gatewayRowAccessId(row: GatewayLog, index: number) {
@@ -239,7 +239,10 @@ function accountLogId(row: BaseAccountLog, index: number) {
 }
 
 function accountLoginTime(row: BaseAccountLog) {
-  return formatTime(row.loginTime || row.createTime)
+  const value = row.loginTime || row.createTime
+  // Python Auth stores UTC in SQL DATETIME; the generic CRUD API omits its offset.
+  const utc = value && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value) ? `${value.replace(' ', 'T')}Z` : value
+  return formatTime(utc)
 }
 
 function accountLoginIp(row: BaseAccountLog) {
@@ -249,6 +252,19 @@ function accountLoginIp(row: BaseAccountLog) {
 function accountLoginStatus(row: BaseAccountLog) {
   if (row.loginStatus == null) return '-'
   return row.loginStatus ? '成功' : '失败'
+}
+
+function accountTerminal(row: BaseAccountLog) {
+  if (!row.clientId) return '未记录'
+  if (row.clientId.endsWith(':miniapp')) return '小程序'
+  if (row.clientId.endsWith(':app')) return 'APP'
+  return 'Web'
+}
+
+function accountEvent(row: BaseAccountLog) {
+  const kind = row.loginType || row.accountType || ''
+  const events: Record<string, string> = { REFRESH: '自动续期', REFRESH_FAILED: '续期失败', REFRESH_REPLAY: '凭证重放拦截', LOGOUT: '主动退出', SESSION_REPLACED: '同端顶号下线', ADMIN_REVOKE: '管理员下线', ADMIN_EXPIRE: '调整凭证有效期', LOGIN_FAILED: '登录失败', AUTH_CODE_FAILED: '授权码兑换失败', REVOKE: '撤销凭证' }
+  return kind.startsWith('LOGIN:') ? `登录完成 · ${kind.slice(6)}` : events[kind] || kind || '-'
 }
 
 watch(
@@ -350,7 +366,8 @@ onUnmounted(stopAutoRefresh)
           <tr class="border-b bg-muted/50">
             <th class="h-10 px-4 text-left font-medium">登录时间</th>
             <th class="h-10 px-4 text-left font-medium">账号</th>
-            <th class="h-10 px-4 text-left font-medium">登录方式</th>
+            <th class="h-10 px-4 text-left font-medium">事件 / 登录方式</th>
+            <th class="h-10 px-4 text-left font-medium">登录终端</th>
             <th class="h-10 px-4 text-left font-medium">状态</th>
             <th class="h-10 px-4 text-left font-medium">来源 IP</th>
             <th class="h-10 px-4 text-left font-medium">登录属地</th>
@@ -367,7 +384,8 @@ onUnmounted(stopAutoRefresh)
           >
             <td class="p-4 text-sm text-muted-foreground">{{ accountLoginTime(row) }}</td>
             <td class="p-4">{{ row.account || row.userName || '-' }}</td>
-            <td class="p-4">{{ row.loginType || row.accountType || '-' }}<span v-if="row.riskLevel === 'warning'" class="ml-2 text-xs text-amber-600">异地登录</span></td>
+            <td class="p-4">{{ accountEvent(row) }}<span v-if="row.riskLevel === 'warning'" class="ml-2 text-xs text-amber-600">异地登录</span></td>
+            <td class="p-4 whitespace-nowrap">{{ accountTerminal(row) }}</td>
             <td class="p-4">
               <Badge :variant="row.loginStatus === false ? 'destructive' : 'secondary'">
                 {{ accountLoginStatus(row) }}
@@ -457,8 +475,8 @@ onUnmounted(stopAutoRefresh)
           <div>{{ accountLoginTime(selectedAccountLog) }}</div>
         </div>
         <div>
-          <div class="text-muted-foreground">登录方式</div>
-          <div>{{ selectedAccountLog.loginType || selectedAccountLog.accountType || '-' }}</div>
+          <div class="text-muted-foreground">事件 / 登录方式</div>
+          <div>{{ accountEvent(selectedAccountLog) }} · {{ accountTerminal(selectedAccountLog) }}</div>
         </div>
         <div>
           <div class="text-muted-foreground">状态</div>
