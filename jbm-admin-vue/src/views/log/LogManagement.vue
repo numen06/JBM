@@ -241,7 +241,7 @@ function accountLogId(row: BaseAccountLog, index: number) {
 function accountLoginTime(row: BaseAccountLog) {
   const value = row.loginTime || row.createTime
   // Python Auth stores UTC in SQL DATETIME; the generic CRUD API omits its offset.
-  const utc = value && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value) ? `${value.replace(' ', 'T')}Z` : value
+  const utc = typeof value === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(value) ? `${value.replace(' ', 'T')}Z` : value
   return formatTime(utc)
 }
 
