@@ -22,6 +22,12 @@ jbm:
     login-error-number: 5
     login-error-limit-minutes: 10
     cache-prefix: jbm:auth
+    session-policy:
+      web-idle-seconds: 7200
+      web-admin-idle-seconds: 3600
+      web-absolute-seconds: 43200
+      mobile-absolute-seconds: 7776000
+      recent-auth-seconds: 600
     # Apply Center migration 20260928_24 first. Never infer RP/origin from Host.
     key-login:
       enabled: false
@@ -43,7 +49,7 @@ jbm:
       key-id: jbm-auth-rs256
       access-token-seconds: 1800
       refresh-token-seconds: 604800
-      mobile-refresh-token-seconds: 2592000
+      mobile-refresh-token-seconds: 1296000
       private-key: ""
       # kid -> PEM public key; retained during planned key rotation.
       verification-keys: {}

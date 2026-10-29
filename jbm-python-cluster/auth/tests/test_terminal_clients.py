@@ -163,7 +163,7 @@ def test_registered_clients_share_app_permissions_but_not_sessions(tmp_path):
                 "refresh_token": tokens["app"]["refresh_token"],
             },
         ).json()
-        assert renewed["refresh_expires_in"] == 2592000
+        assert renewed["refresh_expires_in"] == 1296000
         assert renewed["refresh_token"] != tokens["app"]["refresh_token"]
         assert (
             client.post("/oauth2/logout", data={"access_token": renewed["access_token"]}).json()[

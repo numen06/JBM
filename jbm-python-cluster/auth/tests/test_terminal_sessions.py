@@ -50,7 +50,7 @@ async def terminal_lifecycle(redis_url=None):
             assert (await other.userinfo(token["access_token"]))["userId"] == 7
             assert auth.signer.verify(token["access_token"])["terminal_type"] == terminal
             assert token["expires_in"] == 1800
-            assert token["refresh_expires_in"] == (604800 if terminal == "web" else 2592000)
+            assert token["refresh_expires_in"] == (43200 if terminal == "web" else 1296000)
 
         # Only the same terminal is evicted; its refresh cannot revive it.
         old = tokens["miniapp"]
@@ -152,13 +152,13 @@ def test_mobile_refresh_rolls_for_active_use_and_expires_after_inactivity(monkey
             state = await cache.get_json("refresh:" + _hash_token(token["refresh_token"]))
             family = state["familyId"]
             for _ in range(3):
-                now[0] += 29 * 86400
+                now[0] += 14 * 86400
                 token = await auth.refresh_token(form(token))
                 state = await cache.get_json("refresh:" + _hash_token(token["refresh_token"]))
                 assert state["familyId"] == family
-                assert state["refreshSeconds"] == 30 * 86400
-                assert token["refresh_expires_in"] == 30 * 86400
-            now[0] += 30 * 86400 + 1
+                assert state["refreshSeconds"] == 15 * 86400
+                assert token["refresh_expires_in"] == 15 * 86400
+            now[0] += 15 * 86400 + 1
             with pytest.raises(AuthError):
                 await auth.refresh_token(form(token))
 

@@ -22,6 +22,8 @@ import {
   logoutUser,
 } from '@/api/online'
 import type { BaseApp, SysUserOnline } from '@/api/types'
+import { sessionStatus } from '@/api/auth'
+import { useAuthStore } from '@/stores/auth'
 import { optionalSnowflakeIdParam, toSnowflakeIdString } from '@/lib/snowflakeId'
 
 const { hasAction, isSuperAdmin } = usePermission()
@@ -32,6 +34,13 @@ const ipaddr = ref('')
 const appIdFilter = ref<number | string>('')
 const companyIdFilter = ref<number | string | null>('')
 const apps = ref<BaseApp[]>([])
+const policy = ref<Record<string, number> | null>(null)
+
+function duration(seconds: number) {
+  if (seconds % 86400 === 0) return `${seconds / 86400} 天`
+  if (seconds % 3600 === 0) return `${seconds / 3600} 小时`
+  return `${Math.round(seconds / 60)} 分钟`
+}
 const actionError = ref('')
 const actionLoading = ref(false)
 
@@ -64,6 +73,10 @@ onMounted(async () => {
   } catch {
     apps.value = []
   }
+  try {
+    const status = await sessionStatus(useAuthStore().accessToken)
+    policy.value = { ...status.policy, 'mobile-refresh-seconds': status.mobileRefreshSeconds }
+  } catch { policy.value = null }
 })
 
 function buildSearch() {
@@ -228,7 +241,7 @@ async function handleExpireImmediately(row: SysUserOnline) {
   <div class="space-y-4">
     <PageHeader
       title="在线用户"
-      description="查看各终端登录状态与免登录截止时间。活跃会话自动续期，截止时间随之顺延；时间均为北京时间。"
+      description="截止时间取闲置、续期和最长授权期限中的最早时间；自动刷新不计为用户操作。时间均为北京时间。"
     >
       <template #actions>
         <OrgTreeSelect
@@ -260,6 +273,15 @@ async function handleExpireImmediately(row: SysUserOnline) {
         </Button>
       </template>
     </PageHeader>
+
+    <div v-if="policy" class="flex flex-wrap gap-x-5 gap-y-2 rounded-md border px-3 py-2 text-xs text-muted-foreground">
+      <span>Web 普通用户闲置：{{ duration(policy['web-idle-seconds']) }}</span>
+      <span>超级管理员闲置：{{ duration(policy['web-admin-idle-seconds']) }}</span>
+      <span>Web 最长授权：{{ duration(policy['web-absolute-seconds']) }}</span>
+      <span>移动端未续期：{{ duration(policy['mobile-refresh-seconds']) }}</span>
+      <span>移动端最长授权：{{ duration(policy['mobile-absolute-seconds']) }}</span>
+      <span>敏感操作验证有效期：{{ duration(policy['recent-auth-seconds']) }}</span>
+    </div>
 
     <div class="flex flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-3 py-2 text-sm">
       <span>共 {{ total }} 个有效登录会话</span>
@@ -321,7 +343,9 @@ async function handleExpireImmediately(row: SysUserOnline) {
               </td>
               <td class="p-4 text-sm text-muted-foreground">
                 <div class="text-foreground">{{ row.reauthRequiredAt ? formatEffectiveExpiredTime(row) : '下次续期后显示' }}</div>
-                <div class="mt-1 text-xs">不再续期时需重新登录，活跃时顺延</div>
+                <div v-if="row.idleExpiresAt" class="mt-1 text-xs">闲置截止：{{ formatTime(row.idleExpiresAt) }}</div>
+                <div v-else class="mt-1 text-xs">自动续期可顺延，最长授权截止不顺延</div>
+                <div v-if="row.absoluteExpiresAt" class="mt-1 text-xs">最长授权截止：{{ formatTime(row.absoluteExpiresAt) }}</div>
                 <div class="mt-1 text-xs">访问凭证到期：{{ formatTime(row.accessTokenExpiresAt ?? row.expiredTime) }}</div>
               </td>
               <td class="p-4 font-mono text-xs text-muted-foreground" :title="row.tokenId">

@@ -15,6 +15,7 @@ export function getPlatformClient() {
 }
 
 export function createAdminPlatformClient(router: Router) {
+  useAuthStore().bindSessionActivity()
   const client = createJbmClient({
     baseUrl: apiBaseUrl,
     tokenProvider: {

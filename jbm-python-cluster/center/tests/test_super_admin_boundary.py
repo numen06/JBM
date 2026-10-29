@@ -53,6 +53,8 @@ async def test_userinfo_uses_current_roles_instead_of_embedded_admin_claim():
     service = object.__new__(AuthService)
     service.signer = SimpleNamespace(verify=lambda _: {'user_id': 3, 'admin': True, 'username': 'former_admin'})
     service._require_active_access = AsyncMock()
+    service.cache = SimpleNamespace(get_json=AsyncMock(return_value=None))
+    service.session_policy_config = {'recent-auth-seconds': 600}
     service.repository = SimpleNamespace(user_roles=AsyncMock(return_value=[{'role_id': 4, 'role_code': 'emc_admin'}]))
     service._permissions_for_claims = AsyncMock(return_value=[])
     identity = await service.userinfo('previously-issued-token')

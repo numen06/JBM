@@ -82,6 +82,7 @@ class RequestAccessService:
             return await self.signed(body, api)
         identity = await self.auth.authenticate(authorization)
         require_api_boundary(service, path, identity)
+        self.require_recent_authentication(service, method, path, identity)
         if api is not None:
             if api.get("status") != 1:
                 raise HTTPException(403, "接口已停用")
@@ -117,6 +118,20 @@ class RequestAccessService:
         else:
             authorize_api(service, method, path, identity)
         return {"allowed": True, "identity": identity}
+
+    @staticmethod
+    def require_recent_authentication(service: str, method: str, path: str, identity: dict[str, Any]) -> None:
+        if method in {"GET", "HEAD", "OPTIONS"} or path.rsplit("/", 1)[-1].lower() in {"pagelist", "list", "tree", "model", "root", "check", "query"}:
+            return
+        sensitive = bool(
+            ("center" in service and re.search(r"/(user|baseUser|account|baseAccount|role|baseRole|authority|baseAuthority|grant|delegations|baseTenantApp)(/|$)", path))
+            or re.search(r"/(batch[^/]*|bulk[^/]*)(/|$)", path, re.I)
+            or re.search(r"/air-conditioning/automation/(scenes|policies)/[^/]+/(execute|run)$", path)
+        )
+        if sensitive and identity.get("userId") is not None:
+            auth_time = int(identity.get("authTime") or 0)
+            if not auth_time or time.time() - auth_time >= int(identity.get("recentAuthSeconds") or 600):
+                raise HTTPException(401, "此敏感操作需要重新验证身份，请重新登录后再试")
 
     async def signed(self, body: dict[str, Any], api: dict[str, Any] | None) -> dict[str, Any]:
         if api is None or api.get("status") != 1 or api.get("is_open") != 1:

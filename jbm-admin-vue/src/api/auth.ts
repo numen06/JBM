@@ -118,7 +118,7 @@ async function postOAuthToken(body: URLSearchParams): Promise<OAuth2TokenResult>
   })
   const raw = (await res.json()) as Record<string, unknown>
   if (!res.ok || typeof raw.access_token !== 'string') {
-    throw new Error(String(raw.error_description || raw.error || 'OAuth2 Token 请求失败'))
+    throw Object.assign(new Error(String(raw.error_description || raw.error || 'OAuth2 Token 请求失败')), { status: res.status, oauthError: raw.error })
   }
   return normalizeTokenPayload(raw)
 }
@@ -211,6 +211,15 @@ export async function logout(refreshToken?: string): Promise<void> {
   } catch {
     // ignore logout errors
   }
+}
+
+export async function sessionStatus(token: string, activity = false) {
+  const response = await fetch(authCenterUrl(activity ? '/oauth2/session/activity' : '/oauth2/session/status'), {
+    method: activity ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}` }, cache: 'no-store',
+  })
+  const body = await response.json()
+  if (!response.ok || body.success === false) throw Object.assign(new Error(body.message || '会话检查失败'), { status: response.status, oauthError: body.error })
+  return body.result
 }
 
 /** dev：通过兼容端点恢复 admin 密码与本地 OAuth 种子凭证。 */

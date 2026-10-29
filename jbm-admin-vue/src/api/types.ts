@@ -473,6 +473,9 @@ export interface SysUserOnline {
   lastRefreshTime?: string | null
   accessTokenExpiresAt?: string | null
   reauthRequiredAt?: string | null
+  idleExpiresAt?: string | null
+  absoluteExpiresAt?: string | null
+  lastHumanActivityAt?: string | null
   sessionStatus?: 'active' | 'refreshable'
 }
 

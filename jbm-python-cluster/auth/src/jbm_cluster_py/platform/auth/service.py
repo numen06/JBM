@@ -367,7 +367,18 @@ class AuthService:
         self.audience = audience
         self.access_seconds = int(jwt_config.get("access-token-seconds") or 1800)
         self.refresh_seconds = int(jwt_config.get("refresh-token-seconds") or 604800)
-        self.mobile_refresh_seconds = int(jwt_config.get("mobile-refresh-token-seconds") or 2592000)
+        self.mobile_refresh_seconds = int(jwt_config.get("mobile-refresh-token-seconds") or 1296000)
+        self.session_policy_config = {
+            "web-idle-seconds": 7200,
+            "web-admin-idle-seconds": 3600,
+            "web-absolute-seconds": 43200,
+            "mobile-absolute-seconds": 7776000,
+            "recent-auth-seconds": 600,
+            **dict(self.config.get("session-policy") or {}),
+        }
+        self.session_policy_config = {key: int(value) for key, value in self.session_policy_config.items()}
+        if any(value <= 0 for value in self.session_policy_config.values()):
+            raise ValueError("会话策略时长必须为正数")
         self.account_domain = str(self.config.get("account-domain") or "@admin.com")
         self.max_errors = int(self.config.get("login-error-number") or 5)
         self.lock_minutes = int(self.config.get("login-error-limit-minutes") or 10)
@@ -590,6 +601,7 @@ class AuthService:
                 "clientId": client.get("clientId"),
                 "redirectUri": redirect_uri,
                 **dict(grant),
+                "authTime": int(time.time()),
             },
             300,
         )
@@ -632,6 +644,7 @@ class AuthService:
             "user_id": user_id,
             "must_change_password": cached.get("mustChangePassword"),
             "login_type": cached.get("loginType") or "PASSWORD",
+            "auth_time": cached.get("authTime"),
         }
         return await self._issue_user_token(client, account, user, str(cached.get("scope") or "all"), login_context=form)
 
@@ -904,6 +917,7 @@ class AuthService:
             raise AuthError("客户端无效", 401)
         self._validate_token_client(client, form)
         # Authentication must precede every mutation, including replay revocation.
+        await self._check_session_policy(state)
         state, reused = await self.cache.consume_refresh(
             token_hash, int(state.get("refreshSeconds") or self.refresh_seconds)
         )
@@ -1060,6 +1074,8 @@ class AuthService:
         await self._require_active_access(token, claims)
         role_context = await self._current_role_context(claims)
         permissions = await self._permissions_for_claims(claims, role_context)
+        state = await self.cache.get_json("access:" + _hash_token(token)) or {}
+        policy = await self._session_policy(state) if state.get("familyId") else None
         return {
             "sub": claims.get("sub"),
             "userId": claims.get("user_id"),
@@ -1079,7 +1095,88 @@ class AuthService:
             "permissions": permissions,
             "scope": claims.get("scope"),
             "mustChangePassword": bool(claims.get("must_change_password")),
+            "authTime": policy["authenticatedAt"] if policy else claims.get("iat"),
+            "recentAuthSeconds": int(self.session_policy_config["recent-auth-seconds"]),
         }
+
+    async def _session_policy(self, state: Mapping[str, Any]) -> dict[str, Any]:
+        """Only explicit human activity updates idle time; refresh preserves authentication age."""
+        family_id = str(state.get("familyId") or "")
+        key = "session_policy:" + family_id
+        policy = await self.cache.get_json(key)
+        if policy:
+            return policy
+        async with self.cache.lock(key):
+            policy = await self.cache.get_json(key)
+            if policy:
+                return policy
+            row = await self.cache.get_json("family_session:" + family_id) or dict(state)
+            now = int(time.time())
+
+            def epoch(value: Any, fallback: int) -> int:
+                if isinstance(value, (int, float)):
+                    return int(value)
+                try:
+                    parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+                    return int((parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)).timestamp())
+                except (ValueError, TypeError):
+                    return fallback
+
+            created = epoch(row.get("loginTime"), now)
+            refreshed = epoch(row.get("lastRefreshTime") or row.get("loginTime"), int(state.get("accessExpiresAt") or now + self.access_seconds) - self.access_seconds)
+            roles = await self.repository.user_roles(int(row.get("userId") or state.get("userId") or 0), int(row.get("appId") or 0), int(row.get("companyId") or 0)) if row.get("userId") else []
+            policy = {
+                "createdAt": created,
+                "authenticatedAt": int(state.get("authTime") or created),
+                "lastActivityAt": epoch(row.get("lastHumanActivityAt") or row.get("activityTime"), created),
+                "lastRefreshAt": max(created, refreshed),
+                "terminalType": state.get("terminalType") or row.get("terminalType") or "web",
+                "isRoot": bool(state.get("root") or row.get("root") or row.get("userName") == "admin" or any(int(role.get("role_id") or 0) == 1 for role in roles)),
+            }
+            await self._save_session_policy(family_id, policy)
+            return policy
+
+    async def _save_session_policy(self, family_id: str, policy: Mapping[str, Any]) -> None:
+        limit = self._policy_deadlines(policy)["absoluteExpiresAt"]
+        await self.cache.set_json("session_policy:" + family_id, dict(policy), max(int(limit) - int(time.time()) + 120, 120))
+
+    def _policy_deadlines(self, policy: Mapping[str, Any]) -> dict[str, Any]:
+        mobile = policy.get("terminalType") in {"miniapp", "app"}
+        settings = self.session_policy_config
+        absolute = int(policy["createdAt"]) + int(settings["mobile-absolute-seconds" if mobile else "web-absolute-seconds"])
+        idle_seconds = None if mobile else int(settings["web-admin-idle-seconds" if policy.get("isRoot") else "web-idle-seconds"])
+        idle = int(policy["lastActivityAt"]) + idle_seconds if idle_seconds is not None else None
+        refresh = int(policy["lastRefreshAt"]) + (self.mobile_refresh_seconds if mobile else self.refresh_seconds)
+        return {"absoluteExpiresAt": absolute, "idleExpiresAt": idle, "idleTimeoutSeconds": idle_seconds,
+                "refreshExpiresAt": refresh, "reauthRequiredAt": min(x for x in (absolute, idle, refresh) if x is not None)}
+
+    async def _check_session_policy(self, state: Mapping[str, Any], policy: dict[str, Any] | None = None) -> dict[str, Any]:
+        policy = policy or await self._session_policy(state)
+        deadlines = self._policy_deadlines(policy)
+        if int(time.time()) >= deadlines["reauthRequiredAt"]:
+            await self._revoke_refresh_family(str(state["familyId"]))
+            await self.record_session_event("SESSION_EXPIRED", state, message="会话闲置或最长授权期限已到，需重新验证身份")
+            raise AuthError("会话已超时，请重新登录", 401, "invalid_grant")
+        return policy
+
+    async def session_status(self, token: str, *, activity: bool = False) -> dict[str, Any]:
+        claims = self.signer.verify(token)
+        await self._require_active_access(token, claims)
+        state = await self.cache.get_json("access:" + _hash_token(token)) or {}
+        if not state.get("familyId"):
+            raise AuthError("此凭证不是用户会话", 403)
+        policy = await self._check_session_policy(state)
+        if activity:
+            async with self.cache.lock("session_policy:" + state["familyId"]):
+                policy = await self._check_session_policy(state, await self.cache.get_json("session_policy:" + state["familyId"]) or policy)
+                policy["lastActivityAt"] = int(time.time())
+                await self._save_session_policy(state["familyId"], policy)
+        deadlines = self._policy_deadlines(policy)
+        return {**{key: (_timestamp(value) if value is not None and key.endswith("At") else value) for key, value in deadlines.items()},
+                "lastHumanActivityAt": _timestamp(int(policy["lastActivityAt"])),
+                "authTime": policy["authenticatedAt"], "terminalType": policy["terminalType"],
+                "isRoot": policy["isRoot"], "policy": self.session_policy_config,
+                "mobileRefreshSeconds": self.mobile_refresh_seconds}
 
     async def online_users(
         self,
@@ -1099,6 +1196,13 @@ class AuthService:
             family_id = str(row.get("familyId") or "")
             if family_id and await self.cache.get_json("refresh_family_revoked:" + family_id):
                 continue
+            deadlines = None
+            if family_id:
+                try:
+                    policy = await self._check_session_policy(row)
+                    deadlines = self._policy_deadlines(policy)
+                except AuthError:
+                    continue
             current_access = access.get(row.get("tokenId"))
             active = bool(current_access and not await self._is_revoked(current_access))
             refresh_ttl = await self.cache.remaining_ttl("refresh_family:" + family_id) if family_id else 0
@@ -1110,7 +1214,10 @@ class AuthService:
             row.update(
                 terminalType=row.get("terminalType") or "web",
                 accessTokenExpiresAt=_timestamp(access_expiry) if access_expiry else None,
-                reauthRequiredAt=_timestamp(max(access_expiry if active else 0, refresh_expiry)),
+                reauthRequiredAt=_timestamp(min(max(access_expiry if active else 0, refresh_expiry), deadlines["reauthRequiredAt"])) if deadlines else _timestamp(max(access_expiry if active else 0, refresh_expiry)),
+                idleExpiresAt=_timestamp(deadlines["idleExpiresAt"]) if deadlines and deadlines["idleExpiresAt"] else None,
+                absoluteExpiresAt=_timestamp(deadlines["absoluteExpiresAt"]) if deadlines else None,
+                lastHumanActivityAt=_timestamp(policy["lastActivityAt"]) if deadlines else None,
                 sessionStatus="active" if active else "refreshable",
             )
             rows.append(row)
@@ -1270,6 +1377,8 @@ class AuthService:
                 raise AuthError("登录会话已失效", 401)
             if state.get("familyId") and await self.cache.get_json("refresh_family_revoked:" + str(state["familyId"])):
                 raise AuthError("登录会话已失效", 401)
+            if state.get("familyId"):
+                await self._check_session_policy(state)
             user = await self.repository.find_user(int(claims["user_id"]))
             if not user or not user_is_active(user):
                 raise AuthError("用户已被禁用", 403)
@@ -1878,6 +1987,12 @@ class AuthService:
         family_id = family_id or secrets.token_urlsafe(24)
         if await self.cache.get_json("refresh_family_revoked:" + family_id):
             raise AuthError("登录会话已失效，请重新登录", 401)
+        policy = await self._session_policy({"familyId": family_id, "terminalType": terminal, "root": root, "authTime": account.get("auth_time")})
+        await self._check_session_policy({"familyId": family_id})
+        policy["isRoot"] = root
+        policy["lastRefreshAt"] = now
+        await self._save_session_policy(family_id, policy)
+        refresh_seconds = min(refresh_seconds, self._policy_deadlines(policy)["absoluteExpiresAt"] - now)
         jti = secrets.token_urlsafe(24)
         login_id = "%s:%s:%s" % (user.get("user_type") or "normal", app_id, user_id)
         claims = {
@@ -1900,6 +2015,7 @@ class AuthService:
             "user_type": user.get("user_type"),
             "roles": role_codes,
             "root": root,
+            "auth_time": policy["authenticatedAt"],
             "scope": scope,
             "must_change_password": bool(account.get("must_change_password")),
             "iat": now,
@@ -1923,6 +2039,7 @@ class AuthService:
             "userAgent": str((login_context or {}).get("user_agent") or ""),
             "clientId": client.get("clientId"),
             "terminalType": terminal,
+            "root": root,
             "refreshSeconds": refresh_seconds,
             "scope": scope,
             "mustChangePassword": bool(account.get("must_change_password")),
@@ -1969,6 +2086,7 @@ class AuthService:
                 "permissions": permissions,
                 "terminal_type": terminal,
                 "refresh_expires_in": refresh_seconds,
+                "session_absolute_expires_at": self._policy_deadlines(policy)["absoluteExpiresAt"],
             },
         )
 
@@ -2046,6 +2164,7 @@ class AuthService:
             "appName": client.get("clientId"),
             "terminalType": terminal,
             "userName": claims.get("username"),
+            "root": bool(claims.get("root")),
             "ipaddr": (refresh_state or {}).get("loginIp") or previous.get("ipaddr") or "",
             "userAgent": (refresh_state or {}).get("userAgent") or previous.get("userAgent") or "",
             "loginLocation": "",

@@ -19,6 +19,16 @@ logger = logging.getLogger(__name__)
 def build_auth_router(auth_service: AuthService) -> APIRouter:
     router = APIRouter()
 
+    @router.get("/oauth2/session/status")
+    @router.post("/oauth2/session/activity")
+    async def session_status(request: Request) -> JSONResponse:
+        try:
+            result = await auth_service.session_status(_bearer_token(request), activity=request.method == "POST")
+            return JSONResponse(content=ok(result), headers={"Cache-Control": "no-store"})
+        except (AuthError, JwtError) as exc:
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content={**fail(None, str(exc), code), "error": getattr(exc, "oauth_error", None) or "invalid_token"}, headers={"Cache-Control": "no-store"})
+
     @router.post("/oauth2/token")
     async def token(request: Request) -> JSONResponse:
         form = await _request_params(request)

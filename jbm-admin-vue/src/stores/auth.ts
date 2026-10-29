@@ -23,6 +23,40 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<CurrentUser | null>(null)
   const mustChangePassword = ref(false)
   let storageSyncBound = false
+  let activityBound = false
+  let sessionCheckRunning = false
+  let lastActivitySent = 0
+
+  function bindSessionActivity() {
+    if (activityBound || typeof window === 'undefined') return
+    activityBound = true
+    const check = async (activity = false) => {
+      if (!accessToken.value || sessionCheckRunning) return
+      sessionCheckRunning = true
+      try {
+        try { await authApi.sessionStatus(accessToken.value, activity) }
+        catch (error) {
+          if ((error as { status?: number }).status !== 401 || !refreshToken.value) throw error
+          await refreshAccessToken()
+          await authApi.sessionStatus(accessToken.value, activity)
+        }
+      } catch (error) {
+        const status = (error as { status?: number }).status
+        if (status === 400 || status === 401 || status === 403) {
+          clearSession()
+          if (runtimeConfig.onSessionExpired) await runtimeConfig.onSessionExpired()
+          else window.location.replace(`${import.meta.env.BASE_URL}login`)
+        }
+      } finally { sessionCheckRunning = false }
+    }
+    const activity = (event: Event) => {
+      if (!event.isTrusted || document.visibilityState !== 'visible' || Date.now() - lastActivitySent < 60_000) return
+      lastActivitySent = Date.now()
+      void check(true)
+    }
+    for (const name of ['pointerdown', 'keydown', 'wheel', 'touchstart']) window.addEventListener(name, activity, { passive: true, capture: true })
+    window.setInterval(() => { void check() }, 30_000)
+  }
 
   const isLoggedIn = computed(() => !!accessToken.value)
 
@@ -193,6 +227,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function init() {
+    bindSessionActivity()
     if (accessToken.value) {
       const currentUser = await fetchUser()
       if (!currentUser) {
@@ -226,6 +261,7 @@ export const useAuthStore = defineStore('auth', () => {
     fetchUser,
     clearSession,
     bindSessionStorageSync,
+    bindSessionActivity,
     init,
   }
 })

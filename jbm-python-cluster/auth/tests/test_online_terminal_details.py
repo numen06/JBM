@@ -28,7 +28,7 @@ def test_admin_sees_all_terminals_and_real_rolling_login_deadlines(monkeypatch):
             initial = {row["terminalType"]: row for row in rows}
             for terminal, row in initial.items():
                 assert epoch(row["accessTokenExpiresAt"]) == now[0] + 1800
-                lifetime = 7 * 86400 if terminal == "web" else 30 * 86400
+                lifetime = 7200 if terminal == "web" else 15 * 86400
                 assert epoch(row["reauthRequiredAt"]) == now[0] + lifetime
                 assert row["lastRefreshTime"] is None
                 assert row["sessionStatus"] == "active"
@@ -54,7 +54,7 @@ def test_admin_sees_all_terminals_and_real_rolling_login_deadlines(monkeypatch):
             mini = next(row for row in rows if row["terminalType"] == "miniapp")
             assert mini["loginTime"] == initial["miniapp"]["loginTime"]
             assert epoch(mini["lastRefreshTime"]) == now[0]
-            assert epoch(mini["reauthRequiredAt"]) == now[0] + 30 * 86400
+            assert epoch(mini["reauthRequiredAt"]) == now[0] + 15 * 86400
             assert mini["currentSession"] is True
             assert mini["sessionStatus"] == "active"
             await auth.expire_access_session(_hash_token(rotated["access_token"]), 10)
@@ -64,13 +64,13 @@ def test_admin_sees_all_terminals_and_real_rolling_login_deadlines(monkeypatch):
                 if row["terminalType"] == "miniapp"
             )
             assert epoch(mini["accessTokenExpiresAt"]) == now[0] + 10
-            assert epoch(mini["reauthRequiredAt"]) == now[0] + 30 * 86400
+            assert epoch(mini["reauthRequiredAt"]) == now[0] + 15 * 86400
             await auth.logout(rotated["access_token"])
             assert {row["terminalType"] for row in (await auth.online_users({}))["contents"]} == {
                 "web",
                 "app",
             }
-            now[0] += 30 * 86400 + 1
+            now[0] += 15 * 86400 + 1
             assert (await auth.online_users({}))["total"] == 0
 
     asyncio.run(exercise())
@@ -89,7 +89,7 @@ def test_legacy_session_deadline_uses_remaining_ttl_without_extending_it(monkeyp
             old = await cache.get_json(key)
             old.pop("refreshExpiresAt")
             old.pop("lastRefreshTime")
-            await cache.set_json(key, old, 30 * 86400)
+            await cache.set_json(key, old, 15 * 86400)
             now[0] += 5000
             deadline = epoch((await auth.online_users({}))["contents"][0]["reauthRequiredAt"])
             now[0] += 5000
