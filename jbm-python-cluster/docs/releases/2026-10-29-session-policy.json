@@ -1,0 +1,236 @@
+{
+  "releaseId": "2026-10-29-configurable-session-policy",
+  "status": "deployed-and-verified",
+  "verifiedAtUtc": "2026-10-29T03:29:10.348286+00:00",
+  "policy": {
+    "web-idle-seconds": 7200,
+    "web-admin-idle-seconds": 3600,
+    "web-absolute-seconds": 43200,
+    "mobile-absolute-seconds": 7776000,
+    "recent-auth-seconds": 600,
+    "mobile-refresh-token-seconds": 1296000
+  },
+  "configuration": {
+    "source": "jbm.auth.session-policy and jbm.auth.jwt.mobile-refresh-token-seconds",
+    "sourceFile": "jbm-python-cluster/auth/resource/application.yml",
+    "productionOverrides": "Existing JBM_CONFIG_JSON deployment overrides; unrelated settings preserved",
+    "localConfigCenter": "auth-dev.yml in local Nacos namespace jbm-py",
+    "reload": "Reload the Auth service after changing the authoritative configuration. Deployment environment overrides take precedence over Nacos and packaged defaults.",
+    "frontend": "Online Users shows effective server values. No policy duration is hardcoded in the frontend; the page currently displays settings rather than editing them."
+  },
+  "services": [
+    {
+      "service": "jbm7_jbm-cluster-platform-auth",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:ddba8dedbabee0ec096af989df48d19a668b096f5a4d07acd368f9eb1e4d2365",
+      "tag": "py-7.3.48",
+      "commit": "e67aa56ca41bd6839915badb33ff4852824d389b",
+      "task": "cdde947a-45ea-4334-b72c-1f65288b7af6",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:2c3ac7f84db56399e14c3606e5ca3dd7080f47de298fe12e0beb5c2eb0dbb526",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "313d8ee57f7c",
+      "configurationPreserved": true
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-center",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center@sha256:37433155214a0bc1183198a2d51faf3ac15284e12f4ae10ae5679540f45695df",
+      "tag": "py-7.3.46",
+      "commit": "d9bd3bab447a43ed48149ecb451e9de6ed4763aa",
+      "task": "b3671a85-879d-4e51-986c-0769bbe4788d",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center@sha256:7bbc312f022578d27eb81845e1899d07466f493af02505fa94aacb9d7c7a9203",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "d2acbf1b97f2",
+      "configurationPreserved": true
+    },
+    {
+      "service": "jbm7_jbm-admin",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin@sha256:3e606254902b24fa1dd2639b11e631d00d4c1e4e4f6013202c6c3d9bca9f1e07",
+      "tag": "py-7.3.46",
+      "commit": "d9bd3bab447a43ed48149ecb451e9de6ed4763aa",
+      "task": "b3671a85-879d-4e51-986c-0769bbe4788d",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin@sha256:abaf641d6eb095db148e0a437d3cb2d3a9854f27d612e88b8ce9d9485a20439b",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "b0437a80d4a3",
+      "configurationPreserved": true
+    },
+    {
+      "service": "iot_tpm-iot-platform",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:9edc5cf4519449c64c47261749ed75e3f8baf3e5e59c79a66921203a6134b7ee",
+      "tag": "cloud-session-policy-20261029.1",
+      "commit": "a46914aab0c5859d7ab0f384ac9b8265419f01bf",
+      "task": "065038e9-515c-465e-b4b5-8e3c9ab08a10",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:cloud-control-readback-7d01e5d@sha256:fa53cf6cd248d5b7142bc21d281a72b72747ecee676af603e7aca194db8afa3d",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "3a646bae3a35",
+      "configurationPreserved": true
+    },
+    {
+      "service": "iot_iot-platform-web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:4702cfcac69bf265acff1a0f2e6e784224a6262b6879fbc4e19a2d826c42b902",
+      "tag": "cloud-session-policy-20261029.1",
+      "commit": "a46914aab0c5859d7ab0f384ac9b8265419f01bf",
+      "task": "065038e9-515c-465e-b4b5-8e3c9ab08a10",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:cloud-control-readback-7d01e5d@sha256:958d70cb5ea15cc4448df922bbd6143161fb814d49b1c07b28009cf76374992e",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "ae3a7c41be78",
+      "configurationPreserved": true
+    },
+    {
+      "service": "smart_building_smart-building-web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web@sha256:f0f47627ae639925d17dcc8e8d7ffc612b95ffc1759c68a0b72c068d14d970d8",
+      "tag": "cloud-session-policy-20261029.1",
+      "commit": "9dbee4bd7045fc3648bc226e1ee85792f4bed004",
+      "task": "03fead44-3e51-451a-877a-5978f7464b3c",
+      "baseline": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web@sha256:31c3cafd6419dbaaf20c514e49e65aae34e09d0b4f283615d812371a45a3c13e",
+      "architectures": [
+        "amd64",
+        "arm64"
+      ],
+      "healthy": true,
+      "container": "c4dee6627713",
+      "configurationPreserved": true
+    }
+  ],
+  "sharedAdminPackage": "7.3.0-beta.56",
+  "verification": {
+    "authAndCenterSuite": {
+      "passed": 370,
+      "skippedOptionalBrowserTests": 2,
+      "realRedisTwoWorkerChecks": true
+    },
+    "followupRolePolicyChecks": {
+      "passed": 45
+    },
+    "iotChecks": "Existing control/queue tests and new no-dispatch recent-authentication guard checks passed; runtime-import path was aligned with the current JBM runtime.",
+    "localActualDebug": {
+      "environment": "local",
+      "checks": [
+        {
+          "name": "真实点击延长闲置期限；查询不延长；最长授权及验证时间不变",
+          "passed": true
+        },
+        {
+          "name": "无人工操作，仅后台轮询仍自动返回登录；刷新无法恢复",
+          "passed": true
+        },
+        {
+          "name": "Web 最长 12 小时不能靠操作延长",
+          "passed": true
+        },
+        {
+          "name": "移动端 15 天未续期失效",
+          "passed": true
+        },
+        {
+          "name": "移动端 90 天最长授权失效",
+          "passed": true
+        },
+        {
+          "name": "敏感操作需近期验证；自动续期不能绕过",
+          "passed": true
+        }
+      ],
+      "businessWrites": false,
+      "effectivePolicy": {
+        "web-idle-seconds": 7200,
+        "web-admin-idle-seconds": 3600,
+        "web-absolute-seconds": 43200,
+        "mobile-absolute-seconds": 7776000,
+        "recent-auth-seconds": 600,
+        "mobile-refresh-seconds": 1296000
+      }
+    },
+    "productionFormalAuthAndBrowser": {
+      "environment": "cloud",
+      "checks": [
+        {
+          "name": "真实点击延长闲置期限；查询不延长；最长授权及验证时间不变",
+          "passed": true
+        },
+        {
+          "name": "无人工操作，仅后台轮询仍自动返回登录；刷新无法恢复",
+          "passed": true
+        },
+        {
+          "name": "Web 最长 12 小时不能靠操作延长",
+          "passed": true
+        },
+        {
+          "name": "移动端 15 天未续期失效",
+          "passed": true
+        },
+        {
+          "name": "移动端 90 天最长授权失效",
+          "passed": true
+        },
+        {
+          "name": "敏感操作需近期验证；自动续期不能绕过",
+          "passed": true
+        }
+      ],
+      "businessWrites": false,
+      "effectivePolicy": {
+        "web-idle-seconds": 7200,
+        "web-admin-idle-seconds": 3600,
+        "web-absolute-seconds": 43200,
+        "mobile-absolute-seconds": 7776000,
+        "recent-auth-seconds": 600,
+        "mobile-refresh-seconds": 1296000
+      }
+    },
+    "miniappAfterDeployment": {
+      "sessionStillActive": true,
+      "deviceCount": 13
+    },
+    "screenshots": [
+      "C:/Users/admin/.codex/private/session-policy-20261029/cloud-session-policy.png",
+      "C:/Users/admin/.codex/private/session-policy-20261029/cloud-idle-reauthentication.png"
+    ]
+  },
+  "acceptanceMethod": "Time-based acceptance shortened only newly and formally authenticated test sessions in Redis, never extended their deadlines or changed identity/permissions. Real browser clicks, polling-only expiry, rejected refresh and sensitive-operation authorization were then checked through production HTTP endpoints. No real device control or business writes were executed.",
+  "backups": [
+    "/home/opt/backups/session-policy-20261029-111258",
+    "/home/opt/backups/session-policy-20261029-112238"
+  ],
+  "databaseMigrationRequired": false,
+  "safety": {
+    "unrelatedServicesPreserved": true,
+    "nginxConfigurationAndPortsPreserved": true,
+    "unrelatedBuildingAppVueChangesPreserved": true,
+    "privateKeysRemainedLocal": true,
+    "testSessionsLoggedOut": true
+  },
+  "behavior": [
+    "Ordinary Web idle timeout: 2 hours; super-administrator: 1 hour",
+    "Web absolute lifetime: 12 hours",
+    "Miniapp and APP refresh inactivity lifetime: 15 days; absolute lifetime: 90 days",
+    "Polling, automatic refresh and status checks never reset human idle time or authentication freshness",
+    "Role and permission writes and important batch controls require authentication within the configured 10-minute window",
+    "Current roles are re-evaluated before user activity can extend idle time",
+    "Expired sessions cannot be restored with their refresh tokens"
+  ],
+  "limits": [
+    "APP terminal protocol was verified through formal OAuth APIs; a native APP binary was not tested",
+    "Device-command reauthentication rejection was verified with an isolated no-dispatch test; production device commands were not replayed",
+    "Audit database writes retain their existing best-effort behavior; database-outage zero-loss delivery is not claimed"
+  ]
+}
