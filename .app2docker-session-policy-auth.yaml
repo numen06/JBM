@@ -2,12 +2,12 @@ version: "1.0"
 build:
   project_type: python
   use_project_dockerfile: true
-  dockerfile_name: Dockerfile.session-policy
+  dockerfile_name: Dockerfile.session-policy-auth
   platforms: [linux/amd64, linux/arm64]
 image:
   name: jbm-python-cluster
   prefix: registry.cn-shanghai.aliyuncs.com/okc
-  tag: py-7.3.47
+  tag: py-7.3.48
   push: true
 push_mode: multi
 services:
