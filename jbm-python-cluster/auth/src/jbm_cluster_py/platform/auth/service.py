@@ -1164,8 +1164,8 @@ class AuthService:
         return policy
 
     async def session_status(self, token: str, *, activity: bool = False) -> dict[str, Any]:
-        claims = self.signer.verify(token)
-        await self._require_active_access(token, claims)
+        # Re-evaluate current roles before an activity report can extend idle time.
+        await self.userinfo(token)
         state = await self.cache.get_json("access:" + _hash_token(token)) or {}
         if not state.get("familyId"):
             raise AuthError("此凭证不是用户会话", 403)

@@ -144,7 +144,8 @@ def test_delayed_authorization_code_exchange_does_not_reset_recent_authenticatio
     asyncio.run(exercise())
 
 
-def test_promoted_super_admin_immediately_uses_shorter_idle_limit(clock):
+@pytest.mark.parametrize('operation', ['userinfo', 'activity'])
+def test_promoted_super_admin_immediately_uses_shorter_idle_limit(clock, operation):
     async def exercise():
         async with backends() as (cache, _):
             repo = Terminals()
@@ -157,5 +158,8 @@ def test_promoted_super_admin_immediately_uses_shorter_idle_limit(clock):
             repo.user_roles = promoted
             clock[0] += 101
             with pytest.raises(AuthError, match='超时'):
-                await auth.userinfo(token['access_token'])
+                if operation == 'activity':
+                    await auth.session_status(token['access_token'], activity=True)
+                else:
+                    await auth.userinfo(token['access_token'])
     asyncio.run(exercise())
