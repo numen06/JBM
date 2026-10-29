@@ -142,3 +142,20 @@ def test_delayed_authorization_code_exchange_does_not_reset_recent_authenticatio
             })
             assert (await auth.userinfo(token['access_token']))['authTime'] == authenticated
     asyncio.run(exercise())
+
+
+def test_promoted_super_admin_immediately_uses_shorter_idle_limit(clock):
+    async def exercise():
+        async with backends() as (cache, _):
+            repo = Terminals()
+            auth = service(cache, repo)
+            token = await login(auth, 'web')
+            clock[0] += 3500
+            token = await auth.refresh_token(form(token))
+            async def promoted(*_):
+                return [{'role_id': 1, 'role_code': 'super_admin'}]
+            repo.user_roles = promoted
+            clock[0] += 101
+            with pytest.raises(AuthError, match='超时'):
+                await auth.userinfo(token['access_token'])
+    asyncio.run(exercise())

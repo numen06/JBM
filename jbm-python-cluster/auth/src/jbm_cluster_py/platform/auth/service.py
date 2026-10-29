@@ -1076,6 +1076,10 @@ class AuthService:
         permissions = await self._permissions_for_claims(claims, role_context)
         state = await self.cache.get_json("access:" + _hash_token(token)) or {}
         policy = await self._session_policy(state) if state.get("familyId") else None
+        if policy and policy["isRoot"] != bool(role_context[1]):
+            policy["isRoot"] = bool(role_context[1])
+            await self._save_session_policy(state["familyId"], policy)
+            await self._check_session_policy(state, policy)
         return {
             "sub": claims.get("sub"),
             "userId": claims.get("user_id"),
@@ -1990,6 +1994,7 @@ class AuthService:
         policy = await self._session_policy({"familyId": family_id, "terminalType": terminal, "root": root, "authTime": account.get("auth_time")})
         await self._check_session_policy({"familyId": family_id})
         policy["isRoot"] = root
+        await self._check_session_policy({"familyId": family_id}, policy)
         policy["lastRefreshAt"] = now
         await self._save_session_policy(family_id, policy)
         refresh_seconds = min(refresh_seconds, self._policy_deadlines(policy)["absoluteExpiresAt"] - now)
