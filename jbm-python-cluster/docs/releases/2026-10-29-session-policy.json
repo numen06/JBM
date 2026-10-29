@@ -199,7 +199,11 @@
     },
     "miniappAfterDeployment": {
       "sessionStillActive": true,
-      "deviceCount": 13
+      "catalogDeviceCount": 13,
+      "indoorDeviceCount": 11,
+      "onlineIndoorCount": 10,
+      "automaticRefreshVerified": true,
+      "refreshTokenLifetimeSeconds": 1296000
     },
     "screenshots": [
       "C:/Users/admin/.codex/private/session-policy-20261029/cloud-session-policy.png",
