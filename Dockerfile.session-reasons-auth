@@ -1,0 +1,3 @@
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:ddba8dedbabee0ec096af989df48d19a668b096f5a4d07acd368f9eb1e4d2365
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/service.py /app/auth/src/jbm_cluster_py/platform/auth/service.py
+COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/router.py /app/auth/src/jbm_cluster_py/platform/auth/router.py

@@ -54,11 +54,12 @@ APP_SECRET_AES_KEY = hashlib.md5(b"jbm-app-client-secret").hexdigest().encode("u
 
 
 class AuthError(ValueError):
-    def __init__(self, message: str, code: int = 401, oauth_error: str | None = None, *, captcha_required: bool = False) -> None:
+    def __init__(self, message: str, code: int = 401, oauth_error: str | None = None, *, captcha_required: bool = False, session_reason: str | None = None) -> None:
         super().__init__(message)
         self.code = code
         self.oauth_error = oauth_error
         self.captcha_required = captcha_required
+        self.session_reason = session_reason
 
 
 class TokenCache:
@@ -964,7 +965,7 @@ class AuthService:
             if state and state.get("familyId"):
                 await self.record_session_event("LOGOUT", state, context, message="用户退出登录")
                 audited.add(str(state["familyId"]))
-                await self._revoke_refresh_family(str(state["familyId"]))
+                await self._revoke_refresh_family(str(state["familyId"]), reason="signed_out")
         if token:
             # Keep the session-to-family reference beyond access expiry, so logout
             # after expiry or a racing refresh still ends the refresh capability.
@@ -974,7 +975,7 @@ class AuthService:
                 family = await self.cache.get_json("family_session:" + str(state["familyId"])) or state
                 if str(state["familyId"]) not in audited:
                     await self.record_session_event("LOGOUT", family, context, message="用户退出登录")
-                await self._revoke_refresh_family(str(state["familyId"]))
+                await self._revoke_refresh_family(str(state["familyId"]), reason="signed_out")
             await self.revoke_access_token(token)
         return {"logout": True}
 
@@ -1155,15 +1156,33 @@ class AuthService:
                 "refreshExpiresAt": refresh, "reauthRequiredAt": min(x for x in (absolute, idle, refresh) if x is not None)}
 
     async def _check_session_policy(self, state: Mapping[str, Any], policy: dict[str, Any] | None = None) -> dict[str, Any]:
+        ended = await self.cache.get_json("refresh_family_revoked:" + str(state["familyId"]))
+        if ended:
+            reason = ended.get("reason")
+            message = {
+                "replaced": "该账号已在其他地方登录，当前登录已下线，请重新登录",
+                "timeout": "登录已超时，请重新登录",
+                "signed_out": "当前登录已在其他窗口退出，请重新登录",
+                "kicked": "当前登录已被管理员强制下线，请重新登录",
+                "revoked": "当前登录会话已被撤销，请重新登录",
+            }.get(reason, "登录会话已失效，请重新登录")
+            raise AuthError(message, 401, "invalid_grant", session_reason=reason)
         policy = policy or await self._session_policy(state)
         deadlines = self._policy_deadlines(policy)
         if int(time.time()) >= deadlines["reauthRequiredAt"]:
-            await self._revoke_refresh_family(str(state["familyId"]))
+            await self._revoke_refresh_family(str(state["familyId"]), reason="timeout")
             await self.record_session_event("SESSION_EXPIRED", state, message="会话闲置或最长授权期限已到，需重新验证身份")
-            raise AuthError("会话已超时，请重新登录", 401, "invalid_grant")
+            # Re-read the first cause if replacement raced with this deadline.
+            return await self._check_session_policy(state, policy)
         return policy
 
     async def session_status(self, token: str, *, activity: bool = False) -> dict[str, Any]:
+        # The hash is an existing server-issued token reference, retained beyond
+        # access expiry. It can only explain a denial; userinfo still verifies
+        # the signature, expiry and current authorization before any success.
+        previous = await self.cache.get_json("session_family:" + _hash_token(token))
+        if previous and previous.get("familyId"):
+            await self._check_session_policy(previous)
         # Re-evaluate current roles before an activity report can extend idle time.
         await self.userinfo(token)
         state = await self.cache.get_json("access:" + _hash_token(token)) or {}
@@ -1267,7 +1286,7 @@ class AuthService:
         if not state:
             return
         if state.get("familyId"):
-            await self._revoke_refresh_family(str(state["familyId"]))
+            await self._revoke_refresh_family(str(state["familyId"]), reason="kicked")
         expires_at = int(state.get("accessExpiresAt") or 0)
         ttl = expires_at - int(time.time())
         jti = str(state.get("jti") or "")
@@ -1304,12 +1323,15 @@ class AuthService:
         if access_key:
             await self.cache.delete("access:" + access_key)
 
-    async def _revoke_refresh_family(self, family_id: str) -> None:
-        await self.cache.set_json(
-            "refresh_family_revoked:" + family_id,
-            {"revoked": True},
-            max(self.refresh_seconds, self.mobile_refresh_seconds, self.access_seconds) + 120,
-        )
+    async def _revoke_refresh_family(self, family_id: str, *, reason: str = "revoked") -> None:
+        key = "refresh_family_revoked:" + family_id
+        async with self.cache.lock(key):
+            # Preserve the first cause across racing refresh/logout/timeout.
+            if not await self.cache.get_json(key):
+                await self.cache.set_json(
+                    key, {"revoked": True, "reason": reason},
+                    max(self.refresh_seconds, self.mobile_refresh_seconds, self.access_seconds) + 120,
+                )
         family = await self.cache.pop_json("refresh_family:" + family_id)
         await self.cache.delete("family_session:" + family_id)
         if not family:
@@ -2154,7 +2176,7 @@ class AuthService:
         for stale in existing:
             stale_family = str(stale.get("familyId") or "")
             if stale_family:
-                await self._revoke_refresh_family(stale_family)
+                await self._revoke_refresh_family(stale_family, reason="replaced")
                 await self.record_session_event("SESSION_REPLACED", stale, refresh_state, message="同一终端新登录，原会话已下线")
             elif stale.get("tokenId"):
                 await self.revoke_access_session(str(stale["tokenId"]))

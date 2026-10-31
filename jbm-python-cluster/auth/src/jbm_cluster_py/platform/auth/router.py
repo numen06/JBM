@@ -27,7 +27,7 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             return JSONResponse(content=ok(result), headers={"Cache-Control": "no-store"})
         except (AuthError, JwtError) as exc:
             code = getattr(exc, "code", 401)
-            return JSONResponse(status_code=code, content={**fail(None, str(exc), code), "error": getattr(exc, "oauth_error", None) or "invalid_token"}, headers={"Cache-Control": "no-store"})
+            return JSONResponse(status_code=code, content={**fail(None, str(exc), code), "error": getattr(exc, "oauth_error", None) or "invalid_token", "session_reason": getattr(exc, "session_reason", None)}, headers={"Cache-Control": "no-store"})
 
     @router.post("/oauth2/token")
     async def token(request: Request) -> JSONResponse:
