@@ -5,7 +5,7 @@ import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 import { emptyNavigation, workspaceNames, type NavigationCatalogItem, type TenantNavigationContext, type TenantNavigationPreferences, type WorkspaceKey } from '../../packages/admin/src/navigationPreferences'
 
-const props = defineProps<{ open: boolean; catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
+const props = defineProps<{ open: boolean; embedded?: boolean; catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
 const emit = defineEmits<{ 'update:open': [value: boolean]; save: [value: TenantNavigationPreferences] }>()
 const draft = ref(emptyNavigation())
 const selected = ref<WorkspaceKey>('building')
@@ -31,7 +31,7 @@ function reset() {
 </script>
 
 <template>
-  <Dialog :open="open" title="菜单设置" class="sm:max-w-3xl" @update:open="emit('update:open', $event)">
+  <component :is="embedded ? 'section' : Dialog" v-if="!embedded || open" :open="open" title="菜单设置" :class="embedded ? 'space-y-4' : 'sm:max-w-3xl'" :aria-label="embedded ? '菜单设置编辑器' : undefined" @update:open="emit('update:open', $event)">
     <p class="mb-4 text-sm text-muted-foreground">设置对当前租户成员生效，可用功能仍以各成员权限为准。顺序越小越靠前，名称留空使用默认名称。</p>
     <div v-if="error" role="alert" class="mb-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{{ error }}</div>
     <fieldset :disabled="saving || !settings.canManage" class="space-y-4">
@@ -61,5 +61,5 @@ function reset() {
       <Button variant="outline" :disabled="saving" @click="reset">恢复默认（保存后生效）</Button>
       <Button :disabled="saving || !settings.canManage" @click="emit('save', draft)">{{ saving ? '保存中…' : '保存' }}</Button>
     </div>
-  </Dialog>
+  </component>
 </template>
