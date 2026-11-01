@@ -1,4 +1,5 @@
 from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, Mock
 
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.job.main import create_app
@@ -21,7 +22,9 @@ def job_config() -> AppConfig:
     )
 
 
-def test_job_crud_run_and_logs() -> None:
+def test_job_crud_run_and_logs(monkeypatch) -> None:
+    backups = Mock(worker=AsyncMock())
+    monkeypatch.setattr("jbm_cluster_py.platform.job.main.DatabaseBackups", lambda *_: backups)
     with TestClient(create_app(job_config())) as client:
         created = client.post(
             "/sysJob",
