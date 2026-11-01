@@ -239,3 +239,24 @@ def test_initial_binding_transaction_never_replaces_a_recorded_phone_or_reenable
         assert user['mobile'] == MOBILE
         assert account['status'] == 0
     asyncio.run(check())
+
+
+def test_zero_id_administrator_can_bind_phone_and_keep_the_same_account(phone_login):
+    browser, service, _, _ = phone_login
+    clear_mobile(service)
+    async def zero_admin():
+        async with service.repository.engine.begin() as conn:
+            await conn.execute(text("UPDATE base_user SET user_id=0 WHERE user_name='admin'"))
+            await conn.execute(text("UPDATE base_account SET user_id=0"))
+            await conn.execute(text("UPDATE base_role_user SET user_id=0"))
+    asyncio.run(zero_admin())
+    headers = password_session(browser)
+    identity = browser.get('/oauth2/userinfo', headers=headers).json()['result']
+    assert identity['userId'] == 0
+    assert asyncio.run(service._current_user_id(headers['Authorization'][7:])) == 0
+    result = bind_phone(browser, headers)
+    assert result.status_code == 200, result.text
+    assert result.json()['result']['mobileBound'] is True
+    user = asyncio.run(service.repository.find_user(0))
+    assert user['mobile'] == MOBILE
+    assert submit(browser).status_code == 200

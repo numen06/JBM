@@ -898,7 +898,7 @@ class AuthService:
         identity = await self.userinfo(token)
         user_id = int(identity.get("userId") or 0)
         authenticated = int(identity.get("authTime") or 0)
-        if not user_id:
+        if identity.get("userId") is None:
             raise AuthError("当前登录用户无效", 401)
         if not authenticated or time.time() - authenticated >= int(identity.get("recentAuthSeconds") or 600):
             raise AuthError("此敏感操作需要重新验证身份，请重新登录后再试", 401)
@@ -1756,10 +1756,9 @@ class AuthService:
 
     async def _current_user_id(self, token: str) -> int:
         identity = await self.userinfo(token)
-        user_id = int(identity.get("userId") or 0)
-        if not user_id:
+        if identity.get("userId") is None:
             raise AuthError("当前登录用户无效", 401)
-        return user_id
+        return int(identity["userId"])
 
     async def _identity_password_hash(self, user_id: int) -> str:
         accounts = await self.repository.password_accounts_for_user(user_id)
