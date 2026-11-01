@@ -146,21 +146,31 @@ jbm:
 ```
 
 Use actual registered client IDs and AppIDs; the names above are examples, not
-implicit registrations. Prefer separate JBM client registrations for separate
-Mini Programs so grants, sessions and audit records can be managed per client.
-For independent concurrent sessions, register distinct JBM applications (different
-JBM appId/clientId). The current JBM session index is userId + JBM appId + terminal:
-sharing one application's miniapp terminal retains its same-terminal replacement
-policy, even when the WeChat AppIDs differ. This change does not override that policy.
+implicit registrations. Current JBM applications can expose their approved clients
+through this router. The current session index is userId + JBM appId + terminal:
+sharing one application's miniapp terminal retains same-terminal replacement,
+even when the WeChat AppIDs differ. Different business applications retain their
+existing independent session indexes. This change does not override that policy.
+
+The target multi-product/tenant design separates business applications (for
+example device control, building and campus) from their Mini Program clients.
+One business application may have multiple platform-wide or tenant-specific
+clients. It must not be implemented by duplicating business applications and
+permissions for every Mini Program. Independent client registration/session
+boundaries, tenant-scoped claims, management UI and downstream tenant enforcement
+are not implemented by this credential-routing change and require a separate
+reviewed change.
 Each entry has its own server-only secret and client allowlist. Upstream access
 tokens are cached by AppID. A grant's watermark must match the selected AppID.
 An unknown AppID, disabled entry, missing secret or unlisted client is rejected;
 there is no first-entry/default-credential fallback. An `applications` map, even
 when empty, takes precedence over the legacy single-AppID fields.
 
-Each platform environment supplies its own Nacos configuration namespace, secrets,
-JBM client registrations, issuer/signing keys and session storage (or distinct
-Redis key prefix). Do not reuse another environment's login keys or secrets.
+Independent authentication environments supply their own configuration namespace,
+secrets, client registrations, issuer/signing keys and session storage (or distinct
+Redis prefix). Multiple business platforms in the same authentication environment
+can share JBM accounts while retaining their application grants. Do not reuse
+another authentication environment's login keys or secrets.
 The Mini Program's `config/index.js` supplies that release package's HTTPS platform
 origin and JBM `clientId`; `project.config.json` supplies its WeChat AppID, and
 WeChat's server-domain/privacy capabilities must be configured for that AppID.
