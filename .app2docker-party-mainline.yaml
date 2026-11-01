@@ -12,7 +12,7 @@
   "image": {
     "name": "jbm-cluster-platform-auth",
     "prefix": "registry.cn-shanghai.aliyuncs.com/okc",
-    "tag": "party-mainline-20261101.1",
+    "tag": "party-mainline-20261101.2",
     "push": true
   },
   "push_mode": "multi",
