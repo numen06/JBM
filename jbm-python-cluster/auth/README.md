@@ -111,3 +111,14 @@ login retained. Enable the phone capability/privacy declarations and HTTPS serve
 domain in the WeChat console before real-device testing. Development mocks do
 not count as real WeChat verification. No changes to batch-control reauthentication
 policy or automatic replay of previous controls are included.
+
+Authenticated users can bind their own phone from the Mini Program's My page:
+`POST /oauth2/miniapp/mobile/bind`, with the same `wx_app_id` and fresh
+`wx_phone_code`, plus the normal bearer token. The account comes exclusively from
+the verified session, never from a request user ID. Recent account authentication
+is required using the existing policy. The verified phone is saved through the
+existing transactional mobile binding, with a first-binding guard checked under
+the user row lock. Conflicting ownership, disabled mobile credentials and replacing
+an existing different phone are rejected. Existing platform SMS-based phone-change
+flows are retained. Invalid WeChat grants return 400 and do not invalidate the
+account login. The response contains only `mobileBound` and a masked phone.

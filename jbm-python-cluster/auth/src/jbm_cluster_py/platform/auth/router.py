@@ -172,6 +172,17 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
             code = getattr(exc, "code", 401)
             return JSONResponse(status_code=code, content=fail(False, str(exc), code))
 
+    @router.post("/oauth2/miniapp/mobile/bind")
+    async def wechat_mobile_bind(request: Request) -> JSONResponse:
+        params = await _request_params(request)
+        _add_login_context(params, request)
+        try:
+            token = await _require_login(request, auth_service)
+            return JSONResponse(content=ok(await auth_service.bind_wechat_mobile(token, params)))
+        except (AuthError, JwtError) as exc:
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
+
     @router.post("/oauth2/mobile/bind")
     async def mobile_bind(request: Request) -> JSONResponse:
         params = await _request_params(request)

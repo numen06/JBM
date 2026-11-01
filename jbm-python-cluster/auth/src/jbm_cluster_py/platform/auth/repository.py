@@ -433,7 +433,8 @@ class AuthRepository:
         return [dict(row) for row in rows]
 
     async def bind_mobile_account(
-        self, user_id: int, mobile: str, domain: str, password_hash: str | None = None
+        self, user_id: int, mobile: str, domain: str, password_hash: str | None = None,
+        *, initial_only: bool = False,
     ) -> dict[str, Any]:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         try:
@@ -441,14 +442,17 @@ class AuthRepository:
                 user = (
                     await conn.execute(
                         text(
-                            "SELECT user_id FROM base_user "
+                            "SELECT user_id,mobile FROM base_user "
                             "WHERE user_id=:user_id AND status=1 AND close_time IS NULL"
+                            + (" FOR UPDATE" if not self._sqlite else "")
                         ),
                         {"user_id": user_id},
                     )
-                ).first()
+                ).mappings().first()
                 if not user:
                     raise ValueError("用户不存在或已停用")
+                if initial_only and str(user["mobile"] or "").strip() not in {"", mobile}:
+                    raise ValueError("当前账号已有手机号，请在平台个人中心更换")
                 owner = (
                     await conn.execute(
                         text("SELECT user_id FROM base_user WHERE mobile=:mobile AND user_id<>:user_id LIMIT 1"),
@@ -460,8 +464,9 @@ class AuthRepository:
                 existing = (
                     await conn.execute(
                         text(
-                            "SELECT account_id,user_id FROM base_account "
+                            "SELECT account_id,user_id,status FROM base_account "
                             "WHERE account=:mobile AND account_type='mobile' AND domain=:domain LIMIT 1"
+                            + (" FOR UPDATE" if not self._sqlite else "")
                         ),
                         {"mobile": mobile, "domain": domain},
                     )
@@ -469,6 +474,8 @@ class AuthRepository:
                 if existing:
                     if int(existing["user_id"]) != int(user_id):
                         raise ValueError("手机号已绑定其他用户")
+                    if initial_only and int(existing["status"] or 0) != 1:
+                        raise ValueError("手机号登录已被禁用，请联系管理员")
                 await conn.execute(
                     text(
                         "UPDATE base_account SET status=0,update_time=:now "

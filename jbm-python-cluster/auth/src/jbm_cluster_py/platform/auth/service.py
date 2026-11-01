@@ -812,9 +812,9 @@ class AuthService:
         except OSError:
             return ""
 
-    async def _authenticate_wechat_phone(
+    async def _verify_wechat_phone(
         self, client: Mapping[str, Any], form: Mapping[str, Any]
-    ) -> tuple[dict[str, Any], dict[str, Any], str]:
+    ) -> str:
         """Consume WeChat's phone grant; never trust a client-supplied phone number."""
         app_id = str(form.get("wx_app_id") or "")
         if not self.wechat_phone_options(str(client.get("clientId") or ""), app_id)["enabled"]:
@@ -865,7 +865,12 @@ class AuthService:
         finally:
             if self.http_client is None:
                 await http.aclose()
+        return mobile
 
+    async def _authenticate_wechat_phone(
+        self, client: Mapping[str, Any], form: Mapping[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any], str]:
+        mobile = await self._verify_wechat_phone(client, form)
         users = await self.repository.find_users_by_mobile(mobile)
         if not users:
             raise AuthError("该微信手机号未关联可用的平台账号，请联系管理员", 403)
@@ -888,6 +893,39 @@ class AuthService:
         if not account or int(account.get("status") or 0) != 1:
             raise AuthError("手机号登录初始化失败，请稍后重试", 503)
         return dict(account), dict(user), str(form.get("scope") or "all")
+
+    async def bind_wechat_mobile(self, token: str, form: Mapping[str, Any]) -> dict[str, Any]:
+        identity = await self.userinfo(token)
+        user_id = int(identity.get("userId") or 0)
+        authenticated = int(identity.get("authTime") or 0)
+        if not user_id:
+            raise AuthError("当前登录用户无效", 401)
+        if not authenticated or time.time() - authenticated >= int(identity.get("recentAuthSeconds") or 600):
+            raise AuthError("此敏感操作需要重新验证身份，请重新登录后再试", 401)
+        try:
+            mobile = await self._verify_wechat_phone({"clientId": identity.get("clientId")}, form)
+        except AuthError as exc:
+            # A bad phone grant is not an expired JBM session. Keep the login usable.
+            raise AuthError(str(exc), 400 if exc.code == 401 else exc.code) from None
+        async with self.cache.lock("wechat:bind-user:" + str(user_id)):
+            await self.userinfo(token)
+            user = await self.repository.find_user(user_id)
+            if not user or not user_is_active(user):
+                raise AuthError("用户已被禁用", 403)
+            if user.get("mobile") and str(user["mobile"]).strip() != mobile:
+                raise AuthError("当前账号已有手机号，请在平台个人中心更换", 409)
+            account = await self.repository.find_account(mobile, "mobile", self.account_domain)
+            if account and int(account.get("user_id") or 0) != user_id:
+                raise AuthError("该手机号已绑定其他账号，请使用对应账号登录", 409)
+            if account and int(account.get("status") or 0) != 1:
+                raise AuthError("手机号登录已被禁用，请联系管理员", 403)
+            password_hash = await self._identity_password_hash(user_id)
+            try:
+                await self.repository.bind_mobile_account(user_id, mobile, self.account_domain, password_hash, initial_only=True)
+            except ValueError as exc:
+                raise AuthError(str(exc), 409) from None
+        await self.record_session_event("WECHAT_MOBILE_BIND", identity, form, message="微信手机号绑定成功")
+        return {"mobileBound": True, "mobileMasked": mobile[:3] + "****" + mobile[-4:]}
 
     @staticmethod
     def _wechat_result(response: httpx.Response) -> dict[str, Any]:
