@@ -5,6 +5,8 @@ import asyncio
 import os
 import time
 import zipfile
+import errno
+from pathlib import Path
 
 import pytest
 from jbm_cluster_py.platform.bigscreen.repository import BigscreenRepository
@@ -31,6 +33,43 @@ def package_bytes(label: str, filename: str = "index.html") -> bytes:
 
 def database_config(tmp_path) -> dict[str, str]:
     return {"url": f"sqlite+aiosqlite:///{(tmp_path / 'bigscreen.db').as_posix()}"}
+
+
+@pytest.mark.asyncio
+async def test_publish_and_metadata_rollback_when_history_is_on_another_mount(tmp_path, monkeypatch):
+    repository = BigscreenRepository(database_config(tmp_path))
+    service = BigscreenService(repository, str(tmp_path / "views"), "http://doc.invalid")
+    await service.start()
+    rename, replace = os.rename, os.replace
+
+    def same_mount(operation):
+        def move(source, destination, *args, **kwargs):
+            if Path(source).is_relative_to(service.views_dir) != Path(destination).is_relative_to(service.views_dir):
+                raise OSError(errno.EXDEV, "Invalid cross-device link")
+            return operation(source, destination, *args, **kwargs)
+        return move
+
+    monkeypatch.setattr(os, "rename", same_mount(rename))
+    monkeypatch.setattr(os, "replace", same_mount(replace))
+    try:
+        original = await service.upload_package(Upload(package_bytes("original")), {"viewName": "医院", "projectId": "p1"}, "tenant-a", "user-a")
+        old_zip = service._archive_path(original).read_bytes()
+        save = repository.save
+
+        async def failed(*args, **kwargs):
+            raise RuntimeError("metadata failed")
+
+        monkeypatch.setattr(repository, "save", failed)
+        with pytest.raises(RuntimeError, match="metadata failed"):
+            await service.upload_package(Upload(package_bytes("replacement")), {"id": original["id"], "viewName": "医院"}, "tenant-a", "user-a")
+        assert (service._view_dir(original) / "index.html").read_text() == "original"
+        assert service._archive_path(original).read_bytes() == old_zip
+        monkeypatch.setattr(repository, "save", save)
+        updated = await service.upload_package(Upload(package_bytes("replacement")), {"id": original["id"], "viewName": "医院"}, "tenant-a", "user-a")
+        assert (service._view_dir(updated) / "index.html").read_text() == "replacement"
+        assert not list(service.views_dir.glob(".publish-*"))
+    finally:
+        await service.stop()
 
 
 @pytest.mark.asyncio

@@ -1,0 +1,17 @@
+version: "1.0"
+build:
+  project_type: python
+  use_project_dockerfile: true
+  dockerfile_name: Dockerfile.bigscreen-mount
+  platforms: [linux/amd64, linux/arm64]
+  build_args:
+    BASE_IMAGE: registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:a67b0ea9b964d463d37aaf2c1e9a077e8f1ad4cfe0534baac2de79f6e0164100
+image:
+  name: jbm-cluster-platform-bigscreen
+  prefix: registry.cn-shanghai.aliyuncs.com/okc
+  tag: cloud-mount-20261101.1
+  push: true
+push_mode: multi
+services:
+  - name: jbm-cluster-platform-bigscreen
+    image_name: jbm-cluster-platform-bigscreen

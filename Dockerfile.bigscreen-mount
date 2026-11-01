@@ -1,0 +1,4 @@
+ARG BASE_IMAGE
+FROM ${BASE_IMAGE}
+COPY jbm-python-cluster/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py /app/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py
+RUN python -B -c "from jbm_cluster_py.platform.bigscreen.service import BigscreenService"

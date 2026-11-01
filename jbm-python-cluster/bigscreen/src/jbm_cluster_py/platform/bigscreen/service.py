@@ -419,11 +419,14 @@ class BigscreenService:
         """Keep the previous ZIP and directory until metadata commits successfully."""
         destination = self._view_dir(view)
         zip_path = self._archive_path(view)
-        transaction = self.history.work / uuid.uuid4().hex
-        transaction.mkdir()
+        # Views and the history volume can be different mounts. Keep every
+        # rename (including rollback) on the destination filesystem.
+        transaction = self.views_dir / (".publish-" + uuid.uuid4().hex)
+        transaction.mkdir(mode=0o700)
         staging = transaction / "new"
         backup = transaction / "previous"
         previous_zip = transaction / "previous.zip"
+        incoming_zip = transaction / "incoming.zip"
         staging.mkdir()
         moved_existing = False
         moved_zip = False
@@ -431,6 +434,7 @@ class BigscreenService:
         installed_zip = False
         safe_to_remove = False
         try:
+            shutil.copyfile(archive, incoming_zip)
             self._safe_extract(archive, staging)
             if not (staging / "index.html").is_file():
                 raise ValueError("大屏包根目录不存在 index.html")
@@ -442,7 +446,7 @@ class BigscreenService:
                 moved_zip = True
             staging.rename(destination)
             installed_directory = True
-            archive.replace(zip_path)
+            incoming_zip.replace(zip_path)
             installed_zip = True
             yield previous_zip
             safe_to_remove = True
