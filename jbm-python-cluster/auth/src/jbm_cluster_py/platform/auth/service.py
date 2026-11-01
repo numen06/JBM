@@ -787,16 +787,29 @@ class AuthService:
                 raise AuthError(str(exc), 409) from exc
 
     def wechat_phone_options(self, client_id: str, app_id: str) -> dict[str, Any]:
-        settings = dict(self.login_providers.get("miniapp") or {})
-        clients = settings.get("client-ids") or []
-        enabled = (
-            _truthy(settings.get("enabled"))
-            and settings.get("mode") == "wechat-phone"
-            and isinstance(clients, list) and client_id in clients
-            and bool(app_id) and app_id == settings.get("app-id")
-            and bool(self._wechat_phone_secret(settings))
-        )
+        enabled = self._wechat_phone_settings(client_id, app_id) is not None
         return {"enabled": bool(enabled), "message": "" if enabled else "微信手机号登录暂未开通，请使用账号密码登录"}
+
+    def _wechat_phone_settings(self, client_id: str, app_id: str) -> dict[str, Any] | None:
+        provider = dict(self.login_providers.get("miniapp") or {})
+        if not app_id or not _truthy(provider.get("enabled")) or provider.get("mode") != "wechat-phone":
+            return None
+        if "applications" in provider:
+            applications = provider["applications"]
+            if not isinstance(applications, Mapping) or not isinstance(applications.get(app_id), Mapping):
+                return None
+            settings = dict(applications[app_id])
+            if not _truthy(settings.get("enabled", True)):
+                return None
+        else:
+            # Existing single-application deployments remain valid; unknown AppIDs never fall back.
+            if provider.get("app-id") != app_id:
+                return None
+            settings = provider
+        clients = settings.get("client-ids") or []
+        if not isinstance(clients, list) or client_id not in clients or not self._wechat_phone_secret(settings):
+            return None
+        return settings
 
     @staticmethod
     def _wechat_phone_secret(settings: Mapping[str, Any]) -> str:
@@ -817,12 +830,12 @@ class AuthService:
     ) -> str:
         """Consume WeChat's phone grant; never trust a client-supplied phone number."""
         app_id = str(form.get("wx_app_id") or "")
-        if not self.wechat_phone_options(str(client.get("clientId") or ""), app_id)["enabled"]:
+        settings = self._wechat_phone_settings(str(client.get("clientId") or ""), app_id)
+        if settings is None:
             raise AuthError("微信手机号登录暂未开通，请使用账号密码登录", 503)
         code = str(form.get("wx_phone_code") or "").strip()
         if not code or len(code) > 1024:
             raise AuthError("请重新点击微信手机号登录并授权", 400)
-        settings = dict(self.login_providers["miniapp"])
         # Token bodies and phone grants are deliberately absent from audit/error messages.
         http = self.http_client or httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
         try:

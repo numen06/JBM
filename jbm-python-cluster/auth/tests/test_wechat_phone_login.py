@@ -260,3 +260,64 @@ def test_zero_id_administrator_can_bind_phone_and_keep_the_same_account(phone_lo
     user = asyncio.run(service.repository.find_user(0))
     assert user['mobile'] == MOBILE
     assert submit(browser).status_code == 200
+
+
+def test_multiple_miniprograms_route_secrets_and_tokens_by_appid_and_enforce_clients(phone_login):
+    browser, service, _, _ = phone_login
+    second = 'wx-second-phone'
+    secrets = {APP_ID: 'first-server-secret', second: 'second-server-secret'}
+    service.login_providers['miniapp'] = {
+        'enabled': True, 'mode': 'wechat-phone', 'applications': {
+            APP_ID: {'client-ids': ['JBM'], 'app-secret': secrets[APP_ID]},
+            second: {'client-ids': ['JBM_SECOND'], 'app-secret': secrets[second]},
+        },
+    }
+    async def register_second_client():
+        async with service.repository.engine.begin() as conn:
+            await conn.execute(text("INSERT INTO base_app (app_id,api_key,secret_key,app_type,status,public_key,private_key,extend_data) SELECT 2000,'JBM_SECOND','fixture-secret',app_type,status,public_key,private_key,extend_data FROM base_app WHERE api_key='JBM'"))
+    asyncio.run(register_second_client())
+    seen = {'token': [], 'phone': []}
+    def upstream(request):
+        body = json.loads(request.content)
+        if request.url.path == '/cgi-bin/stable_token':
+            app_id = body['appid']; assert body['secret'] == secrets[app_id]
+            seen['token'].append(app_id)
+            return httpx.Response(200, json={'access_token':'token:' + app_id, 'expires_in':7200})
+        app_id = request.url.params['access_token'].removeprefix('token:')
+        assert app_id in secrets
+        seen['phone'].append(app_id)
+        return httpx.Response(200, json={'errcode':0,'phone_info':{'purePhoneNumber':MOBILE,'countryCode':'86','watermark':{'appid':app_id}}})
+    asyncio.run(service.http_client.aclose())
+    service.http_client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
+    first_login = submit(browser)
+    second_login = submit(browser, wx_app_id=second, client_id='JBM_SECOND')
+    assert first_login.status_code == second_login.status_code == 200
+    assert submit(browser).status_code == 200
+    assert seen == {'token':[APP_ID,second], 'phone':[APP_ID,second,APP_ID]}
+    sessions = []
+    for login, client_id in [(first_login,'JBM'),(second_login,'JBM_SECOND')]:
+        code = parse_qs(urlparse(login.json()['result']).query)['code'][0]
+        token = browser.post('/oauth2/token', data={'grant_type':'authorization_code','client_id':client_id,
+            'redirect_uri':'http://admin.test/login/callback','code':code,'code_verifier':PKCE_VERIFIER})
+        assert token.status_code == 200, token.text
+        sessions.append((token.json()['access_token'],client_id))
+    for token, client_id in sessions:
+        identity = browser.get('/oauth2/userinfo',headers={'Authorization':'Bearer '+token})
+        assert identity.status_code == 200, identity.text
+        assert identity.json()['result']['clientId'] == client_id
+    for app_id, client_id in [(APP_ID,'JBM_SECOND'),(second,'JBM'),('wx-unknown','JBM')]:
+        response = submit(browser, wx_app_id=app_id, client_id=client_id)
+        assert response.status_code == 503
+    assert len(seen['phone']) == 3
+    service.login_providers['miniapp']['applications'][second]['enabled'] = False
+    assert service.wechat_phone_options('JBM_SECOND',second)['enabled'] is False
+    assert service.wechat_phone_options('JBM',APP_ID)['enabled'] is True
+
+
+@pytest.mark.parametrize('applications', [{}, [], {'wx-unknown':{}}])
+def test_multi_app_configuration_never_falls_back_to_legacy_credentials(phone_login, applications):
+    browser, service, _, counts = phone_login
+    service.login_providers['miniapp']['applications'] = applications
+    assert service.wechat_phone_options('JBM',APP_ID)['enabled'] is False
+    assert submit(browser).status_code == 503
+    assert counts == {'token':0,'phone':0}

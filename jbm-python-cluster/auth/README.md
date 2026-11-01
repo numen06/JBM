@@ -122,3 +122,50 @@ the user row lock. Conflicting ownership, disabled mobile credentials and replac
 an existing different phone are rejected. Existing platform SMS-based phone-change
 flows are retained. Invalid WeChat grants return 400 and do not invalidate the
 account login. The response contains only `mobileBound` and a masked phone.
+
+### Multiple Mini Programs and deployment environments
+
+An Auth deployment can configure multiple WeChat AppIDs. Select an application
+by the exact runtime `wx_app_id` and validate its allowed JBM OAuth client IDs:
+
+```yaml
+jbm:
+  auth:
+    login-providers:
+      miniapp:
+        enabled: true
+        mode: wechat-phone
+        dev-mock-enabled: false
+        applications:
+          wx_first_app_id:
+            client-ids: [first_registered_jbm_client:miniapp]
+            app-secret-file: /run/secrets/wechat_first
+          wx_second_app_id:
+            client-ids: [second_registered_jbm_client:miniapp]
+            app-secret-file: /run/secrets/wechat_second
+```
+
+Use actual registered client IDs and AppIDs; the names above are examples, not
+implicit registrations. Prefer separate JBM client registrations for separate
+Mini Programs so grants, sessions and audit records can be managed per client.
+For independent concurrent sessions, register distinct JBM applications (different
+JBM appId/clientId). The current JBM session index is userId + JBM appId + terminal:
+sharing one application's miniapp terminal retains its same-terminal replacement
+policy, even when the WeChat AppIDs differ. This change does not override that policy.
+Each entry has its own server-only secret and client allowlist. Upstream access
+tokens are cached by AppID. A grant's watermark must match the selected AppID.
+An unknown AppID, disabled entry, missing secret or unlisted client is rejected;
+there is no first-entry/default-credential fallback. An `applications` map, even
+when empty, takes precedence over the legacy single-AppID fields.
+
+Each platform environment supplies its own Nacos configuration namespace, secrets,
+JBM client registrations, issuer/signing keys and session storage (or distinct
+Redis key prefix). Do not reuse another environment's login keys or secrets.
+The Mini Program's `config/index.js` supplies that release package's HTTPS platform
+origin and JBM `clientId`; `project.config.json` supplies its WeChat AppID, and
+WeChat's server-domain/privacy capabilities must be configured for that AppID.
+The backend does not hardcode an environment or a WeChat AppID. The runtime AppID
+selects credentials inside the contacted platform; it never selects an arbitrary
+remote platform. This is multiple Mini Programs per deployment, not a client-side
+platform-switching feature. Configuration is loaded at Auth startup: apply changed
+configuration and secret mounts through the normal deployment/restart workflow.

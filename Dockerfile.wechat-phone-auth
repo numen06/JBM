@@ -1,3 +1,3 @@
-FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster:py-wechat-phone-20261101.2@sha256:c52f0d52a283cd9ddc9876c4e7065b8252f35acd1f0d3957827d68cfbad48c75
-RUN python -B -c "import hashlib,pathlib; p=pathlib.Path('/app/auth/src/jbm_cluster_py/platform/auth/service.py'); assert hashlib.sha256(p.read_bytes().replace(bytes([13,10]),bytes([10]))).hexdigest()=='f7897effc7ff2590ef2e1f547e365b8ea343f91feb39f62e6410700c28086017', 'Deployed auth baseline differs'"
+FROM registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster:py-wechat-phone-20261101.3@sha256:1a947350688dfb28dce020a5ef95feec8773f87c38482dae382c01b5675ca3cc
+RUN python -B -c "import hashlib,pathlib; p=pathlib.Path('/app/auth/src/jbm_cluster_py/platform/auth/service.py'); assert hashlib.sha256(p.read_bytes().replace(bytes([13,10]),bytes([10]))).hexdigest()=='90cf2a1babcb2d0c90bc0c345026b2dc7b6b7b1485627f7eab73562094c4e303', 'Deployed auth baseline differs'"
 COPY --chown=appuser:appuser jbm-python-cluster/auth/src/jbm_cluster_py/platform/auth/service.py /app/auth/src/jbm_cluster_py/platform/auth/service.py
