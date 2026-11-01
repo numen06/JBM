@@ -25,3 +25,14 @@ test('shell geometry, controls and scrollbars have one responsive CSS contract',
   assert.match(css, /\.jbm-workspace-shell\.is-mobile-open \.jbm-shell-sidebar \{ visibility: visible; transform: none; \}/)
   assert.match(css, /\.jbm-shell-toggle svg \{ width: 18px; height: 18px; \}/)
 })
+
+test('wordmark geometry belongs to the shared shell in every workspace', async () => {
+  for (const workspace of ['建筑', '物连', '系统']) {
+    const html = await renderToString(createSSRApp({ render: () => h(JbmWorkspaceShell,
+      { brand: '中启能服', title: '总览', workspace, logoMode: 'wordmark', logo: '/brand.svg' }) }))
+    assert.match(html, /jbm-workspace-shell has-wordmark/)
+  }
+  const css = readFileSync(new URL('../design.css', import.meta.url), 'utf8')
+  assert.match(css, /\.jbm-workspace-shell\.has-wordmark \.workspace-brand__icon \{ width: 200px; height: 40px; flex-basis: 200px;/)
+  assert.match(css, /\.jbm-workspace-shell\.has-wordmark \.workspace-brand__copy \{ display: none;/)
+})

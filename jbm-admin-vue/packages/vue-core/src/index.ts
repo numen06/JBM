@@ -78,6 +78,7 @@ export const JbmWorkspaceShell = defineComponent({
     title: { type: String, required: true },
     brand: { type: String, required: true },
     logo: { type: String, default: '' },
+    logoMode: { type: String as PropType<'icon' | 'wordmark'>, default: 'icon' },
     workspace: { type: String, required: true },
     collapsed: Boolean,
     mobileOpen: Boolean,
@@ -104,7 +105,7 @@ export const JbmWorkspaceShell = defineComponent({
       type: 'button', class: ['jbm-shell-toggle', className], 'aria-label': label, title: label,
       'aria-controls': 'jbm-workspace-sidebar', 'aria-expanded': expanded, onClick: click,
     }, [icon(path)])
-    return () => h('div', { ref: root, class: ['jbm-workspace-shell', props.collapsed && 'is-collapsed', props.mobileOpen && 'is-mobile-open'] }, [
+    return () => h('div', { ref: root, class: ['jbm-workspace-shell', props.collapsed && 'is-collapsed', props.mobileOpen && 'is-mobile-open', props.logoMode === 'wordmark' && 'has-wordmark'] }, [
       props.mobileOpen ? h('button', { class: 'jbm-shell-backdrop', type: 'button', 'aria-label': '关闭菜单', onClick: close, tabindex: -1 }) : null,
       h('aside', { id: 'jbm-workspace-sidebar', class: 'jbm-shell-sidebar', inert: mobile.value && !props.mobileOpen }, [
         h('div', { class: 'workspace-brand' }, [

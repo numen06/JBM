@@ -159,6 +159,9 @@ button, input, select, textarea { font-family: inherit; }
 @media (max-width: 639px) { .jbm-segments > button { padding: 8px 6px; font-size: 12px; } }
 .workspace-brand { display: flex; height: 64px; flex: 0 0 64px; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid hsl(var(--border)); }
 .workspace-brand__icon { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; overflow: hidden; border-radius: 10px; border: 1px solid var(--jbm-accent-border); background: var(--jbm-accent-soft); color: hsl(var(--primary)); }
+.workspace-brand__icon:has(img) { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.jbm-workspace-shell.has-wordmark .workspace-brand__icon { width: 200px; height: 40px; flex-basis: 200px; }
+.jbm-workspace-shell.has-wordmark .workspace-brand__copy { display: none; }
 .workspace-brand__copy { flex: 1; min-width: 0; }
 .workspace-brand__title { font-size: 14px; line-height: 20px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-brand__subtitle { margin-top: 2px; font-size: 12px; line-height: 18px; color: hsl(var(--muted-foreground)); }
