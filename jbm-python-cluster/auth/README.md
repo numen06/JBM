@@ -72,3 +72,42 @@ aliyun:
 ```
 
 Nacos is authoritative. The Push database channel row only receives non-sensitive display defaults; AccessKey, Secret and STS Token must never be copied to `push_config_info` or returned by the channel-management API.
+
+## WeChat Mini Program phone login
+
+The native `getPhoneNumber` button supplies a one-use phone authorization code.
+`POST /oauth2/doLogin` accepts `loginType=MINIAPP`, `wx_app_id` and `wx_phone_code`
+alongside the normal authorization-code + S256 PKCE parameters. The server uses
+WeChat's stable access token and `getuserphonenumber` API to verify the phone.
+This is independent of `wx.login` codes; never substitute a client-supplied phone.
+Each fresh login requires an authorized phone code; persistent OpenID linking is
+not part of this flow. Normal token refresh preserves the original auth time.
+
+Configure the **server-side** `jbm.auth.login-providers.miniapp` in the existing
+Nacos auth configuration (or its protected `JBM_CONFIG_JSON` override):
+
+```yaml
+enabled: true
+mode: wechat-phone
+dev-mock-enabled: false
+app-id: wxbf2072314bea5b63
+app-secret: "<server-side secret; never commit or ship in the Mini Program>"
+# Alternatively mount a Docker Secret and use app-secret-file instead:
+# app-secret-file: /run/secrets/jbm_wechat_phone
+client-ids:
+  - iot_platform-98dc2cbb2a528b0e:miniapp
+```
+
+Only a unique existing active user with the verified mainland-China mobile
+number can sign in. Missing mobile login credentials are bound using the existing
+transactional mobile binding; unknown users are never auto-registered. Conflicting
+ownership and disabled mobile credentials are rejected. Roles and tenant/project
+access come from the existing account and normal JBM session pipeline.
+
+`GET /oauth2/miniapp/options?client_id=...&app_id=...` exposes readiness and a
+user-facing message, never the secret or upstream access token. Until configured,
+the Mini Program displays the entry and its unavailable reason with password
+login retained. Enable the phone capability/privacy declarations and HTTPS server
+domain in the WeChat console before real-device testing. Development mocks do
+not count as real WeChat verification. No changes to batch-control reauthentication
+policy or automatic replay of previous controls are included.

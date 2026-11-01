@@ -109,6 +109,11 @@ def build_auth_router(auth_service: AuthService) -> APIRouter:
                 headers={"Cache-Control": "no-store", "Pragma": "no-cache"},
             )
 
+    @router.get("/oauth2/miniapp/options")
+    async def miniapp_options(client_id: str = "", app_id: str = "") -> JSONResponse:
+        return JSONResponse(content=ok(auth_service.wechat_phone_options(client_id, app_id)),
+                            headers={"Cache-Control": "no-store"})
+
     @router.post("/oauth2/doLogin")
     async def oauth_do_login(request: Request) -> JSONResponse:
         form = await _request_params(request)

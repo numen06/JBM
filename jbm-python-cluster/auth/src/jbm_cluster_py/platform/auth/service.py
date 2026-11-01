@@ -18,6 +18,7 @@ from weakref import WeakValueDictionary
 from datetime import datetime, timezone
 from urllib.parse import parse_qs, urlencode, urlparse
 from typing import Any, Mapping, Optional
+from pathlib import Path
 
 import bcrypt
 import httpx
@@ -665,6 +666,8 @@ class AuthService:
         username = str(form.get("username") or "").strip()
         password = str(form.get("password") or "")
         login_type = str(form.get("loginType") or form.get("login_type") or "PASSWORD").upper()
+        if login_type == "MINIAPP" and ("wx_phone_code" in form or "wx_app_id" in form):
+            return await self._authenticate_wechat_phone(client, form)
         if login_type in {"PASSKEY", "SSH_KEY", "FILE_KEY"}:
             return await self.key_login.authenticate(client, form)
         if login_type == "SMS" and (
@@ -782,6 +785,118 @@ class AuthService:
         except ValueError as exc:
             if not await self.repository.find_account(mobile, "mobile", self.account_domain):
                 raise AuthError(str(exc), 409) from exc
+
+    def wechat_phone_options(self, client_id: str, app_id: str) -> dict[str, Any]:
+        settings = dict(self.login_providers.get("miniapp") or {})
+        clients = settings.get("client-ids") or []
+        enabled = (
+            _truthy(settings.get("enabled"))
+            and settings.get("mode") == "wechat-phone"
+            and isinstance(clients, list) and client_id in clients
+            and bool(app_id) and app_id == settings.get("app-id")
+            and bool(self._wechat_phone_secret(settings))
+        )
+        return {"enabled": bool(enabled), "message": "" if enabled else "微信手机号登录暂未开通，请使用账号密码登录"}
+
+    @staticmethod
+    def _wechat_phone_secret(settings: Mapping[str, Any]) -> str:
+        if settings.get("app-secret"):
+            return str(settings["app-secret"]).strip()
+        path = settings.get("app-secret-file")
+        if not path:
+            return ""
+        try:
+            with Path(str(path)).open(encoding="utf-8") as source:
+                secret = source.read(256).strip()
+            return secret if 0 < len(secret) < 256 else ""
+        except OSError:
+            return ""
+
+    async def _authenticate_wechat_phone(
+        self, client: Mapping[str, Any], form: Mapping[str, Any]
+    ) -> tuple[dict[str, Any], dict[str, Any], str]:
+        """Consume WeChat's phone grant; never trust a client-supplied phone number."""
+        app_id = str(form.get("wx_app_id") or "")
+        if not self.wechat_phone_options(str(client.get("clientId") or ""), app_id)["enabled"]:
+            raise AuthError("微信手机号登录暂未开通，请使用账号密码登录", 503)
+        code = str(form.get("wx_phone_code") or "").strip()
+        if not code or len(code) > 1024:
+            raise AuthError("请重新点击微信手机号登录并授权", 400)
+        settings = dict(self.login_providers["miniapp"])
+        # Token bodies and phone grants are deliberately absent from audit/error messages.
+        http = self.http_client or httpx.AsyncClient(timeout=httpx.Timeout(10.0, connect=3.0), trust_env=False)
+        try:
+            key = "wechat:access-token:" + app_id
+            async with self.cache.lock(key):
+                cached = await self.cache.get_json(key)
+                if not cached:
+                    result = await http.post("https://api.weixin.qq.com/cgi-bin/stable_token", json={
+                        "grant_type": "client_credential", "appid": app_id,
+                        "secret": self._wechat_phone_secret(settings), "force_refresh": False,
+                    })
+                    body = self._wechat_result(result)
+                    token = body.get("access_token")
+                    expires = int(body.get("expires_in") or 0)
+                    if not isinstance(token, str) or not token or expires <= 120:
+                        raise AuthError("微信登录服务配置异常，请联系管理员", 503)
+                    cached = {"token": token}
+                    await self.cache.set_json(key, cached, min(expires - 120, 7000))
+            result = await http.post("https://api.weixin.qq.com/wxa/business/getuserphonenumber",
+                                     params={"access_token": cached["token"]}, json={"code": code})
+            body = self._wechat_result(result)
+            if str(body.get("errcode") or "0") in {"40001", "40014", "42001"}:
+                await self.cache.delete(key)
+                raise AuthError("微信登录凭证已过期，请重新点击授权", 401)
+            if str(body.get("errcode") or "0") != "0":
+                raise AuthError("微信手机号授权未完成或已失效，请重新点击授权", 401)
+            info = body.get("phone_info")
+            if not isinstance(info, Mapping):
+                raise AuthError("微信未返回有效手机号，请重新授权", 401)
+            watermark = info.get("watermark")
+            if not isinstance(watermark, Mapping) or watermark.get("appid") != app_id:
+                raise AuthError("微信手机号授权来源不匹配", 401)
+            mobile = str(info.get("purePhoneNumber") or "").strip()
+            if str(info.get("countryCode") or "") != "86" or not re.fullmatch(r"1[3-9]\d{9}", mobile):
+                raise AuthError("该手机号暂不支持，请使用账号密码登录", 400)
+        except (httpx.HTTPError, ValueError, TypeError, KeyError) as exc:
+            if isinstance(exc, AuthError):
+                raise
+            raise AuthError("微信登录服务暂时不可用，请稍后重试或使用账号密码", 503) from None
+        finally:
+            if self.http_client is None:
+                await http.aclose()
+
+        users = await self.repository.find_users_by_mobile(mobile)
+        if not users:
+            raise AuthError("该微信手机号未关联可用的平台账号，请联系管理员", 403)
+        if len(users) != 1:
+            raise AuthError("手机号关联多个平台账号，请联系管理员处理", 409)
+        user = users[0]
+        if not user_is_active(user):
+            raise AuthError("用户已被禁用", 403)
+        account = await self.repository.find_account(mobile, "mobile", self.account_domain)
+        if account and (int(account.get("user_id") or 0) != int(user["user_id"])):
+            raise AuthError("手机号账号归属冲突，请联系管理员处理", 409)
+        if account and int(account.get("status") or 0) != 1:
+            raise AuthError("手机号登录已被禁用，请联系管理员", 403)
+        if not account:
+            try:
+                await self.repository.bind_mobile_account(int(user["user_id"]), mobile, self.account_domain)
+            except ValueError as exc:
+                raise AuthError(str(exc), 409) from None
+            account = await self.repository.find_account(mobile, "mobile", self.account_domain)
+        if not account or int(account.get("status") or 0) != 1:
+            raise AuthError("手机号登录初始化失败，请稍后重试", 503)
+        return dict(account), dict(user), str(form.get("scope") or "all")
+
+    @staticmethod
+    def _wechat_result(response: httpx.Response) -> dict[str, Any]:
+        if response.status_code != 200:
+            raise AuthError("微信登录服务暂时不可用，请稍后重试", 503)
+        body = response.json()
+        if not isinstance(body, dict):
+            raise AuthError("微信登录服务响应异常，请稍后重试", 503)
+        return body
 
     async def _authenticate_external_login(
         self,

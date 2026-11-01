@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from contextlib import AsyncExitStack, asynccontextmanager
+import logging
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -27,6 +28,9 @@ from jbm_cluster_py.platform.auth.service import AuthService, TokenCache
 def create_app(config: AppConfig | None = None) -> FastAPI:
     app_config = config or AppConfig.load(app="auth")
     configure_logging()
+    # Upstream authentication URLs may contain access_token. Never log them.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
     print_jbm_banner()
     init_telemetry(app_config.telemetry)
     repository = AuthRepository(app_config.database)
