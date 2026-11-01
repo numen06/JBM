@@ -5,11 +5,11 @@ import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 import { emptyNavigation, workspaceNames, type NavigationCatalogItem, type TenantNavigationContext, type TenantNavigationPreferences, type WorkspaceKey } from '../../packages/admin/src/navigationPreferences'
 
-const props = defineProps<{ catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
+const props = defineProps<{ workspace?: WorkspaceKey; catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
 const emit = defineEmits<{ save: [value: TenantNavigationPreferences]; change: [dirty: boolean] }>()
 const draft = ref(emptyNavigation())
 const baseline = ref('')
-const selected = ref<WorkspaceKey>('building')
+const selected = ref<WorkspaceKey>(props.workspace || 'building')
 const selectedGroup = ref('')
 const query = ref('')
 const icons = { building: Building2, iot: Cable, jbm: Shield }

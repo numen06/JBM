@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button.vue'
 import NavigationSettingsPageEditor from './NavigationSettingsPageEditor.vue'
 import { emptyNavigation, workspaceNames, type NavigationCatalogItem, type TenantNavigationContext, type TenantNavigationPreferences, type WorkspaceKey } from '../../packages/admin/src/navigationPreferences'
 
-const props = defineProps<{ open: boolean; embedded?: boolean; catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
+const props = defineProps<{ open: boolean; embedded?: boolean; workspace?: WorkspaceKey; catalog: NavigationCatalogItem[]; settings: TenantNavigationContext; saving?: boolean; error?: string }>()
 const emit = defineEmits<{ 'update:open': [value: boolean]; save: [value: TenantNavigationPreferences]; change: [dirty: boolean] }>()
 const draft = ref(emptyNavigation())
 const selected = ref<WorkspaceKey>('building')
@@ -32,7 +32,7 @@ function reset() {
 </script>
 
 <template>
-  <NavigationSettingsPageEditor v-if="embedded && open" :catalog="catalog" :settings="settings" :saving="saving" :error="error" @save="emit('save', $event)" @change="emit('change', $event)" />
+  <NavigationSettingsPageEditor v-if="embedded && open" :workspace="workspace" :catalog="catalog" :settings="settings" :saving="saving" :error="error" @save="emit('save', $event)" @change="emit('change', $event)" />
   <Dialog v-else-if="!embedded" :open="open" title="菜单设置" class="sm:max-w-3xl" @update:open="emit('update:open', $event)">
     <p class="mb-4 text-sm text-muted-foreground">设置对当前租户成员生效，可用功能仍以各成员权限为准。顺序越小越靠前，名称留空使用默认名称。</p>
     <div v-if="error" role="alert" class="mb-3 rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-400">{{ error }}</div>

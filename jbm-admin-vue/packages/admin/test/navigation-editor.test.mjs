@@ -52,5 +52,9 @@ test('page editor keeps drafts across groups/workspaces, searches, undoes, and e
   await nextTick()
   assert.equal(find(el => el.tag === 'fieldset').props.disabled, true)
   renderer.render(null, root)
+  renderer.render(h(JbmNavigationSettings, { open: true, embedded: true, workspace: 'iot', catalog, settings }), root)
+  await nextTick()
+  assert.ok(find(el => el.tag === 'h3' && text(el) === '物连工作区'))
+  renderer.render(null, root)
   globalThis.Document = previousDocument; globalThis.ShadowRoot = previousShadow
 })
