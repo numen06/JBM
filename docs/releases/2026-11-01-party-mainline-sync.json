@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-01",
+  "environment": "party-school",
+  "sources": {
+    "iot": {
+      "branch": "jbm",
+      "commit": "06469f33636cd7b20255c22af2ec8f208c0b9d1d",
+      "sourceTag": "party-mainline-20261101.1"
+    },
+    "building": {
+      "branch": "py",
+      "commit": "dc76ffac43ba0b98fb38a51d60db0a0841b96335",
+      "sourceTag": "party-mainline-20261101.1"
+    },
+    "jbm": {
+      "branch": "7.3-python",
+      "commit": "3dad766cb65cf3649aaa5bde3a3f50996ce3cc12",
+      "sourceTag": "party-mainline-20261101.2"
+    }
+  },
+  "builds": {
+    "iot": {
+      "taskId": "e33de2af-e691-47df-b809-1a6cdd3bfb8b",
+      "sourceMode": "git"
+    },
+    "building": {
+      "taskId": "86ebc2fa-b3a6-41a9-bb7a-dedbfa33c3dd",
+      "sourceMode": "clean-pushed-mainline-snapshot"
+    },
+    "jbm": {
+      "taskId": "723551a3-151e-4210-9382-0464fde66b16",
+      "sourceMode": "git"
+    }
+  },
+  "images": {
+    "tpm-iot-platform": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:446c6227cbe13e999b9c5d2bec6498248f1abb81ca56a97bbaa235f5855c97e7",
+    "iot-mqtt-worker": "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:58ff7fc123c4cb621144e73c66934a470e2bb5b8f30fd48399f3daa70f5b09dc",
+    "tpm-iot-rule-engine": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:f1c8e0fd4186ea5343eff2b0d3e31cfa916e886a46dc6a7e469d7a52b080c965",
+    "iot-usage-worker": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:ad0c4fb48b50a4bbe5c2e3c8c7ab7d775dfb8c8cd5c8a4e4c5e4260d1fb305a5",
+    "feige-ops-worker": "registry.cn-shanghai.aliyuncs.com/okc/iot-feige-ops-worker@sha256:43bebb2c423b86055e884cc9eca31257b84d7d3a542094972bd1d7ab7855f82d",
+    "iot-web": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:cdd2114929a663a2c2c19748d8d8da6f282b4da5614da0eadb89042547cbce3b",
+    "smart-building-python-api": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app@sha256:281a6e5059165953996355702ee33f9c1a165a1adc98f3ea4c2d598a51018828",
+    "smart-building-python-batch": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch@sha256:6e6a71d514a1a7c069b46d52c04fda26ca3f993e892f90e7a003695507d4ff9a",
+    "building-web": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web@sha256:bd0d705f7003aa9d3790efff77c0876821ba40e4982b722d9540ec095119c0cb",
+    "jbm-auth": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth@sha256:e290b2c02acfbfb6ea28599529d4911fde5fb7e2763d8ed31a205d26fa2c13a9",
+    "jbm-center": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center@sha256:c2ea9ce150af96983b751712e62823d79dabf87b58281cf5e5b41428328bf143",
+    "jbm-gateway": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway@sha256:63fd2976c1ed9e69411089191ed05cf666594c7048ff8f273d95a00c2d6586e5",
+    "jbm-doc": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc@sha256:49e0644ee051464ebe0e194da8637dba5775486f321db82cec4c5abe1be3d144",
+    "jbm-push": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push@sha256:b1eba18520010e8532f1a316dad7b82f10dd2b45b0174b3d2bcc5666a7fb0be1",
+    "jbm-job": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job@sha256:df12207c19f34f6780953d13c2169c5835b8ec441f613d70183acb7c533cb6d1",
+    "jbm-logs": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs@sha256:75a029a62b4fd827f289992f7283764bc93bc5e60bae78746d7e4e12be49cd65",
+    "jbm-bigscreen": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen@sha256:2af506bb955c10a48c44147dfa12d5af73bb45f42645df0e26e2c615b130a0b6",
+    "iot-control-history": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:446c6227cbe13e999b9c5d2bec6498248f1abb81ca56a97bbaa235f5855c97e7"
+  },
+  "updatedServices": [
+    "jbm-center",
+    "jbm-auth",
+    "tpm-iot-platform",
+    "iot-control-history",
+    "iot-mqtt-worker",
+    "tpm-iot-rule-engine",
+    "iot-usage-worker",
+    "feige-ops-worker",
+    "iot-web",
+    "smart-building-python-api",
+    "smart-building-python-batch",
+    "building-web",
+    "jbm-gateway",
+    "jbm-doc",
+    "jbm-push",
+    "jbm-job",
+    "jbm-logs",
+    "jbm-bigscreen"
+  ],
+  "verification": {
+    "localServices": 19,
+    "partyServices": 18,
+    "tests": {
+      "iot": {
+        "passed": 1262,
+        "skipped": 52
+      },
+      "jbm": {
+        "passed": 555,
+        "skipped": 6
+      },
+      "building": {
+        "passed": 378
+      }
+    },
+    "frontendsBuilt": [
+      "iot",
+      "jbm",
+      "building"
+    ],
+    "liveSourceFiles": 1021,
+    "iotMigration": "0032_control_projection_offsets",
+    "deviceFullBusinessFieldsCompared": 12,
+    "cloudStreetlightFixture": "7/7 passed before and after; original cloud tenant/project baseline retained",
+    "subitemGranularities": [
+      "hour",
+      "day",
+      "month",
+      "year"
+    ],
+    "inventoryIdentityAndLocationDevices": 2433,
+    "formalKeyLogin": true,
+    "controlHistoryHealthy": true,
+    "otherContainersUnchanged": true,
+    "environmentMountsPortsCommandsPreserved": true,
+    "fieldControls": 0,
+    "manualBusinessReplay": 0
+  },
+  "fixes": [
+    "Restore device protocol pagination contents alias",
+    "Include current service migrations and runtime resources",
+    "Install pinned offline IP attribution dependency and verified database files"
+  ],
+  "frameworkResourceChanges": [
+    "jbm.auth.session-policy",
+    "jbm.auth.jwt.mobile-refresh-token-seconds",
+    "jbm.auth.jwt.access-token-seconds"
+  ],
+  "rollout": {
+    "webStartupCheckRaceResolved": true,
+    "oldImagesIncompatibleWithNewAlembicRevision": true,
+    "recoveredByMigrationCompatibleImages": true,
+    "databaseDowngraded": false,
+    "orphanedReadCancelled": false
+  },
+  "intentionalEnvironmentAddition": {
+    "tpm-iot-platform": {
+      "CONTROL_TASKS_ENABLED": "true"
+    }
+  },
+  "pipelineAtVerification": {
+    "state": "healthy",
+    "tone": "success",
+    "title": "采集链路正常",
+    "message": "存储可访问，当前没有检测到待处理积压或写入重试。",
+    "partitions": [
+      {
+        "partition": 0,
+        "committed": 1231291,
+        "earliest": 976036,
+        "latest": 1231291,
+        "lag": 0
+      },
+      {
+        "partition": 1,
+        "committed": 5421808,
+        "earliest": 4594463,
+        "latest": 5421808,
+        "lag": 0
+      },
+      {
+        "partition": 2,
+        "committed": 4290734,
+        "earliest": 3373813,
+        "latest": 4290734,
+        "lag": 0
+      }
+    ],
+    "lag": 0,
+    "serverVersion": "3.4.2.8.community",
+    "expiredOffsets": 0,
+    "checkedAt": "2026-11-01T12:42:27.659894+08:00",
+    "automaticRecoveryEnabled": true,
+    "connectedConsumers": 3,
+    "processedMessages": 691,
+    "consumerErrors": 0,
+    "lastProcessedAt": "2026-11-01T12:42:30.931116+08:00",
+    "writtenWrites": 1288,
+    "pendingWrites": 0,
+    "inFlightWrites": 0,
+    "retryingWrites": 0,
+    "errorWrites": 0,
+    "lastWriteAt": "2026-11-01T12:42:30.858835+08:00",
+    "lastErrorAt": null,
+    "lastErrorReason": null,
+    "correctedInvalidTimestamps": 0,
+    "clockCorrections": []
+  },
+  "productionBackup": "/home/opt/jxdx-platform/backups/mainline-20261101-122826",
+  "notes": [
+    "Building Git clone authentication failed; original app2docker local snapshot entry built the same clean pushed commit.",
+    "Existing unrelated building workspace changes restored after release documentation commit."
+  ]
+}
