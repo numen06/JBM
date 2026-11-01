@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "build": {
+    "project_type": "python",
+    "use_project_dockerfile": true,
+    "dockerfile_name": "Dockerfile.party-mainline",
+    "platforms": [
+      "linux/amd64",
+      "linux/arm64"
+    ]
+  },
+  "image": {
+    "name": "jbm-cluster-platform-auth",
+    "prefix": "registry.cn-shanghai.aliyuncs.com/okc",
+    "tag": "party-mainline-20261101.1",
+    "push": true
+  },
+  "push_mode": "multi",
+  "services": [
+    {
+      "name": "jbm-auth",
+      "image_name": "jbm-cluster-platform-auth"
+    },
+    {
+      "name": "jbm-center",
+      "image_name": "jbm-cluster-platform-center"
+    },
+    {
+      "name": "jbm-gateway",
+      "image_name": "jbm-cluster-platform-gateway"
+    },
+    {
+      "name": "jbm-doc",
+      "image_name": "jbm-cluster-platform-doc"
+    },
+    {
+      "name": "jbm-push",
+      "image_name": "jbm-cluster-platform-push"
+    },
+    {
+      "name": "jbm-job",
+      "image_name": "jbm-cluster-platform-job"
+    },
+    {
+      "name": "jbm-logs",
+      "image_name": "jbm-cluster-platform-logs"
+    },
+    {
+      "name": "jbm-bigscreen",
+      "image_name": "jbm-cluster-platform-bigscreen"
+    }
+  ]
+}
