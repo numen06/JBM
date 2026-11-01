@@ -1,4 +1,9 @@
 ARG BASE_IMAGE
 FROM ${BASE_IMAGE}
-COPY jbm-python-cluster/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py /app/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py
+ARG BASE_SERVICE_SHA256
+USER root
+COPY jbm-python-cluster/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py /tmp/source_bigscreen_service.py
+COPY deploy/patch_bigscreen_mount.py /tmp/patch_bigscreen_mount.py
+RUN python /tmp/patch_bigscreen_mount.py /tmp/source_bigscreen_service.py /app/bigscreen/src/jbm_cluster_py/platform/bigscreen/service.py ${BASE_SERVICE_SHA256}
 RUN python -B -c "from jbm_cluster_py.platform.bigscreen.service import BigscreenService"
+USER appuser
