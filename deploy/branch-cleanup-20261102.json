@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-02",
+  "platform": "jbm",
+  "mainline": "7.3-python",
+  "rule": "Only ancestor branches without an attached worktree were removed; remote deletion used an exact SHA lease. Formal branches are unchanged.",
+  "refs": [
+    {
+      "ref": "codex/full-local-release-20261021",
+      "sha": "b5b8ff2513f4211745a376f8b039b0b17f8d4a26",
+      "merged": false,
+      "inUse": true,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "codex/party-school-security-20261012",
+      "sha": "35987daae149c0522fd66442c3f81178e39c17fc",
+      "merged": true,
+      "inUse": true,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "codex/release-py-7.3.27",
+      "sha": "1275825193f3d9fe8de100089cd1406b0c7d7dcb",
+      "merged": true,
+      "inUse": false,
+      "disposition": "deleted-merged-after-backup"
+    },
+    {
+      "ref": "codex/self-password-build-20261019",
+      "sha": "febb2e41c2263acb1572a20182dd87c276cbbc10",
+      "merged": true,
+      "inUse": true,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "codex/tenant-permission-boundary-20261018",
+      "sha": "4f2ac5d468068c5adb228f0e4564e54a2c1fcdd2",
+      "merged": true,
+      "inUse": true,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "origin/codex/full-local-release-20261021",
+      "sha": "b5b8ff2513f4211745a376f8b039b0b17f8d4a26",
+      "merged": false,
+      "inUse": false,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "origin/codex/party-school-security-20261012",
+      "sha": "35987daae149c0522fd66442c3f81178e39c17fc",
+      "merged": true,
+      "inUse": false,
+      "disposition": "preserved-worktree"
+    },
+    {
+      "ref": "origin/codex/tenant-permission-boundary-20261018",
+      "sha": "4f2ac5d468068c5adb228f0e4564e54a2c1fcdd2",
+      "merged": true,
+      "inUse": false,
+      "disposition": "preserved-worktree"
+    }
+  ]
+}

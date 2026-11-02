@@ -1,44 +1,52 @@
-version: "1.0"
-
+# Full-build template. Formal publishing requires the release standard, a reserved version and verified service targets.
+# Default push is disabled to prevent old fixed tags being reused by legacy pipelines.
+version: '1.0'
 build:
   project_type: python
   use_project_dockerfile: true
   dockerfile_name: Dockerfile.app2docker
   build_args:
-    JBM_COMMIT: "{commit}"
+    JBM_COMMIT: '{commit}'
   platforms:
-    - linux/amd64
-    - linux/arm64
-
+  - linux/amd64
+  - linux/arm64
 image:
   name: jbm-python-cluster
   prefix: registry.cn-shanghai.aliyuncs.com/okc
-  tag: py-7.3.23
-  push: true
-
+  tag: release-version-required
+  push: false
 push_mode: multi
-
 services:
-  - name: jbm-python-cluster
-    image_name: jbm-python-cluster
-  - name: jbm-cluster-platform-center
-    image_name: jbm-cluster-platform-center
-  - name: jbm-cluster-platform-auth
-    image_name: jbm-cluster-platform-auth
-  - name: jbm-cluster-platform-gateway
-    image_name: jbm-cluster-platform-gateway
-  - name: jbm-cluster-platform-doc
-    image_name: jbm-cluster-platform-doc
-  - name: jbm-cluster-platform-push
-    image_name: jbm-cluster-platform-push
-  - name: jbm-cluster-platform-job
-    image_name: jbm-cluster-platform-job
-  - name: jbm-cluster-platform-logs
-    image_name: jbm-cluster-platform-logs
-  - name: jbm-cluster-platform-bigscreen
-    image_name: jbm-cluster-platform-bigscreen
-  - name: jbm-admin-packages
-    image_name: jbm-admin-packages
-    push: true
-  - name: jbm-admin
-    image_name: jbm-admin
+- name: jbm-python-cluster
+  image_name: jbm-python-cluster
+  push: false
+- name: jbm-cluster-platform-center
+  image_name: jbm-cluster-platform-center
+  push: false
+- name: jbm-cluster-platform-auth
+  image_name: jbm-cluster-platform-auth
+  push: false
+- name: jbm-cluster-platform-gateway
+  image_name: jbm-cluster-platform-gateway
+  push: false
+- name: jbm-cluster-platform-doc
+  image_name: jbm-cluster-platform-doc
+  push: false
+- name: jbm-cluster-platform-push
+  image_name: jbm-cluster-platform-push
+  push: false
+- name: jbm-cluster-platform-job
+  image_name: jbm-cluster-platform-job
+  push: false
+- name: jbm-cluster-platform-logs
+  image_name: jbm-cluster-platform-logs
+  push: false
+- name: jbm-cluster-platform-bigscreen
+  image_name: jbm-cluster-platform-bigscreen
+  push: false
+- name: jbm-admin-packages
+  image_name: jbm-admin-packages
+  push: false
+- name: jbm-admin
+  image_name: jbm-admin
+  push: false

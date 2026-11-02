@@ -1,0 +1,265 @@
+{
+  "platform": "jbm",
+  "sourceCommit": "db15c95a77ec71154ed2dd51c3618709abfc0a39",
+  "mainline": "7.3-python",
+  "versionSeries": "py-7.3",
+  "activeProfiles": [
+    ".app2docker.yaml",
+    ".app2docker-menu-center.yaml",
+    ".app2docker-menu-gateway.yaml",
+    ".app2docker-database-job.yaml"
+  ],
+  "profileCountBefore": 25,
+  "profileCountAfter": 4,
+  "archivedProfiles": 21,
+  "archivedDockerfiles": 17,
+  "retainedRecipes": [
+    "Dockerfile.app2docker"
+  ],
+  "recipeReferences": {
+    "Dockerfile.app2docker": [
+      ".app2docker-database-job.yaml",
+      ".app2docker-menu-center.yaml",
+      ".app2docker-menu-gateway.yaml",
+      ".app2docker.yaml",
+      "scripts/release-python-images.ps1"
+    ]
+  },
+  "files": [
+    {
+      "original": ".app2docker-admin-key-issuer.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-admin-key-issuer.yaml",
+      "sha256": "c9e1458e9f77108fbfce2a24d4e5a2acb41476cdbc8f6c046f4153b19495d965",
+      "sha256Lf": "c9e1458e9f77108fbfce2a24d4e5a2acb41476cdbc8f6c046f4153b19495d965"
+    },
+    {
+      "original": ".app2docker-auth-admin.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-auth-admin.yaml",
+      "sha256": "c45ea165fbfa7f279aace2e3217d56d01dd0602989e5d68261cab59ee8443e18",
+      "sha256Lf": "c45ea165fbfa7f279aace2e3217d56d01dd0602989e5d68261cab59ee8443e18"
+    },
+    {
+      "original": ".app2docker-bigscreen-mount-cloud.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-bigscreen-mount-cloud.yaml",
+      "sha256": "fcafbfa51b6c421390f8466a8c0d609ac398d4a54fd81e74ae3a54e2d935097b",
+      "sha256Lf": "fcafbfa51b6c421390f8466a8c0d609ac398d4a54fd81e74ae3a54e2d935097b"
+    },
+    {
+      "original": ".app2docker-boundary-center.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-boundary-center.yaml",
+      "sha256": "607f6db36ac99259afe7e79ad1fb42dae92d8b0cbfafb6d689aecf98b490d4b9",
+      "sha256Lf": "607f6db36ac99259afe7e79ad1fb42dae92d8b0cbfafb6d689aecf98b490d4b9"
+    },
+    {
+      "original": ".app2docker-boundary-cloud-auth.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-boundary-cloud-auth.yaml",
+      "sha256": "2d153d9b81a9f65dc1acd5fb7fdcfc864da73be76dff11994a90833952be5129",
+      "sha256Lf": "2d153d9b81a9f65dc1acd5fb7fdcfc864da73be76dff11994a90833952be5129"
+    },
+    {
+      "original": ".app2docker-boundary-party-auth.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-boundary-party-auth.yaml",
+      "sha256": "07fac7a7885954e7c48ae3edfabdca53116f6025ae2cc9ed0293c5f94b48d08b",
+      "sha256Lf": "07fac7a7885954e7c48ae3edfabdca53116f6025ae2cc9ed0293c5f94b48d08b"
+    },
+    {
+      "original": ".app2docker-doc-connection.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-doc-connection.yaml",
+      "sha256": "d4f3c641371968794ee6466806b17c0bfc25942166f7f3fcdd8b678b175200e6",
+      "sha256Lf": "8a4f4a346394b521b0b5569b372eaff0fb0b093d29943630b21b313832783e15"
+    },
+    {
+      "original": ".app2docker-message-isolation-cloud.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-message-isolation-cloud.yaml",
+      "sha256": "21c7781b340269028ca9a5c7a64961fb8a63e71cd2508caecb3ebb97c9c8faf8",
+      "sha256Lf": "5480762fc14211fb6a938918dabbc20f3a5b95458e1b059ad06d6fd2933e3ac9"
+    },
+    {
+      "original": ".app2docker-message-isolation-party.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-message-isolation-party.yaml",
+      "sha256": "7095bd842edb3ef12a7b5b3e88f666e456f69ff08393573ac6b7c9b66c6c5038",
+      "sha256Lf": "0e74853b55df870c8cc253a0ea83a342b11904d2efc029694eeddd460f541299"
+    },
+    {
+      "original": ".app2docker-online-sessions.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-online-sessions.yaml",
+      "sha256": "f3bec46d4675beed82aaa64f7bfc0e815235e8eecb2277cfe12ed2c0cb8e15a2",
+      "sha256Lf": "f3bec46d4675beed82aaa64f7bfc0e815235e8eecb2277cfe12ed2c0cb8e15a2"
+    },
+    {
+      "original": ".app2docker-party-mainline.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-party-mainline.yaml",
+      "sha256": "d03f56bee445d84b769a213e9ddf4fb28c67d6999936cf585cf5292e672a8ba7",
+      "sha256Lf": "9e6edd3b9c36f3cfe8be578325529f291ab94ccd0b0b20965b99db4ffdc84d13"
+    },
+    {
+      "original": ".app2docker-party-security.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-party-security.yaml",
+      "sha256": "f4902a2b1dc9ac445699aec4e2af215eac6860cabe696534c0f2b3c09286b3a3",
+      "sha256Lf": "f4902a2b1dc9ac445699aec4e2af215eac6860cabe696534c0f2b3c09286b3a3"
+    },
+    {
+      "original": ".app2docker-self-password-admin.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-self-password-admin.yaml",
+      "sha256": "058cb5d3cdbdf52a052075242727e9b261ee61ead1705d731f7ab6a7ea1e38b7",
+      "sha256Lf": "5a736c70720b4fbb55febbbf8cf473d23bdc5ee1f0b1a40301791d7aab777eea"
+    },
+    {
+      "original": ".app2docker-session-policy-auth.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-session-policy-auth.yaml",
+      "sha256": "65bd1a7fb145ae665aac961f0150c704b592766a7d7027c3b7b771d06bc6be06",
+      "sha256Lf": "65bd1a7fb145ae665aac961f0150c704b592766a7d7027c3b7b771d06bc6be06"
+    },
+    {
+      "original": ".app2docker-session-policy.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-session-policy.yaml",
+      "sha256": "70d748dc882c591675b7e65633d0833ceb78877785d720fd7abad4cfa4bf0c34",
+      "sha256Lf": "70d748dc882c591675b7e65633d0833ceb78877785d720fd7abad4cfa4bf0c34"
+    },
+    {
+      "original": ".app2docker-session-reasons-auth.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-session-reasons-auth.yaml",
+      "sha256": "6f6803e19c56f40d2d716800424602c7521009f49f69729cf11fb603843cf8c4",
+      "sha256Lf": "09e9815c8bb70fd9df96c73867b336c0d883ba4f22ab0b2049a2a0da19a30098"
+    },
+    {
+      "original": ".app2docker-streetlight-access.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-streetlight-access.yaml",
+      "sha256": "d8d3a195051a1a4748289b9ed8874293ae7a3c7abecce946b74727338d7222e5",
+      "sha256Lf": "d8d3a195051a1a4748289b9ed8874293ae7a3c7abecce946b74727338d7222e5"
+    },
+    {
+      "original": ".app2docker-tenant-admin-notifications-cloud.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-tenant-admin-notifications-cloud.yaml",
+      "sha256": "a8e024417515109fec69d52f634d30e04f8784879d7f8408af0391e52208f607",
+      "sha256Lf": "abf8daba4df08c9a67a99e513bc62711376d192e65aab930d5873a1dea61e60c"
+    },
+    {
+      "original": ".app2docker-tenant-admin-notifications-party.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-tenant-admin-notifications-party.yaml",
+      "sha256": "a0f44e76ff13851196664fd1b9f2cd4f45a1b00c3f3bae8004e4fe78f8f9a546",
+      "sha256Lf": "f5f0d86bee1543fb42cc0b23020a8182f0875bda546eac860335cadd6141d6c5"
+    },
+    {
+      "original": ".app2docker-terminal-sessions.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-terminal-sessions.yaml",
+      "sha256": "d72a51f128cba92536c12cd0c9c3019e985c548501d3d2044f6d030b4654d025",
+      "sha256Lf": "d72a51f128cba92536c12cd0c9c3019e985c548501d3d2044f6d030b4654d025"
+    },
+    {
+      "original": ".app2docker-wechat-phone-auth.yaml",
+      "archived": "deploy/release-archive/20261102/.app2docker-wechat-phone-auth.yaml",
+      "sha256": "4fce9fcd99949454b3a992614f66704187d8a23857e0b15220c7acf55b877f64",
+      "sha256Lf": "f6a10449ea57e1c4978b7384e84a0d14728766bd9232553e6eda1e4c12f044d6"
+    },
+    {
+      "original": "Dockerfile.admin-key-issuer",
+      "archived": "deploy/release-archive/20261102/Dockerfile.admin-key-issuer",
+      "sha256": "482b4a86d9f310d924972190d3a337f15bf6232dc0d98cd1f16ff01b88abfeff",
+      "sha256Lf": "482b4a86d9f310d924972190d3a337f15bf6232dc0d98cd1f16ff01b88abfeff"
+    },
+    {
+      "original": "Dockerfile.auth-admin-cloud",
+      "archived": "deploy/release-archive/20261102/Dockerfile.auth-admin-cloud",
+      "sha256": "d21f56a66449c4d04f5b312b7e5875d7be80f8786eb2181401871b0a9b0be7e4",
+      "sha256Lf": "d21f56a66449c4d04f5b312b7e5875d7be80f8786eb2181401871b0a9b0be7e4"
+    },
+    {
+      "original": "Dockerfile.bigscreen-mount",
+      "archived": "deploy/release-archive/20261102/Dockerfile.bigscreen-mount",
+      "sha256": "70d7eac5409a92223d82da7648e0c0a85614e7f7e71aaf6df204ca5242920fda",
+      "sha256Lf": "70d7eac5409a92223d82da7648e0c0a85614e7f7e71aaf6df204ca5242920fda"
+    },
+    {
+      "original": "Dockerfile.doc-connection",
+      "archived": "deploy/release-archive/20261102/Dockerfile.doc-connection",
+      "sha256": "8774cf898cb7ae033e11a0d7f61ef17289e781b400d507e02a0409557e6969cb",
+      "sha256Lf": "5abcc1fc23012a63763cd7c177d357ad0e0e4788475f18163b5ddb4628bf500f"
+    },
+    {
+      "original": "Dockerfile.message-recipient-isolation",
+      "archived": "deploy/release-archive/20261102/Dockerfile.message-recipient-isolation",
+      "sha256": "b2d613e0c12f708fd8fe3519d6cf3daba0226c3450f083f3b73e07078d6a3132",
+      "sha256Lf": "b2d613e0c12f708fd8fe3519d6cf3daba0226c3450f083f3b73e07078d6a3132"
+    },
+    {
+      "original": "Dockerfile.online-sessions",
+      "archived": "deploy/release-archive/20261102/Dockerfile.online-sessions",
+      "sha256": "e7499967b6cbd364f28b34d7fead333f12bc16eb96530827f4c06e64c50a04b6",
+      "sha256Lf": "e7499967b6cbd364f28b34d7fead333f12bc16eb96530827f4c06e64c50a04b6"
+    },
+    {
+      "original": "Dockerfile.party-mainline",
+      "archived": "deploy/release-archive/20261102/Dockerfile.party-mainline",
+      "sha256": "f0614366f162ae575dccda82c9501e3bd8f43afc8ca5936c5e6676f83bf42dd6",
+      "sha256Lf": "ec3360f9bb2ad67d6de36a36559f1505b122b3f6c467c7d7b68c612dfb3f0cc1"
+    },
+    {
+      "original": "Dockerfile.party-security",
+      "archived": "deploy/release-archive/20261102/Dockerfile.party-security",
+      "sha256": "984a2f75122a5a1fe269db51c963864ccf7b9821b7751e1cc36bfdd0e5dfcda2",
+      "sha256Lf": "984a2f75122a5a1fe269db51c963864ccf7b9821b7751e1cc36bfdd0e5dfcda2"
+    },
+    {
+      "original": "Dockerfile.self-password-admin",
+      "archived": "deploy/release-archive/20261102/Dockerfile.self-password-admin",
+      "sha256": "fae18036495d299244ca2a9785492a2e81b0ef546013ae97ba7a7e6476099dcb",
+      "sha256Lf": "571436062b9a95947b33df5758e5bac41634de455bce608ce78fcd3103e954e8"
+    },
+    {
+      "original": "Dockerfile.session-policy",
+      "archived": "deploy/release-archive/20261102/Dockerfile.session-policy",
+      "sha256": "8530f6bea0092fcae6e1b419577880e1d137eb3ba1a21400ac542d8aca2e3ee8",
+      "sha256Lf": "8530f6bea0092fcae6e1b419577880e1d137eb3ba1a21400ac542d8aca2e3ee8"
+    },
+    {
+      "original": "Dockerfile.session-policy-auth",
+      "archived": "deploy/release-archive/20261102/Dockerfile.session-policy-auth",
+      "sha256": "8cbbc39b38041ca63b7954e6b2335297e6309e8a2d11c129a8eae06c3b83d331",
+      "sha256Lf": "8cbbc39b38041ca63b7954e6b2335297e6309e8a2d11c129a8eae06c3b83d331"
+    },
+    {
+      "original": "Dockerfile.session-reasons-auth",
+      "archived": "deploy/release-archive/20261102/Dockerfile.session-reasons-auth",
+      "sha256": "e079e16e336b3e1bb908b79bb3fa490c2fd62abd2fec8f58c2f801958ed3515f",
+      "sha256Lf": "7408a6f8b991c52ee696e7e62a8c7e83e28c0a05d75b707d96ef7d7eb8f55d12"
+    },
+    {
+      "original": "Dockerfile.streetlight-access",
+      "archived": "deploy/release-archive/20261102/Dockerfile.streetlight-access",
+      "sha256": "b7565e71b94f4dcf0049b4bb3e25a716435015a4d48257b9e583839ca83a7be2",
+      "sha256Lf": "b7565e71b94f4dcf0049b4bb3e25a716435015a4d48257b9e583839ca83a7be2"
+    },
+    {
+      "original": "Dockerfile.tenant-admin-notifications",
+      "archived": "deploy/release-archive/20261102/Dockerfile.tenant-admin-notifications",
+      "sha256": "8811c9ad43bdd5b760a91fac5495bc2f89f61f527838cf1dd629b5225caa5ef9",
+      "sha256Lf": "8811c9ad43bdd5b760a91fac5495bc2f89f61f527838cf1dd629b5225caa5ef9"
+    },
+    {
+      "original": "Dockerfile.tenant-boundary",
+      "archived": "deploy/release-archive/20261102/Dockerfile.tenant-boundary",
+      "sha256": "cd1ec668400fe9c115e288e2df5573f0fcfe28a24e47f9339e8441f9878d2b34",
+      "sha256Lf": "cd1ec668400fe9c115e288e2df5573f0fcfe28a24e47f9339e8441f9878d2b34"
+    },
+    {
+      "original": "Dockerfile.terminal-sessions",
+      "archived": "deploy/release-archive/20261102/Dockerfile.terminal-sessions",
+      "sha256": "f9ad2f3a2d4af22518b837b2fe26ac8e4448f8f7e56690fc3fa6d6c0a8d75147",
+      "sha256Lf": "f9ad2f3a2d4af22518b837b2fe26ac8e4448f8f7e56690fc3fa6d6c0a8d75147"
+    },
+    {
+      "original": "Dockerfile.wechat-phone-auth",
+      "archived": "deploy/release-archive/20261102/Dockerfile.wechat-phone-auth",
+      "sha256": "04872b53b037010bdd096404dd025900f63f61673900fcee721f886d48b6247d",
+      "sha256Lf": "a5dd68cd5b091373684411294c14172636b0d0d68663894e10622b0f23c9240d"
+    },
+    {
+      "original": "scripts/release-python-images.ps1",
+      "archived": "deploy/release-archive/20261102/scripts/release-python-images.ps1",
+      "sha256": "d0e7a181d72671f2e2054a79d2088a9dacd2af6887a756af5294a02645b4e4aa",
+      "sha256Lf": "d0e7a181d72671f2e2054a79d2088a9dacd2af6887a756af5294a02645b4e4aa"
+    }
+  ],
+  "checksumPolicy": "sha256 records original local bytes; sha256Lf validates text content across Git CRLF/LF checkout normalization"
+}

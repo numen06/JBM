@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "platform": "jbm",
+  "mainline": "7.3-python",
+  "mainlineMigration": "not-executed",
+  "versionSeries": "py-7.3",
+  "standard": "docs/operations/multi-platform-version-release-sop.md",
+  "buildSystem": "app2docker",
+  "formalSource": "clean-pushed-mainline-git",
+  "newFormalTagPattern": "^py\\-7\\.3-([0-9]{8})\\.([1-9][0-9]*)$",
+  "profiles": [
+    {
+      "file": ".app2docker.yaml",
+      "purpose": "保留的全量模板；默认禁止推送，防止旧流水线重用历史标签；待标准化参数与目标迁移后启用",
+      "defaultTagIsFormalVersion": false,
+      "mustOverrideTag": true,
+      "defaultPushDisabled": true
+    },
+    {
+      "file": ".app2docker-menu-center.yaml",
+      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "defaultTagIsFormalVersion": false,
+      "mustOverrideTag": true
+    },
+    {
+      "file": ".app2docker-menu-gateway.yaml",
+      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "defaultTagIsFormalVersion": false,
+      "mustOverrideTag": true
+    },
+    {
+      "file": ".app2docker-database-job.yaml",
+      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "defaultTagIsFormalVersion": false,
+      "mustOverrideTag": true
+    }
+  ],
+  "archive": "deploy/release-archive/20261102/inventory.json",
+  "versionAutomation": "pending-implementation",
+  "productionChangesInThisCleanup": 0,
+  "retainedBuildRecipes": [
+    {
+      "file": "Dockerfile.app2docker",
+      "referencedBy": [
+        ".app2docker-database-job.yaml",
+        ".app2docker-menu-center.yaml",
+        ".app2docker-menu-gateway.yaml",
+        ".app2docker.yaml",
+        "scripts/release-python-images.ps1"
+      ],
+      "reason": "current build/compose/tool reference"
+    }
+  ],
+  "branchAudit": "deploy/branch-cleanup-20261102.json",
+  "releaseTimezone": "Asia/Shanghai",
+  "sequenceScope": "platform + git mainline + release date",
+  "newFormatReleaseBlockedUntilMainlineMigration": true,
+  "defaultTemplateChanged": {
+    "fields": [
+      "image.tag",
+      "image.push",
+      "services[].push"
+    ],
+    "reason": "disable accidental reuse of old fixed image versions",
+    "noRuntimeDeployment": true
+  },
+  "targetMainline": "py-7.3"
+}
