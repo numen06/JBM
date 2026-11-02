@@ -16,7 +16,7 @@ git:
 image:
   name: registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job
   tag: py-7.3-20261102.1
-  push: false
+  push: true
 push_mode: single
 release:
   enabled: true

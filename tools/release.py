@@ -32,7 +32,7 @@ def profile(config, component, version):
     return {'version': '1.0', 'build': {'project_type': 'python', 'use_project_dockerfile': True,
             'dockerfile_name': component['dockerfile'], 'platforms': ['linux/amd64', 'linux/arm64'], 'build_args': args},
             'git': {'branch': config['mainline']},
-            'image': {'name': component['image'], 'tag': version, 'push': False}, 'push_mode': 'single',
+            'image': {'name': component['image'], 'tag': version, 'push': True}, 'push_mode': 'single',
             'release': {'enabled': True, 'platform': config['platform'], 'mainline': config['mainline'],
                         'version_file': 'VERSION', 'timezone': 'Asia/Shanghai', 'immutable': True, 'require_git_tag': True}}
 
