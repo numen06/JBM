@@ -365,3 +365,12 @@ def test_security_middleware_protects_management_endpoint_and_adds_headers() -> 
     assert gray_denied.status_code == 403
     assert allowed.status_code == 200
     assert allowed.headers["x-content-type-options"] == "nosniff"
+
+
+def test_gray_management_accepts_verified_platform_identity_but_not_raw_bearer():
+    policy = GatewaySecurityPolicy({'management': {'path-prefixes': ['/gateway/gray-routes'], 'allowed-ips': ['10.0.0.0/8'], 'allow-local': False}})
+    args = ('/gateway/gray-routes', '', {'authorization': 'Bearer unverified'}, '203.0.113.1')
+    assert not policy.inspect_request_meta(*args).allowed
+    assert not policy.inspect_request_meta(*args, identity={'roles': ['tenant_admin']}).allowed
+    assert policy.inspect_request_meta(*args, identity={'admin': True}).allowed
+    assert not policy.inspect_request_meta('/__gateway/routes', '', {}, '203.0.113.1', identity={'admin': True}).allowed

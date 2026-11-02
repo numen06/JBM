@@ -12,6 +12,15 @@ def person(*permissions):
     return {"userId": 42, "tenantId": 7, "clientId": "browser", "permissions": list(permissions)}
 
 
+@pytest.mark.parametrize('path', ['/extend-field/forms', '/api-docs/sources', '/developer', '/developer/pending'])
+def test_administration_menu_apis_require_verified_platform_identity(path):
+    for method in ['GET', 'POST']:
+        authorize_api('center', method, path, {**person(), 'admin': True})
+        with pytest.raises(HTTPException) as exc:
+            authorize_api('center', method, path, {**person('all'), 'roles': ['tenant_admin']})
+        assert exc.value.status_code == 403
+
+
 @pytest.mark.parametrize(
     "service,method,path",
     [

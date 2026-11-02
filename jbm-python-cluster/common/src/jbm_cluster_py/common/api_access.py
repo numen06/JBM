@@ -176,6 +176,9 @@ CENTER_RULES = tuple(
         "/baseAccountLogs",
         "/openApiDocument",
         "/openApiOperation",
+        "/api-docs",
+        "/extend-field",
+        "/developer",
         "/baseAppConfig",
     )
 ) + (

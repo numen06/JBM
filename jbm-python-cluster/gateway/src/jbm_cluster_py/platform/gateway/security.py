@@ -11,6 +11,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
+from jbm_cluster_py.common.api_access import is_platform
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.result import fail
 
@@ -204,6 +205,7 @@ class GatewaySecurityPolicy:
         query_string: str,
         headers: Mapping[str, str],
         remote_ip: str,
+        identity: Optional[Mapping[str, Any]] = None,
     ) -> SecurityDecision:
         if not self.enabled:
             return SecurityDecision(True)
@@ -213,7 +215,7 @@ class GatewaySecurityPolicy:
         length = headers.get("content-length") or headers.get("Content-Length")
         if length and self.max_body_bytes > 0 and _int(length, 0) > self.max_body_bytes:
             return SecurityDecision(False, "请求体超过网关限制", 413)
-        management_decision = self._inspect_management(path, headers, remote_ip)
+        management_decision = self._inspect_management(path, headers, remote_ip, identity)
         if not management_decision.allowed:
             return management_decision
         if self._is_excluded_path(path):
@@ -247,7 +249,12 @@ class GatewaySecurityPolicy:
         path: str,
         headers: Mapping[str, str],
         remote_ip: str,
+        identity: Optional[Mapping[str, Any]] = None,
     ) -> SecurityDecision:
+        # The outer API middleware has already verified this identity. Internal
+        # /__gateway endpoints retain their separate network/token restriction.
+        if (path == '/gateway/gray-routes' or path.startswith('/gateway/gray-routes/')) and is_platform(identity or {}):
+            return SecurityDecision(True)
         if not self.management_enabled or not any(
             path.startswith(prefix) for prefix in self.management_prefixes
         ):
@@ -298,6 +305,7 @@ def install_security_middleware(app: FastAPI, config: AppConfig) -> GatewaySecur
             request.url.query,
             request.headers,
             _client_ip(request),
+            getattr(request.state, 'identity', None),
         )
         if not decision.allowed:
             return JSONResponse(

@@ -1,0 +1,18 @@
+version: "1.0"
+build:
+  project_type: python
+  use_project_dockerfile: true
+  dockerfile_name: Dockerfile.app2docker
+  platforms: [linux/amd64, linux/arm64]
+  build_args:
+    JBM_COMMIT: "{commit}"
+    JBM_BUILD_TARGET: jbm-cluster-platform-gateway
+image:
+  name: jbm-cluster-platform-gateway
+  prefix: registry.cn-shanghai.aliyuncs.com/okc
+  tag: menu-acceptance-{commit}
+  push: true
+push_mode: multi
+services:
+  - name: jbm-cluster-platform-gateway
+    image_name: jbm-cluster-platform-gateway
