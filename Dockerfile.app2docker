@@ -7,8 +7,6 @@ ARG JBM_BUILD_TARGET=jbm-admin
 FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
 
 FROM ${PYTHON_RUNTIME} AS jbm-runtime
-ARG JBM_COMMIT=unknown
-LABEL org.opencontainers.image.revision=${JBM_COMMIT}
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -38,6 +36,9 @@ COPY --chown=appuser:appuser jbm-python-cluster/gateway ./gateway
 COPY --chown=appuser:appuser jbm-python-cluster/center ./center
 COPY --chown=appuser:appuser jbm-python-cluster/logs ./logs
 COPY --chown=appuser:appuser jbm-python-cluster/bigscreen ./bigscreen
+
+ARG JBM_COMMIT=unknown
+LABEL org.opencontainers.image.revision=${JBM_COMMIT}
 
 USER appuser
 EXPOSE 3312 3313 3314 4444 5555 6060 7777 9999

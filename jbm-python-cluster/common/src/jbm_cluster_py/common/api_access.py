@@ -327,6 +327,7 @@ SERVICE_RULES = {
                 "/pushMessageConfig",
                 "/messageTemplate",
                 "/pushChannelConfig",
+                "/pushConfigInfo",
                 "/smsPushConfig",
                 "/emailPushConfig",
                 "/notification",

@@ -21,6 +21,14 @@ def test_administration_menu_apis_require_verified_platform_identity(path):
         assert exc.value.status_code == 403
 
 
+def test_message_channel_configuration_alias_is_platform_only():
+    for method, path in [('POST', '/pushConfigInfo/pageList'), ('POST', '/pushConfigInfo/save')]:
+        authorize_api('push', method, path, {**person(), 'admin': True})
+        with pytest.raises(HTTPException) as exc:
+            authorize_api('push', method, path, {**person('all'), 'roles': ['tenant_admin']})
+        assert exc.value.status_code == 403
+
+
 @pytest.mark.parametrize(
     "service,method,path",
     [
