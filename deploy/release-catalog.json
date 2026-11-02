@@ -95,7 +95,6 @@
   ],
   "archive": "deploy/release-archive/20261102/inventory.json",
   "versionAutomation": "tools/release.py",
-  "productionChangesInThisCleanup": 0,
   "retainedBuildRecipes": [
     {
       "file": "Dockerfile.app2docker",
@@ -148,7 +147,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-center": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -165,7 +169,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-auth": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -182,7 +191,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-gateway": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -199,7 +213,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-doc": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -216,7 +235,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-push": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -234,6 +258,11 @@
         "jbm7_jbm-cluster-platform-job": {
           "stack": "jbm7",
           "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          },
           "healthcheck": {
             "Test": [
               "CMD-SHELL",
@@ -266,7 +295,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-logs": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -283,7 +317,12 @@
       "servicePolicies": {
         "jbm7_jbm-cluster-platform-bigscreen": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "any",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     },
@@ -314,7 +353,12 @@
       "servicePolicies": {
         "jbm7_jbm-admin": {
           "stack": "jbm7",
-          "replicas": 1
+          "replicas": 1,
+          "restartPolicy": {
+            "Condition": "on-failure",
+            "Delay": 5000000000,
+            "MaxAttempts": 0
+          }
         }
       }
     }
@@ -338,7 +382,7 @@
     }
   ],
   "remoteDefaultBranchPolicy": "unchanged-by-user-instruction",
-  "deploymentInventory": "deploy/releases/20261102-unified-platform-release.json",
+  "deploymentInventory": "deploy/releases/20261103-unified-platform-release.json",
   "stackValidation": "tools/check_stack_release.py",
   "protectedBranches": [
     "7.2",
@@ -346,5 +390,7 @@
     "dev",
     "master",
     "py-7.3"
-  ]
+  ],
+  "archiveCleanupRuntimeChanges": 0,
+  "productionDeploymentState": "completed"
 }

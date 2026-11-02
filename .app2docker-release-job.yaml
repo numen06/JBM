@@ -30,6 +30,10 @@ release:
     jbm7_jbm-cluster-platform-job:
       stack: jbm7
       replicas: 1
+      restartPolicy:
+        Condition: any
+        Delay: 5000000000
+        MaxAttempts: 0
       healthcheck:
         Test:
         - CMD-SHELL

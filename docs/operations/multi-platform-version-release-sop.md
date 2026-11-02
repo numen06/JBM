@@ -54,7 +54,7 @@ App2Docker 配置顶层 `version: '1.0'` 为配置结构版本，不是产品版
 - 服务标签记录 stack、完整版本、完整 SHA、主线和发布组合；`com.docker.stack.image` 必须等于实际 `镜像:版本@sha256:摘要`。未部署的基础运行时、SDK 组件包也登记制品，不虚构对应服务。
 - `deploy/release-catalog.json` 的 `servicePolicies` 与生成的 App2Docker `release.service_policies` 保存角色规则。Job 保持一个活动备份 Worker，更新期间由程序后台等待旧进程的共享目录锁，每 2 秒重试，获取后自动接管；HTTP/发现先启动，暂未接管的数据库运维接口返回 503 和 Retry-After，等待不被误报为启动失败。真正的初始化错误由健康检查和 stack 重启策略恢复。不要求人工切换更新顺序，不删除锁文件，不让两个备份 Worker 并行执行。
 - 同一镜像的不同角色保留各自健康检查。控制历史 Worker 使用其 `--health`；无 HTTP 服务的运维 Worker 不继承 API 的 HTTP 探针，保持 `Test: [NONE]` 并结合进程和订阅日志验收。建筑批处理存活探针使用 `/actuator/live`，数据未就绪仍由 `/health` 如实报告，不能用反复重启掩盖缺数据。
-- `smart_building` 还包含独立仓库 `smart-building-flow` 的组态编辑器，其主线保持 `master`，采用 `master-YYYYMMDD.N`；环境组合清单列出它的独立 SHA 和摘要，不冒用建筑 Python 的 SHA 或 `latest`。数据库、消息中间件和外部基础设施按各自维护周期管理，不为统一应用版本而升级。
+- `smart_building` 还包含独立仓库 `smart-building-flow` 的组态编辑器，其主线保持 `master`，采用 `master-YYYYMMDD.N`；环境组合清单列出它的独立 SHA 和摘要，不冒用建筑 Python 的 SHA 或 `latest`。App2Docker、共享天气/定位服务及第三方数据库、中间件按各自仓库或供应商版本管理；同样盘点当前摘要并单独登记，不为统一三个业务平台版本而升级它们。
 - 退役服务先确认零副本、无有效消费职责并备份完整规格，再从 stack 删除；保留卷、配置、历史镜像与回滚证据。不批量清理 Docker 镜像或数据。
 - 发布清单位于 `deploy/releases/<发布组合>.json`，包含所有目标服务及制品。使用 `python tools/check_stack_release.py --snapshot <私有的完整 docker-service-inspect.json> --manifest <发布清单>` 验证漏服务、额外服务、stack 标签、镜像摘要、版本、源码和角色规则。服务规格含敏感配置，快照仅放忽略目录；不得提交 Git。
 - 最后逐个核对实际运行副本的镜像、健康、源码/静态资源摘要，避免挂载覆盖制品或旧副本仍在运行。完整界面验收受阻时必须记录未验项目，接口通过不能写成全部菜单通过。
@@ -63,7 +63,7 @@ App2Docker 配置顶层 `version: '1.0'` 为配置结构版本，不是产品版
 
 正式记录放 `deploy/releases/` 或已有 `docs/releases/`，包含：平台/仓库/主线/版本/发布类型/状态，冻结 SHA 与 Git tag，原 App2Docker 流水线和任务，每个组件 Dockerfile/target/基础摘要/架构/OCI 元数据/最终 digest，部署前后服务规格引用，迁移和兼容性，测试、本地实际服务、线上菜单/API/完整性结果，回滚基线与最终三平台组合。秘密只在忽略的私有记录中，不提交 Git。
 
-本轮组合见 `deploy/releases/20261102-unified-platform-release.json`。部署后的规范、工具及验收记录可以另行提交，不改动已冻结运行时 SHA；再次构建应用必须递增新版本，不能用文档提交更新原镜像标签。
+本轮最终组合见 `deploy/releases/20261103-unified-platform-release.json`；11 月 2 日的清单保留为自动接管修复前的阶段记录。部署后的规范、工具及验收记录可以另行提交，不改动已冻结运行时 SHA；再次构建应用必须递增新版本，不能用文档提交更新原镜像标签。
 
 ## 紧急修复与回滚
 

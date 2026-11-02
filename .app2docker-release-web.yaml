@@ -29,3 +29,7 @@ release:
     jbm7_jbm-admin:
       stack: jbm7
       replicas: 1
+      restartPolicy:
+        Condition: on-failure
+        Delay: 5000000000
+        MaxAttempts: 0

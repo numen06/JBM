@@ -31,6 +31,8 @@ def validate(snapshot, manifest):
         labels = spec.get('Labels', {})
         image = spec['TaskTemplate']['ContainerSpec']['Image']
         stack = target['stack']
+        if not re.fullmatch(r'[0-9a-f]{40}', target['sourceCommit']):
+            issues.append({'service': name, 'issue': 'incomplete-source-revision'})
         counts[stack] = counts.get(stack, 0) + 1
         if labels.get('com.docker.stack.namespace') != stack:
             issues.append({'service': name, 'issue': 'wrong-or-missing-stack-label'})
@@ -59,6 +61,9 @@ def validate(snapshot, manifest):
         for key, value in target.get('healthcheck', {}).items():
             if spec['TaskTemplate']['ContainerSpec'].get('Healthcheck', {}).get(key) != value:
                 issues.append({'service': name, 'issue': 'role-healthcheck-differs', 'field': key})
+        for key, value in target.get('restartPolicy', {}).items():
+            if spec['TaskTemplate'].get('RestartPolicy', {}).get(key) != value:
+                issues.append({'service': name, 'issue': 'restart-policy-differs', 'field': key})
         if 'replicas' in target and spec.get('Mode', {}).get('Replicated', {}).get('Replicas') != target['replicas']:
             issues.append({'service': name, 'issue': 'replica-count-differs'})
     return {'passed': not issues, 'expectedServices': len(expected), 'actualServices': len(actual),

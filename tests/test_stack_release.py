@@ -26,17 +26,21 @@ def test_singleton_handover_and_worker_probe_cannot_regress():
     image = 'registry/job:py-7.3-20261102.4@sha256:' + 'a'*64
     target = {'service':'jbm7_job','stack':'jbm7','image':image,'version':'py-7.3-20261102.4',
               'sourceCommit':'b'*40,'mainline':'py-7.3','replicas':1,
-              'deployment':{'singleActiveWorker':True},'healthcheck':{'Test':['NONE']}}
+              'deployment':{'singleActiveWorker':True},'healthcheck':{'Test':['NONE']},
+              'restartPolicy':{'Condition':'any','Delay':5000000000,'MaxAttempts':0}}
     manifest = {'scopeStacks':['jbm7'],'services':[target]}
     service = {'Spec':{'Name':target['service'],'Labels':{'com.docker.stack.namespace':'jbm7',
         'com.docker.stack.image':image,'io.feige.release.version':target['version'],
         'io.feige.release.revision':target['sourceCommit'],'io.feige.release.branch':'py-7.3'},
         'Mode':{'Replicated':{'Replicas':1}},'UpdateConfig':{'Order':'stop-first'},
-        'RollbackConfig':{'Order':'stop-first'},'TaskTemplate':{'ContainerSpec':{'Image':image,'Healthcheck':{'Test':['NONE']}}}}}
+        'RollbackConfig':{'Order':'stop-first'},'TaskTemplate':{'RestartPolicy':target['restartPolicy'].copy(),
+          'ContainerSpec':{'Image':image,'Healthcheck':{'Test':['NONE']}}}}}
     assert validate([service],manifest)['passed']
     changed=copy.deepcopy(service);changed['Spec']['UpdateConfig']['Order']='start-first'
     assert validate([changed],manifest)['passed']
     changed['Spec']['Mode']['Replicated']['Replicas']=2
+    assert not validate([changed],manifest)['passed']
+    changed=copy.deepcopy(service);changed['Spec']['TaskTemplate']['RestartPolicy']['MaxAttempts']=1
     assert not validate([changed],manifest)['passed']
     changed=copy.deepcopy(service);changed['Spec']['TaskTemplate']['ContainerSpec']['Healthcheck']={'Test':['CMD','curl','localhost']}
     assert not validate([changed],manifest)['passed']
