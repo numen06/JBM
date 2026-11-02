@@ -4,6 +4,8 @@ build:
   project_type: python
   use_project_dockerfile: true
   dockerfile_name: Dockerfile.app2docker
+  build_args:
+    JBM_COMMIT: "{commit}"
   platforms:
     - linux/amd64
     - linux/arm64

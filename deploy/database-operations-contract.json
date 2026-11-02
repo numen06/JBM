@@ -1,0 +1,10 @@
+{
+  "name": "JBM database operations",
+  "sourceBranch": "7.3-python",
+  "service": "jbm-cluster-platform-job",
+  "checks": [
+    {"method": "GET", "path": "/job/sysJob/database-backups/sources"},
+    {"method": "GET", "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1"},
+    {"method": "GET", "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1"}
+  ]
+}

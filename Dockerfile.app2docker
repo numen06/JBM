@@ -1,8 +1,13 @@
 ARG PYTHON_RUNTIME=m.daocloud.io/docker.io/python:3.12
 ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine
 ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine
+ARG MYSQL_CLIENT_IMAGE=mysql:8.4
+
+FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
 
 FROM ${PYTHON_RUNTIME} AS jbm-runtime
+ARG JBM_COMMIT=unknown
+LABEL org.opencontainers.image.revision=${JBM_COMMIT}
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -44,6 +49,10 @@ FROM jbm-runtime AS jbm-cluster-platform-gateway
 FROM jbm-runtime AS jbm-cluster-platform-doc
 FROM jbm-runtime AS jbm-cluster-platform-push
 FROM jbm-runtime AS jbm-cluster-platform-job
+USER root
+COPY --from=mysql-client /usr/bin/mysql /usr/bin/mysqldump /usr/local/bin/
+RUN mysql --version && mysqldump --version
+USER appuser
 FROM jbm-runtime AS jbm-cluster-platform-logs
 FROM jbm-runtime AS jbm-cluster-platform-bigscreen
 
