@@ -3,6 +3,11 @@ ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine
 ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine
 ARG MYSQL_CLIENT_IMAGE=mysql:8.4
 ARG RELEASE_TARGET=jbm-admin
+ARG GEOIP_DATABASE_IMAGE=registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:91c56dfdd0e0318c596920c761e2395643195872ec35a5b8ecca0f558e72b499
+
+# The lookup database is architecture-independent and is not tracked as source.
+# Preserve the verified production asset rather than relying on a startup download.
+FROM --platform=$BUILDPLATFORM ${GEOIP_DATABASE_IMAGE} AS geoip-assets
 
 FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
 
@@ -36,6 +41,8 @@ COPY --chown=appuser:appuser jbm-python-cluster/gateway ./gateway
 COPY --chown=appuser:appuser jbm-python-cluster/center ./center
 COPY --chown=appuser:appuser jbm-python-cluster/logs ./logs
 COPY --chown=appuser:appuser jbm-python-cluster/bigscreen ./bigscreen
+COPY --from=geoip-assets --chown=appuser:appuser /app/auth/data/ip2region_v4.xdb /app/auth/data/ip2region_v4.xdb
+RUN echo '27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1  /app/auth/data/ip2region_v4.xdb' | sha256sum -c -
 
 ARG JBM_COMMIT=unknown
 LABEL org.opencontainers.image.revision=${JBM_COMMIT}

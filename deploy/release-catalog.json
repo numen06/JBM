@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "platform": "jbm",
   "mainline": "py-7.3",
-  "mainlineMigration": "completed-local",
+  "mainlineMigration": "completed",
   "versionSeries": "py-7.3",
   "standard": "docs/operations/multi-platform-version-release-sop.md",
   "buildSystem": "app2docker",
@@ -246,5 +246,16 @@
       ],
       "buildArgs": {}
     }
-  }
+  },
+  "resourceDependencies": [
+    {
+      "path": "/app/auth/data/ip2region_v4.xdb",
+      "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1",
+      "sourceImage": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:91c56dfdd0e0318c596920c761e2395643195872ec35a5b8ecca0f558e72b499",
+      "requiredBy": [
+        "auth"
+      ]
+    }
+  ],
+  "remoteDefaultBranchPolicy": "unchanged-by-user-request"
 }

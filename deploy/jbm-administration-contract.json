@@ -1,6 +1,6 @@
 {
   "name": "JBM administration menus",
-  "sourceBranch": "7.3-python",
+  "sourceBranch": "py-7.3",
   "checks": [
     {"method": "GET", "path": "/center/extend-field/forms"},
     {"method": "GET", "path": "/center/api-docs/sources"},
