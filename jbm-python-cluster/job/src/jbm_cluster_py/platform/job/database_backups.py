@@ -58,7 +58,11 @@ class DatabaseBackups:
         self.worker_lock = (self.root / ".worker.lock").open("a")
         if os.name != "nt":
             import fcntl
-            fcntl.flock(self.worker_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                fcntl.flock(self.worker_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                self.worker_lock.close()
+                raise
         self.state = self.root / "operations.sqlite3"
         key = self.root / "credentials.key"
         if not key.exists():
@@ -548,8 +552,16 @@ class DatabaseBackups:
         # ponytail: one worker per deployment; use a shared queue before scaling replicas.
         while True:
             try:
-                await asyncio.to_thread(self.schedule)
-                await asyncio.to_thread(self.run_next)
+                # Cancellation must not release our ownership while a native operation
+                # is still running in a thread. Docker may terminate the whole process
+                # after its grace period, but a graceful handover drains the current step.
+                for operation in (self.schedule, self.run_next):
+                    step = asyncio.create_task(asyncio.to_thread(operation))
+                    try:
+                        await asyncio.shield(step)
+                    except asyncio.CancelledError:
+                        await step
+                        raise
             except Exception:
                 import logging
                 logging.getLogger(__name__).exception("Database backup worker iteration failed")

@@ -28,7 +28,10 @@ def build_database_backup_router():
             raise HTTPException(422, str(exc)) from None
 
     def service(request):
-        return request.app.state.database_backups
+        manager = getattr(request.app.state, "database_backups", None)
+        if manager is None:
+            raise HTTPException(503, "数据库运维正在启动，请稍后重试", headers={"Retry-After": "2"})
+        return manager
 
     @router.get("/sources")
     async def sources(request: Request):

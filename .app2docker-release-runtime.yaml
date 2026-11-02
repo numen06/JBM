@@ -25,3 +25,4 @@ release:
   timezone: Asia/Shanghai
   immutable: true
   require_git_tag: true
+  service_policies: {}

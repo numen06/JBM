@@ -26,3 +26,7 @@ release:
   timezone: Asia/Shanghai
   immutable: true
   require_git_tag: true
+  service_policies:
+    jbm7_jbm-cluster-platform-doc:
+      stack: jbm7
+      replicas: 1

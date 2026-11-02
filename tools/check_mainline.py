@@ -19,7 +19,7 @@ def git(root, *args):
 def validate(root, *, release=False, pushed_refs=None):
     catalog = json.loads((root / 'deploy/release-catalog.json').read_text(encoding='utf-8'))
     mainline = catalog['mainline']
-    formal = {mainline, 'dev', 'master', *catalog.get('historicalMainlines', [])}
+    formal = {mainline, 'dev', 'master', *catalog.get('historicalMainlines', []), *catalog.get('protectedBranches', [])}
     current = git(root, 'branch', '--show-current')
     if current != mainline:
         if release or not current.startswith(DEVELOPMENT_PREFIXES) or not current.split('/', 1)[1]:

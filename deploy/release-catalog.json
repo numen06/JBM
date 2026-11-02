@@ -144,6 +144,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-center": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "auth": {
@@ -155,6 +161,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-auth": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "gateway": {
@@ -166,6 +178,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-gateway": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "doc": {
@@ -177,6 +195,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-doc": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "push": {
@@ -188,6 +212,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-push": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "job": {
@@ -199,6 +229,28 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-job": {
+          "stack": "jbm7",
+          "replicas": 1,
+          "healthcheck": {
+            "Test": [
+              "CMD-SHELL",
+              "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:4444/actuator/health',timeout=3)\""
+            ],
+            "Interval": 15000000000,
+            "Timeout": 5000000000,
+            "StartPeriod": 30000000000,
+            "Retries": 12
+          },
+          "deployment": {
+            "singleActiveWorker": true,
+            "ownership": "exclusive-file-lock",
+            "startup": "background-retry-2s",
+            "restart": "stack-policy"
+          }
+        }
       }
     },
     "logs": {
@@ -210,6 +262,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-logs": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "bigscreen": {
@@ -221,6 +279,12 @@
       ],
       "buildArgs": {
         "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      },
+      "servicePolicies": {
+        "jbm7_jbm-cluster-platform-bigscreen": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
       }
     },
     "runtime": {
@@ -228,14 +292,16 @@
       "target": "jbm-python-cluster",
       "dockerfile": "Dockerfile.app2docker",
       "services": [],
-      "buildArgs": {}
+      "buildArgs": {},
+      "servicePolicies": {}
     },
     "packages": {
       "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages",
       "target": "jbm-admin-packages",
       "dockerfile": "Dockerfile.app2docker",
       "services": [],
-      "buildArgs": {}
+      "buildArgs": {},
+      "servicePolicies": {}
     },
     "web": {
       "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin",
@@ -244,7 +310,13 @@
       "services": [
         "jbm7_jbm-admin"
       ],
-      "buildArgs": {}
+      "buildArgs": {},
+      "servicePolicies": {
+        "jbm7_jbm-admin": {
+          "stack": "jbm7",
+          "replicas": 1
+        }
+      }
     }
   },
   "resourceDependencies": [
@@ -265,5 +337,14 @@
       ]
     }
   ],
-  "remoteDefaultBranchPolicy": "unchanged-by-user-request"
+  "remoteDefaultBranchPolicy": "unchanged-by-user-instruction",
+  "deploymentInventory": "deploy/releases/20261102-unified-platform-release.json",
+  "stackValidation": "tools/check_stack_release.py",
+  "protectedBranches": [
+    "7.2",
+    "7.3-python",
+    "dev",
+    "master",
+    "py-7.3"
+  ]
 }

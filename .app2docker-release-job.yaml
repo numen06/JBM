@@ -26,3 +26,20 @@ release:
   timezone: Asia/Shanghai
   immutable: true
   require_git_tag: true
+  service_policies:
+    jbm7_jbm-cluster-platform-job:
+      stack: jbm7
+      replicas: 1
+      healthcheck:
+        Test:
+        - CMD-SHELL
+        - python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4444/actuator/health',timeout=3)"
+        Interval: 15000000000
+        Timeout: 5000000000
+        StartPeriod: 30000000000
+        Retries: 12
+      deployment:
+        singleActiveWorker: true
+        ownership: exclusive-file-lock
+        startup: background-retry-2s
+        restart: stack-policy

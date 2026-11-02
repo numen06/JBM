@@ -34,7 +34,8 @@ def profile(config, component, version):
             'git': {'branch': config['mainline']},
             'image': {'name': component['image'], 'tag': version, 'push': True}, 'push_mode': 'single',
             'release': {'enabled': True, 'platform': config['platform'], 'mainline': config['mainline'],
-                        'version_file': 'VERSION', 'timezone': 'Asia/Shanghai', 'immutable': True, 'require_git_tag': True}}
+                        'version_file': 'VERSION', 'timezone': 'Asia/Shanghai', 'immutable': True, 'require_git_tag': True,
+                        'service_policies': component.get('servicePolicies', {})}}
 
 
 def render(root, config, version):
@@ -153,13 +154,62 @@ def status(component):
     print(json.dumps(tasks, ensure_ascii=False))
 
 
+def validate_artifact(manifest, images, version, commit):
+    """Validate both runnable architectures, excluding BuildKit attestations."""
+    if not re.fullmatch(r'[0-9a-f]{40}', commit):
+        raise RuntimeError('制品必须关联完整 Git SHA')
+    if not re.fullmatch(r'sha256:[0-9a-f]{64}', manifest.get('digest', '')):
+        raise RuntimeError('镜像缺少不可变摘要')
+    architectures = {m['platform']['os'] + '/' + m['platform']['architecture']
+                     for m in manifest.get('manifests', []) if m.get('platform', {}).get('os') != 'unknown'}
+    expected = {'linux/amd64', 'linux/arm64'}
+    if architectures != expected or not expected.issubset(images):
+        raise RuntimeError('制品必须包含 AMD64 和 ARM64')
+    for architecture in sorted(expected):
+        labels = images[architecture].get('config', {}).get('Labels', {})
+        if labels.get('org.opencontainers.image.version') != version or labels.get('org.opencontainers.image.revision') != commit:
+            raise RuntimeError('镜像版本或源码不一致：' + architecture)
+    return {'digest': manifest['digest'], 'architectures': sorted(expected), 'version': version, 'sourceCommit': commit}
+
+
+def verify(component):
+    config = catalog()
+    version = check_generated()
+    row = config['components'][component]
+    state = ROOT / '.release-output' / version / (component + '.json')
+    saved = json.loads(state.read_text())
+    task_ids = saved.get('task_ids') or [saved['task_id']]
+    api = client()
+    for task_id in task_ids:
+        task = api.request('GET', '/api/build-tasks/' + task_id, query={'team_id': config['teamId']})
+        if (task['status'] != 'completed' or task.get('tag') != version or task.get('image') != row['image']
+                or task.get('task_config', {}).get('config_commit') != saved['commit']):
+            raise RuntimeError('构建未完成或任务与冻结清单不符')
+    ref = git(ROOT, 'ls-remote', 'origin', 'refs/tags/' + version)
+    if not ref or ref.split()[0] != saved['commit']:
+        raise RuntimeError('冻结标签与制品源码不符')
+    tag = row['image'] + ':' + version
+    def metadata(image, field):
+        result = subprocess.run(['docker', 'buildx', 'imagetools', 'inspect', image, '--format', '{{json .' + field + '}}'],
+                                capture_output=True, text=True, encoding='utf-8')
+        if result.returncode:
+            raise RuntimeError('镜像元数据读取失败，请检查仓库认证与网络')
+        return json.loads(result.stdout)
+    manifest = metadata(tag, 'Manifest')
+    image = tag + '@' + manifest['digest']
+    proof = {**validate_artifact(manifest, metadata(image, 'Image'), version, saved['commit']),
+             'component': component, 'image': image, 'taskIds': task_ids, 'services': row['services']}
+    (state.parent / (component + '-verified.json')).write_text(json.dumps(proof, indent=2), encoding='utf-8')
+    print(json.dumps(proof))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['reserve', 'freeze', 'check', 'build', 'status'])
+    parser.add_argument('action', choices=['reserve', 'freeze', 'check', 'build', 'status', 'verify'])
     parser.add_argument('component', nargs='?')
     args = parser.parse_args()
     try:
-        if args.action in ('build', 'status'):
+        if args.action in ('build', 'status', 'verify'):
             if not args.component:
                 parser.error('需要组件名')
             globals()[args.action](args.component)
