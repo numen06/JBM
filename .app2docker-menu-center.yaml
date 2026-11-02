@@ -1,18 +1,30 @@
-version: "1.0"
+version: '1.0'
 build:
   project_type: python
   use_project_dockerfile: true
   dockerfile_name: Dockerfile.app2docker
-  platforms: [linux/amd64, linux/arm64]
+  platforms:
+  - linux/amd64
+  - linux/arm64
   build_args:
-    JBM_COMMIT: "{commit}"
+    JBM_COMMIT: '{commit}'
     JBM_BUILD_TARGET: jbm-cluster-platform-center
 image:
   name: jbm-cluster-platform-center
   prefix: registry.cn-shanghai.aliyuncs.com/okc
-  tag: menu-acceptance-{commit}
-  push: true
+  tag: release-version-required
+  push: false
 push_mode: multi
 services:
-  - name: jbm-cluster-platform-center
-    image_name: jbm-cluster-platform-center
+- name: jbm-cluster-platform-center
+  image_name: jbm-cluster-platform-center
+  push: false
+release:
+  enabled: true
+  platform: jbm
+  mainline: py-7.3
+  version_file: VERSION
+  tag_pattern: ^py\-7\.3-([0-9]{8})\.([1-9][0-9]*)$
+  timezone: Asia/Shanghai
+  immutable: true
+  require_git_tag: true

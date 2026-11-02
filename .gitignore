@@ -86,3 +86,5 @@ __pycache__/
 jbm-python-cluster/auth/data/*.xdb
 jbm-python-cluster/auth/data/*.download
 /.artifacts
+
+/.release-output/

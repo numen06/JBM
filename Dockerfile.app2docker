@@ -2,7 +2,7 @@ ARG PYTHON_RUNTIME=m.daocloud.io/docker.io/python:3.12
 ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine
 ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine
 ARG MYSQL_CLIENT_IMAGE=mysql:8.4
-ARG JBM_BUILD_TARGET=jbm-admin
+ARG RELEASE_TARGET=jbm-admin
 
 FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
 
@@ -82,4 +82,7 @@ COPY --from=jbm-admin-builder /jbm/dist /usr/share/nginx/html
 RUN chmod +x /docker-entrypoint.d/40-jbm-runtime-config.sh
 
 # app2docker builds the final stage; profiles select the required runtime here.
-FROM ${JBM_BUILD_TARGET} AS app2docker-output
+FROM ${RELEASE_TARGET} AS app2docker-output
+ARG RELEASE_VERSION
+ARG JBM_COMMIT
+LABEL org.opencontainers.image.version=${RELEASE_VERSION} org.opencontainers.image.revision=${JBM_COMMIT}

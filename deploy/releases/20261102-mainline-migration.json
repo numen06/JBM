@@ -1,0 +1,10 @@
+{
+  "platform": "jbm",
+  "historicalMainline": "7.3-python",
+  "mainline": "py-7.3",
+  "baselineCommit": "754c8e62f9fb3294f01a30a78ba7954b274d277d",
+  "businessTreeChangedByBranchSwitch": false,
+  "branchPolicy": "new mainline only; historical refs preserved",
+  "sop": "docs/operations/multi-platform-version-release-sop.md",
+  "releaseEntry": "tools/release.py"
+}

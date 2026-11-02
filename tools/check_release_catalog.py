@@ -55,6 +55,11 @@ def validate(root: Path, version: str | None = None) -> dict:
         actual = hashlib.sha256(raw.replace(b'\r\n', b'\n') if 'sha256Lf' in item else raw).hexdigest()
         if not path.is_file() or actual != expected:
             raise ValueError('Archived file changed or is missing: ' + item['archived'])
+    if catalog.get('versionAutomation') == 'tools/release.py':
+        from release import check_generated
+        checked = check_generated(root)
+        if version is not None and version != checked:
+            raise ValueError('VERSION 与待发布版本不一致')
     return {'valid': True, 'platform': catalog['platform'], 'mainline': catalog['mainline'],
             'versionSeries': catalog['versionSeries'], 'checkedVersion': version,
             'activeProfiles': len(declared), 'verifiedArchivedFiles': len(archive['files']),

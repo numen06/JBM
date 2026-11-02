@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "platform": "jbm",
-  "mainline": "7.3-python",
-  "mainlineMigration": "not-executed",
+  "mainline": "py-7.3",
+  "mainlineMigration": "completed-local",
   "versionSeries": "py-7.3",
   "standard": "docs/operations/multi-platform-version-release-sop.md",
   "buildSystem": "app2docker",
@@ -11,32 +11,90 @@
   "profiles": [
     {
       "file": ".app2docker.yaml",
-      "purpose": "保留的全量模板；默认禁止推送，防止旧流水线重用历史标签；待标准化参数与目标迁移后启用",
+      "purpose": "已禁用的兼容引用；正式发布只用 tools/release.py",
       "defaultTagIsFormalVersion": false,
       "mustOverrideTag": true,
       "defaultPushDisabled": true
     },
     {
       "file": ".app2docker-menu-center.yaml",
-      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "purpose": "已禁用的兼容引用；正式发布只用 tools/release.py",
       "defaultTagIsFormalVersion": false,
-      "mustOverrideTag": true
+      "mustOverrideTag": true,
+      "defaultPushDisabled": true
     },
     {
       "file": ".app2docker-menu-gateway.yaml",
-      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "purpose": "已禁用的兼容引用；正式发布只用 tools/release.py",
       "defaultTagIsFormalVersion": false,
-      "mustOverrideTag": true
+      "mustOverrideTag": true,
+      "defaultPushDisabled": true
     },
     {
       "file": ".app2docker-database-job.yaml",
-      "purpose": "当前兼容入口；正式发布时必须显式使用统一新版本",
+      "purpose": "已禁用的兼容引用；正式发布只用 tools/release.py",
       "defaultTagIsFormalVersion": false,
-      "mustOverrideTag": true
+      "mustOverrideTag": true,
+      "defaultPushDisabled": true
+    },
+    {
+      "file": ".app2docker-release-center.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-auth.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-gateway.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-doc.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-push.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-job.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-logs.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-bigscreen.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-runtime.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-packages.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
+    },
+    {
+      "file": ".app2docker-release-web.yaml",
+      "purpose": "由 VERSION 和目录生成；由统一工具显式推送",
+      "generated": true
     }
   ],
   "archive": "deploy/release-archive/20261102/inventory.json",
-  "versionAutomation": "pending-implementation",
+  "versionAutomation": "tools/release.py",
   "productionChangesInThisCleanup": 0,
   "retainedBuildRecipes": [
     {
@@ -49,12 +107,19 @@
         "scripts/release-python-images.ps1"
       ],
       "reason": "current build/compose/tool reference"
+    },
+    {
+      "file": "Dockerfile.app2docker",
+      "referencedBy": [
+        "tools/release.py"
+      ],
+      "reason": "统一服务目标与完整主线源码"
     }
   ],
   "branchAudit": "deploy/branch-cleanup-20261102.json",
   "releaseTimezone": "Asia/Shanghai",
   "sequenceScope": "platform + git mainline + release date",
-  "newFormatReleaseBlockedUntilMainlineMigration": true,
+  "newFormatReleaseBlockedUntilMainlineMigration": false,
   "defaultTemplateChanged": {
     "fields": [
       "image.tag",
@@ -64,5 +129,122 @@
     "reason": "disable accidental reuse of old fixed image versions",
     "noRuntimeDeployment": true
   },
-  "targetMainline": "py-7.3"
+  "historicalMainlines": [
+    "7.3-python"
+  ],
+  "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+  "teamId": "95151451-d39a-4bbf-9a03-cd5ad5e7b08a",
+  "components": {
+    "center": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center",
+      "target": "jbm-cluster-platform-center",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-center"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "auth": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth",
+      "target": "jbm-cluster-platform-auth",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-auth"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "gateway": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway",
+      "target": "jbm-cluster-platform-gateway",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-gateway"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "doc": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc",
+      "target": "jbm-cluster-platform-doc",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-doc"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "push": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push",
+      "target": "jbm-cluster-platform-push",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-push"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "job": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job",
+      "target": "jbm-cluster-platform-job",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-job"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "logs": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs",
+      "target": "jbm-cluster-platform-logs",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-logs"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "bigscreen": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen",
+      "target": "jbm-cluster-platform-bigscreen",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-cluster-platform-bigscreen"
+      ],
+      "buildArgs": {
+        "MYSQL_CLIENT_IMAGE": "m.daocloud.io/docker.io/library/mysql:8.4"
+      }
+    },
+    "runtime": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster",
+      "target": "jbm-python-cluster",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [],
+      "buildArgs": {}
+    },
+    "packages": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages",
+      "target": "jbm-admin-packages",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [],
+      "buildArgs": {}
+    },
+    "web": {
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin",
+      "target": "jbm-admin",
+      "dockerfile": "Dockerfile.app2docker",
+      "services": [
+        "jbm7_jbm-admin"
+      ],
+      "buildArgs": {}
+    }
+  }
 }

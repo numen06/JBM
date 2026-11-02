@@ -1,19 +1,31 @@
-version: "1.0"
+version: '1.0'
 build:
   project_type: python
   use_project_dockerfile: true
   dockerfile_name: Dockerfile.app2docker
-  platforms: [linux/amd64, linux/arm64]
+  platforms:
+  - linux/amd64
+  - linux/arm64
   build_args:
-    JBM_COMMIT: "{commit}"
+    JBM_COMMIT: '{commit}'
     JBM_BUILD_TARGET: jbm-cluster-platform-job
     MYSQL_CLIENT_IMAGE: m.daocloud.io/docker.io/library/mysql:8.4
 image:
   name: jbm-cluster-platform-job
   prefix: registry.cn-shanghai.aliyuncs.com/okc
-  tag: database-operations-{commit}
-  push: true
+  tag: release-version-required
+  push: false
 push_mode: multi
 services:
-  - name: jbm-cluster-platform-job
-    image_name: jbm-cluster-platform-job
+- name: jbm-cluster-platform-job
+  image_name: jbm-cluster-platform-job
+  push: false
+release:
+  enabled: true
+  platform: jbm
+  mainline: py-7.3
+  version_file: VERSION
+  tag_pattern: ^py\-7\.3-([0-9]{8})\.([1-9][0-9]*)$
+  timezone: Asia/Shanghai
+  immutable: true
+  require_git_tag: true
