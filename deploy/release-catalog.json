@@ -251,7 +251,15 @@
     {
       "path": "/app/auth/data/ip2region_v4.xdb",
       "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1",
-      "sourceImage": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster@sha256:91c56dfdd0e0318c596920c761e2395643195872ec35a5b8ecca0f558e72b499",
+      "fetcher": "jbm-python-cluster/auth/fetch_ip_regions.py",
+      "requiredBy": [
+        "auth"
+      ]
+    },
+    {
+      "path": "/app/auth/data/ip2region_v6.xdb",
+      "sha256": "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed",
+      "fetcher": "jbm-python-cluster/auth/fetch_ip_regions.py",
       "requiredBy": [
         "auth"
       ]
