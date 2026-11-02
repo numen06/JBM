@@ -7,6 +7,7 @@ build:
   build_args:
     JBM_COMMIT: "{commit}"
     JBM_BUILD_TARGET: jbm-cluster-platform-job
+    MYSQL_CLIENT_IMAGE: m.daocloud.io/docker.io/library/mysql:8.4
 image:
   name: jbm-cluster-platform-job
   prefix: registry.cn-shanghai.aliyuncs.com/okc
