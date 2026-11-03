@@ -1,6 +1,7 @@
 import io
 
 import httpx
+import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
@@ -13,11 +14,13 @@ def image_bytes(size=(1280,720)):
     return buffer.getvalue()
 
 
-def test_project_images_use_doc_storage_and_live_project_membership(tmp_path,monkeypatch):
+@pytest.mark.parametrize('writer_id',[0,10])
+def test_project_images_use_doc_storage_and_live_project_membership(tmp_path,monkeypatch,writer_id):
     original=httpx.AsyncClient
     members={'writer':{'11'},'reader':{'11'},'outsider':{'12'}}
     identities={name:{'userId':i,'tenantId':1,'roles':['tenant_admin'] if name=='writer' else [],'admin':False}
                 for i,name in enumerate(members,10)}
+    identities['writer']['userId']=writer_id
     outage=False
     def upstream(request):
         token=request.headers.get('authorization','').removeprefix('Bearer ')

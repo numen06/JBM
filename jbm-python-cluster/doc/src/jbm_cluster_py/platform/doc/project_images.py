@@ -73,7 +73,9 @@ def build_project_image_router(service: Any, check_project=authorize_project) ->
         group=f'project-images/{tenant}/{project}'
         # Production's existing creator column is BIGINT. Project ownership is
         # enforced by the scoped group and live project check, not this field.
-        creator=identity.get('userId') or identity.get('user_id')
+        creator=identity.get('userId')
+        if creator is None:
+            creator=identity.get('user_id')
         if creator is None:
             raise HTTPException(403,'图片上传缺少用户归属')
         doc=await service.upload_doc(prepared,group=group,creator=creator)
