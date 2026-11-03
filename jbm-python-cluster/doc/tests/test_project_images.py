@@ -42,6 +42,9 @@ def test_project_images_use_doc_storage_and_live_project_membership(tmp_path,mon
         uploaded=client.post(root,headers=headers('writer'),files={'file':('cover.webp',image_bytes(),'image/webp')})
         assert uploaded.status_code==200
         value=uploaded.json()['result']; assert value['width']==1280 and value['height']==720
+        import asyncio
+        metadata=asyncio.run(client.app.state.doc_service.repository.get_doc_by_id(value['docId']))
+        assert str(metadata['creator'])==str(identities['writer']['userId'])  # Compatible with the existing MySQL BIGINT column.
         path=value['url'].removeprefix('/jbm-api/doc')
         assert client.get(path).status_code==401
         response=client.get(path,headers=headers('reader'))
