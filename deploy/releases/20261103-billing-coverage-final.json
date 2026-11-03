@@ -1,0 +1,2889 @@
+{
+  "schemaVersion": 1,
+  "releaseGroup": "20261103-billing-coverage-final",
+  "checkedAt": "2026-11-03T22:58:15.055646+08:00",
+  "deploymentState": "completed",
+  "acceptanceState": "billing-coverage-and-price-accepted-in-cloud-party-and-original-local-debug",
+  "scopeStacks": [
+    "jbm7",
+    "iot",
+    "smart_building"
+  ],
+  "remoteDefaultBranches": "unchanged-by-user-instruction",
+  "platforms": [
+    {
+      "platform": "iot",
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/iot-platform.git",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "independentComponent": false,
+      "resourceDependencies": [],
+      "releaseScope": "related-components-only"
+    },
+    {
+      "platform": "jbm",
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "independentComponent": false,
+      "resourceDependencies": [
+        {
+          "path": "/app/auth/data/ip2region_v4.xdb",
+          "sha256": "27ecba8c9a6d5e3b280aedbe7ee15c65372b179fbd0dad3845d8c608f2fcace1",
+          "fetcher": "jbm-python-cluster/auth/fetch_ip_regions.py",
+          "requiredBy": [
+            "auth"
+          ]
+        },
+        {
+          "path": "/app/auth/data/ip2region_v6.xdb",
+          "sha256": "939f6b46bd2b8bec3cf7c5ceb8ba782266ae9b1f35b5ba7916700dec0b7506ed",
+          "fetcher": "jbm-python-cluster/auth/fetch_ip_regions.py",
+          "requiredBy": [
+            "auth"
+          ]
+        }
+      ],
+      "releaseScope": "related-components-only"
+    },
+    {
+      "platform": "building",
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/smart-building-platform.git",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261103.16",
+      "sourceCommit": "d1d8d09d384513db70ab8bf3895bb778e030bcdd",
+      "pipelineId": "410b8d25-9567-4420-888e-368cd2d3afe6",
+      "independentComponent": false,
+      "resourceDependencies": [],
+      "releaseScope": "related-components-only",
+      "componentVersions": {
+        "api": {
+          "version": "py-2.0-20261103.16",
+          "sourceCommit": "d1d8d09d384513db70ab8bf3895bb778e030bcdd",
+          "digest": "sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77"
+        },
+        "batch": {
+          "version": "py-2.0-20261103.15",
+          "sourceCommit": "afc77f9cecc4b98b7dea0068c40cb112927e0940",
+          "digest": "sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5"
+        },
+        "web": {
+          "version": "py-2.0-20261103.8",
+          "sourceCommit": "3c447640ea5842145bc43455581114f158b2145f",
+          "digest": "sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f"
+        }
+      }
+    },
+    {
+      "platform": "building-flow",
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/smart-building-flow.git",
+      "mainline": "master",
+      "version": "master-20261102.2",
+      "sourceCommit": "56b82da82d9d5497d142f8bf5f2b1035fb6842f7",
+      "pipelineId": "08bda3f5-3440-416d-902b-d203e5f86f52",
+      "independentComponent": true,
+      "resourceDependencies": []
+    }
+  ],
+  "artifacts": [
+    {
+      "platform": "iot",
+      "component": "mqtt",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker:py-2.0-20261102.4@sha256:df3ea222141321afcf156ae69589a599896fedcbff71989aad95ee98a5f2d52c",
+      "services": [
+        "iot_iot-mqtt-receiver"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 45,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "129dde95-4b45-4173-940c-34775519ab2e"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "mqtt-worker",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_iot-mqtt-receiver"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "http",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver:py-2.0-20261102.4@sha256:201b807995b9c6c467d5badceeec19a2744648344aee059e3551c36a4dfa038a",
+      "services": [
+        "iot_iot-http-receiver"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 47,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "1a2894c6-b609-4f9b-baed-479ce53e04f1"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "http-receiver",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_iot-http-receiver"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "feige",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige:py-2.0-20261102.4@sha256:63e635a3dc1d9e526e9597a944bd7da53c46777f802c95f91c47297553aa8590",
+      "services": [
+        "iot_tpm-iot-protocol-feige"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 46,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "ce40f810-a3c3-4c8a-bb36-bab7f0679463"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "feige",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_tpm-iot-protocol-feige"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "rule",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine:py-2.0-20261102.4@sha256:f25088d603a25db57c0279a460918338430779d65c91c812715d218ce81f8f71",
+      "services": [
+        "iot_tpm-iot-rule-engine"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 47,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "187b506f-5d86-4aa7-ac3b-4427c09b5c93"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "rule-engine",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_tpm-iot-rule-engine"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "usage",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker:py-2.0-20261102.4@sha256:dead548a9736b47738a0ae2e00e31f016d1f6aadfdb3a3bca293acf23ed2cad5",
+      "services": [
+        "iot_iot-usage-worker"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 45,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "821023f3-5519-430f-9375-681067f17182"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "usage-worker",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_iot-usage-worker"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "feiyi",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi:py-2.0-20261102.4@sha256:c93664653f88e546765adc4f7e738c5980f84286a4d54f0c8c2068acdc1b05a9",
+      "services": [
+        "iot_iot-ac-worker-feiyi"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 3,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "b2348bc1-14bd-4b08-9402-479a12c3437d"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "ac-worker-feiyi",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_iot-ac-worker-feiyi"
+      ]
+    },
+    {
+      "platform": "iot",
+      "component": "simulator",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator:py-2.0-20261102.4@sha256:41bf72398a15ffc0215017e19bf20ec9d334a46d4437fdaf5927dd695b1f14d1",
+      "services": [
+        "iot_zqnf-vrf-demo"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 1,
+        "isolatedSimulator": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "5005e71b-dcd4-4788-bcdc-32ecc5df6105"
+      ],
+      "mainline": "py-2.0",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "target": "ac-simulator",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator@sha256:fe081e47c945722bc400802acba5e73c317ea74ee2663ab96a21254527674214",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi@sha256:9f06da8173ee1101de9a3e27be559587742f48b74d597be076b618b7ef336e5c",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker@sha256:5df11d9455bcdd55d1079328467e846c981bcad54137ceaa02a1e4c4f248a743",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige@sha256:d222b79629f7ac5d00e33546ad0617b62d6f898f15ef3beda4602eed0e520699",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend@sha256:5afdea174d02375188eb011376307cc6fdb9d883c1700ffbbd5a6a7c7b8d44b4",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver@sha256:b1099981e1849fb638c0323da52397a0362032e563cc4f2726ad6441b22f7563",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine@sha256:1b6a13c44c04762061bf2611e0788e6cbf567a93206e19c14518751be366445d",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker@sha256:c772fa5fe4b5840df60f1bd2f4e5b90e063dc6822d6e354d887602c6056a8217",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform@sha256:a3a562c25c388b9483ce7bcdf3477b4dafa2cb93e5a9b843c3048f9103cb2f49"
+      ],
+      "runtimeServices": [
+        "iot_zqnf-vrf-demo"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "doc",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "services": [
+        "jbm7_jbm-cluster-platform-doc"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "8f72fe17-f469-48f8-8a4b-a62e304d4e91"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-cluster-platform-doc",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": [
+        "jbm7_jbm-cluster-platform-doc"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "push",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "services": [
+        "jbm7_jbm-cluster-platform-push"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "1c7b2d47-ec25-4972-a0e7-21ca1425370c"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-cluster-platform-push",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": [
+        "jbm7_jbm-cluster-platform-push"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "job",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261103.1@sha256:1033c322d8405a8de3bdb126e3ee3255d9ba9c7031fbdf5a26d58010ac2cb3ee",
+      "services": [
+        "jbm7_jbm-cluster-platform-job"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "75d09fd3-7d6f-4709-aa44-1ea62c2ad10a"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-cluster-platform-job",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": [
+        "jbm7_jbm-cluster-platform-job"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "logs",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "services": [
+        "jbm7_jbm-cluster-platform-logs"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "1d341e6f-4eb5-4363-ac30-9dc6b77c5e44"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-cluster-platform-logs",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": [
+        "jbm7_jbm-cluster-platform-logs"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "bigscreen",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "services": [
+        "jbm7_jbm-cluster-platform-bigscreen"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "34581991-cfdc-46cd-babe-7971cd1756d3"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-cluster-platform-bigscreen",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": [
+        "jbm7_jbm-cluster-platform-bigscreen"
+      ]
+    },
+    {
+      "platform": "jbm",
+      "component": "runtime",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "services": [],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimePreflight": {
+        "sourceFilesVerified": 122,
+        "applicationImports": true,
+        "businessWrites": 0
+      },
+      "taskIds": [
+        "0f00788a-1706-47a4-a327-52582b2f2012"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-python-cluster",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": []
+    },
+    {
+      "platform": "jbm",
+      "component": "packages",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages:py-7.3-20261103.1@sha256:c1dd6e0f90a234e829d45a346499a1c6eb9cc3101d410ac6c8fd769eafc4381f",
+      "services": [],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "packages": [
+        "/packs/jbm7-admin-7.3.0-beta.59.tgz",
+        "/packs/jbm7-sdk-7.3.0-beta.6.tgz",
+        "/packs/jbm7-vue-core-7.3.0-beta.18.tgz"
+      ],
+      "taskIds": [
+        "d1def758-1677-44d9-bd10-a1dffe40ca8f"
+      ],
+      "mainline": "py-7.3",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "jbm-admin-packages",
+      "pinnedRuntimeBases": [],
+      "runtimeServices": []
+    },
+    {
+      "platform": "building-flow",
+      "component": "web",
+      "version": "master-20261102.2",
+      "sourceCommit": "56b82da82d9d5497d142f8bf5f2b1035fb6842f7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-flow:master-20261102.2@sha256:47d77314e1dca727e5623e3aa1d3ce18ce4f7c50b3c613df6d3ed1c5bd5306eb",
+      "services": [
+        "smart_building_smart-building-flow"
+      ],
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "runtimeConfigPreserved": true,
+      "indexSha256": "489cd8fbe38a050f457ec98b263c0e6a93cef52fd454593e849a6f2c7fa9ae73",
+      "taskIds": [
+        "0912df3b-6d06-4570-b63e-f9e08f58cc31"
+      ],
+      "mainline": "master",
+      "pipelineId": "08bda3f5-3440-416d-902b-d203e5f86f52",
+      "dockerfile": "Dockerfile.app2docker",
+      "target": "release-output",
+      "pinnedRuntimeBases": [
+        "registry.cn-shanghai.aliyuncs.com/okc/smart-building-flow@sha256:7baf47995e9c63e71b5286b9c5ddacf2d05d0e09100ae8afca967cd3f4eee1d4"
+      ],
+      "runtimeServices": [
+        "smart_building_smart-building-flow"
+      ]
+    },
+    {
+      "digest": "sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261103.16",
+      "sourceCommit": "d1d8d09d384513db70ab8bf3895bb778e030bcdd",
+      "component": "api",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+      "taskIds": [
+        "6eb9727a-1ff6-4835-98fd-925c3b36aad9"
+      ],
+      "services": [
+        "smart_building_smart-building-app"
+      ],
+      "platform": "building",
+      "mainline": "py-2.0",
+      "verified": true
+    },
+    {
+      "digest": "sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261103.15",
+      "sourceCommit": "afc77f9cecc4b98b7dea0068c40cb112927e0940",
+      "component": "batch",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+      "taskIds": [
+        "65f3d8ec-ec43-45c6-b15f-b15aaaf8bf5b"
+      ],
+      "services": [
+        "smart_building_smart-building-data-batch"
+      ],
+      "platform": "building",
+      "mainline": "py-2.0",
+      "verified": true
+    },
+    {
+      "digest": "sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261103.8",
+      "sourceCommit": "3c447640ea5842145bc43455581114f158b2145f",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261103.8@sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f",
+      "taskIds": [
+        "83b2ba0e-0d73-4f84-8b46-7474a13f1b24"
+      ],
+      "services": [
+        "smart_building_smart-building-web"
+      ],
+      "platform": "building",
+      "mainline": "py-2.0",
+      "verified": true
+    },
+    {
+      "digest": "sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "component": "api",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+      "taskIds": [
+        "8a30220f-6837-488b-9759-b98b9b6474bd"
+      ],
+      "services": [
+        "iot_tpm-iot-platform",
+        "iot_control-history",
+        "iot_feige-ops-worker"
+      ],
+      "platform": "iot",
+      "mainline": "py-2.0",
+      "verified": true
+    },
+    {
+      "digest": "sha256:fa1adbcda7e175cd66a93d9215bc3b04cacec22f103637fe2bdbe231ccfbdd3c",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261103.4@sha256:fa1adbcda7e175cd66a93d9215bc3b04cacec22f103637fe2bdbe231ccfbdd3c",
+      "taskIds": [
+        "8bcfe9a8-a60f-4a46-9b23-21f66b4157a0"
+      ],
+      "services": [
+        "iot_iot-platform-web"
+      ],
+      "platform": "iot",
+      "mainline": "py-2.0",
+      "verified": true
+    },
+    {
+      "digest": "sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "component": "auth",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "taskIds": [
+        "0391c19b-44c8-42e2-ba99-8119bc0754a6"
+      ],
+      "services": [
+        "jbm7_jbm-cluster-platform-auth"
+      ],
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "verified": true
+    },
+    {
+      "digest": "sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "component": "center",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "taskIds": [
+        "9cf23afd-b05d-433a-a711-59aabe394cc3"
+      ],
+      "services": [
+        "jbm7_jbm-cluster-platform-center"
+      ],
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "verified": true
+    },
+    {
+      "digest": "sha256:cd77f17b01be9069b0d3e1bc0bac3528b947b9cd8a29a6e5ceee253cd4b0f22a",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261103.3@sha256:cd77f17b01be9069b0d3e1bc0bac3528b947b9cd8a29a6e5ceee253cd4b0f22a",
+      "taskIds": [
+        "0ebc9e8f-9b59-4f18-85c0-c49bb6ea0351"
+      ],
+      "services": [
+        "jbm7_jbm-admin"
+      ],
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "verified": true
+    },
+    {
+      "digest": "sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "component": "gateway",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "taskIds": [
+        "cc8290f0-8dbd-4d46-b43a-b729b59fec76"
+      ],
+      "services": [
+        "jbm7_jbm-cluster-platform-gateway"
+      ],
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "verified": true
+    },
+    {
+      "digest": "sha256:877c872c0d8a9e1528fdbf0f858617baa3ac15be51560193c9606bb8316136d5",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "component": "packages",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages:py-7.3-20261103.3@sha256:877c872c0d8a9e1528fdbf0f858617baa3ac15be51560193c9606bb8316136d5",
+      "taskIds": [
+        "a5da0c79-f5a3-4e3c-8e80-4fdcf60f30e0"
+      ],
+      "services": [],
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "verified": true
+    }
+  ],
+  "services": [
+    {
+      "service": "iot_tpm-iot-platform",
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "api",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0,
+        "Window": 60000000000
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3100/health/live', timeout=3).read()\""
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 180000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_control-history",
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "api",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -m iot_platform.control_history_worker --health"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 6
+      }
+    },
+    {
+      "service": "iot_feige-ops-worker",
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+      "replicas": 1,
+      "health": "running",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "api",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "NONE"
+        ]
+      }
+    },
+    {
+      "service": "iot_iot-platform-web",
+      "version": "py-2.0-20261103.4",
+      "sourceCommit": "b1052233dfee2ab2475b506b3faf3022743f1757",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261103.4@sha256:fa1adbcda7e175cd66a93d9215bc3b04cacec22f103637fe2bdbe231ccfbdd3c",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "web",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1/"
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_iot-mqtt-receiver",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker:py-2.0-20261102.4@sha256:df3ea222141321afcf156ae69589a599896fedcbff71989aad95ee98a5f2d52c",
+      "replicas": 2,
+      "health": "running",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "mqtt",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-http-receiver",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver:py-2.0-20261102.4@sha256:201b807995b9c6c467d5badceeec19a2744648344aee059e3551c36a4dfa038a",
+      "replicas": 2,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "http",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_tpm-iot-protocol-feige",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige:py-2.0-20261102.4@sha256:63e635a3dc1d9e526e9597a944bd7da53c46777f802c95f91c47297553aa8590",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "feige",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18015/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_tpm-iot-rule-engine",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine:py-2.0-20261102.4@sha256:f25088d603a25db57c0279a460918338430779d65c91c812715d218ce81f8f71",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "rule",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8016/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_iot-usage-worker",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker:py-2.0-20261102.4@sha256:dead548a9736b47738a0ae2e00e31f016d1f6aadfdb3a3bca293acf23ed2cad5",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "usage",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8017/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "iot_iot-ac-worker-feiyi",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi:py-2.0-20261102.4@sha256:c93664653f88e546765adc4f7e738c5980f84286a4d54f0c8c2068acdc1b05a9",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "feiyi",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8020/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 5
+      }
+    },
+    {
+      "service": "iot_zqnf-vrf-demo",
+      "version": "py-2.0-20261102.4",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator:py-2.0-20261102.4@sha256:41bf72398a15ffc0215017e19bf20ec9d334a46d4437fdaf5927dd695b1f14d1",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "iot",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "iot",
+      "component": "simulator",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8021/health',timeout=3)\""
+        ],
+        "Interval": 10000000000,
+        "Timeout": 4000000000,
+        "Retries": 6
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-center",
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "center",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:7777/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-auth",
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "auth",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5555/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-gateway",
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "gateway",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:6060/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-doc",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "doc",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:9999/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-push",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "push",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3313/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-job",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261103.1@sha256:1033c322d8405a8de3bdb126e3ee3255d9ba9c7031fbdf5a26d58010ac2cb3ee",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "job",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:4444/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "deployment": {
+        "singleActiveWorker": true,
+        "ownership": "exclusive-file-lock",
+        "startup": "background-retry-2s",
+        "restart": "stack-policy"
+      },
+      "intentionalDeploymentChanges": {
+        "updateOrder": "stop-first -> original start-first"
+      },
+      "configurationPreservedExcept": "restored original generic update policy after automatic standby fix"
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-logs",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "logs",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3312/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-bigscreen",
+      "version": "py-7.3-20261103.1",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "bigscreen",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3314/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "jbm7_jbm-admin",
+      "version": "py-7.3-20261103.3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261103.3@sha256:cd77f17b01be9069b0d3e1bc0bac3528b947b9cd8a29a6e5ceee253cd4b0f22a",
+      "replicas": 1,
+      "health": "running",
+      "stack": "jbm7",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-7.3",
+      "platform": "jbm",
+      "component": "web",
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "smart_building_smart-building-app",
+      "version": "py-2.0-20261103.16",
+      "sourceCommit": "d1d8d09d384513db70ab8bf3895bb778e030bcdd",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "smart_building",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "building",
+      "component": "api",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 45000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "smart_building_smart-building-data-batch",
+      "version": "py-2.0-20261103.15",
+      "sourceCommit": "afc77f9cecc4b98b7dea0068c40cb112927e0940",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "smart_building",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "building",
+      "component": "batch",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8017/actuator/live',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 45000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "smart_building_smart-building-web",
+      "version": "py-2.0-20261103.8",
+      "sourceCommit": "3c447640ea5842145bc43455581114f158b2145f",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261103.8@sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f",
+      "replicas": 1,
+      "health": "healthy",
+      "stack": "smart_building",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "py-2.0",
+      "platform": "building",
+      "component": "web",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1/"
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 12
+      }
+    },
+    {
+      "service": "smart_building_smart-building-flow",
+      "version": "master-20261102.2",
+      "sourceCommit": "56b82da82d9d5497d142f8bf5f2b1035fb6842f7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-flow:master-20261102.2@sha256:47d77314e1dca727e5623e3aa1d3ce18ce4f7c50b3c613df6d3ed1c5bd5306eb",
+      "replicas": 1,
+      "health": "running",
+      "stack": "smart_building",
+      "configurationPreserved": true,
+      "effectiveHealthcheckPreserved": true,
+      "state": "completed",
+      "mainline": "master",
+      "platform": "building-flow",
+      "component": "web",
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    }
+  ],
+  "previousInventory": "deploy/releases/20261103-energy-pricing-release.json",
+  "environments": {
+    "cloud": {
+      "passed": true,
+      "targetServices": 11,
+      "issues": [],
+      "checks": [
+        {
+          "service": "iot_control-history",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "iot_feige-ops-worker",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "iot_iot-platform-web",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261103.4@sha256:fa1adbcda7e175cd66a93d9215bc3b04cacec22f103637fe2bdbe231ccfbdd3c",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "iot_tpm-iot-platform",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm7_jbm-admin",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261103.3@sha256:cd77f17b01be9069b0d3e1bc0bac3528b947b9cd8a29a6e5ceee253cd4b0f22a",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm7_jbm-cluster-platform-auth",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm7_jbm-cluster-platform-center",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm7_jbm-cluster-platform-gateway",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "smart_building_smart-building-app",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "smart_building_smart-building-data-batch",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "smart_building_smart-building-web",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261103.8@sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f",
+          "healthy": true,
+          "expected": true
+        }
+      ],
+      "billingPatchRuntime": {
+        "passed": true,
+        "targetServices": 2,
+        "issues": [],
+        "checks": [
+          {
+            "service": "smart_building_smart-building-data-batch",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+            "healthy": true,
+            "expected": true
+          },
+          {
+            "service": "smart_building_smart-building-app",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+            "healthy": true,
+            "expected": true
+          }
+        ],
+        "stages": [
+          "batch15 with API14 preserved",
+          "API16 with batch15 preserved"
+        ]
+      },
+      "configurationAndUnrelatedServicesPreserved": true
+    },
+    "party": {
+      "passed": true,
+      "targetServices": 10,
+      "issues": [],
+      "checks": [
+        {
+          "service": "jxdx-platform-iot-web-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261103.4@sha256:fa1adbcda7e175cd66a93d9215bc3b04cacec22f103637fe2bdbe231ccfbdd3c",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-feige-ops-worker-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-iot-control-history-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-tpm-iot-platform-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261103.4@sha256:879a4b8e27c694d3fc7d0d0d8b09b5e4325260cb8cc33470d1dad4d653d776b7",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm73-standard-test-jbm-cluster-platform-gateway-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-building-web-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261103.8@sha256:9b8eaf5666e84a6f451d8522ad33e0ae514f88b557d9955d19e62033ada7c32f",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-smart-building-python-batch-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jxdx-platform-smart-building-python-api-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm73-standard-test-jbm-cluster-platform-auth-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        },
+        {
+          "service": "jbm73-standard-test-jbm-cluster-platform-center-1",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+          "healthy": true,
+          "expected": true
+        }
+      ],
+      "billingPatchRuntime": {
+        "passed": true,
+        "targetServices": 2,
+        "issues": [],
+        "checks": [
+          {
+            "service": "jxdx-platform-smart-building-python-batch-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+            "healthy": true,
+            "expected": true
+          },
+          {
+            "service": "jxdx-platform-smart-building-python-api-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261103.16@sha256:24b510dab4ef044390ee6ef340dc8091726874fac046d4548018b3f1d3ef5b77",
+            "healthy": true,
+            "expected": true
+          }
+        ],
+        "stages": [
+          "batch15 with API14 preserved",
+          "API16 with batch15 preserved"
+        ]
+      },
+      "configurationAndUnrelatedServicesPreserved": true
+    }
+  },
+  "acceptance": {
+    "administrationContract": {
+      "local": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      },
+      "cloud": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      },
+      "party": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      }
+    },
+    "partyTariff": {
+      "rate": "0.62",
+      "unit": "元/kWh",
+      "allDay": true,
+      "unlimited": true,
+      "appliesToAllAvailableHistory": true,
+      "historyAvailableFrom": "2026-08-12",
+      "planId": "f505c13f7c60057e46217f2aba80088c",
+      "purpose": "COST",
+      "knownHistoricalBills": {
+        "2026-08": {
+          "9001301": "40180.61",
+          "9001302": "39360.36"
+        },
+        "2026-09": {
+          "9001301": "228485.23",
+          "9001302": "228033.11"
+        },
+        "2026-10": {
+          "9001301": "194759.25",
+          "9001302": "163654.85"
+        },
+        "2026-11": {
+          "9001301": "10006.24",
+          "9001302": "11035.19"
+        }
+      },
+      "snapshotOnly": true,
+      "sourceDataIncomplete": true,
+      "monetaryRule": "Exact tariff is 0.62 at each line; booked cents are conserved across report grains and rollup scopes. Node totals may contain allocated cent tails."
+    },
+    "partyFeeGrains": {
+      "passed": true,
+      "readOnly": true,
+      "months": "08,09,10,11",
+      "checks": [
+        {
+          "month": "08",
+          "knownNodesMatched": 5,
+          "tree": "9001301"
+        },
+        {
+          "month": "08",
+          "knownNodesMatched": 12,
+          "tree": "9001302"
+        },
+        {
+          "month": "08",
+          "node": "9001301",
+          "interval": "hour",
+          "usage": "64807.43784332341015",
+          "amount": "40180.61",
+          "seconds": 0.422
+        },
+        {
+          "month": "08",
+          "node": "9001301",
+          "interval": "day",
+          "usage": "64807.43784332340876",
+          "amount": "40180.61",
+          "seconds": 0.281
+        },
+        {
+          "month": "08",
+          "node": "9001301",
+          "interval": "month",
+          "usage": "64807.43784332341",
+          "amount": "40180.61",
+          "seconds": 0.266
+        },
+        {
+          "month": "08",
+          "node": "9001301",
+          "interval": "year",
+          "usage": "64807.43784332341",
+          "amount": "40180.61",
+          "seconds": 0.266
+        },
+        {
+          "month": "08",
+          "node": "9001302",
+          "interval": "hour",
+          "usage": "63484.45000000065289",
+          "amount": "39360.36",
+          "seconds": 0.312
+        },
+        {
+          "month": "08",
+          "node": "9001302",
+          "interval": "day",
+          "usage": "63484.4500000006520",
+          "amount": "39360.36",
+          "seconds": 0.313
+        },
+        {
+          "month": "08",
+          "node": "9001302",
+          "interval": "month",
+          "usage": "63484.45000000065",
+          "amount": "39360.36",
+          "seconds": 0.265
+        },
+        {
+          "month": "08",
+          "node": "9001302",
+          "interval": "year",
+          "usage": "63484.45000000065",
+          "amount": "39360.36",
+          "seconds": 0.281
+        },
+        {
+          "month": "09",
+          "knownNodesMatched": 21,
+          "tree": "9001301"
+        },
+        {
+          "month": "09",
+          "knownNodesMatched": 12,
+          "tree": "9001302"
+        },
+        {
+          "month": "09",
+          "node": "9001301",
+          "interval": "hour",
+          "usage": "368524.565155023417443",
+          "amount": "228485.23",
+          "seconds": 1.984
+        },
+        {
+          "month": "09",
+          "node": "9001301",
+          "interval": "day",
+          "usage": "368524.565155023420",
+          "amount": "228485.23",
+          "seconds": 0.422
+        },
+        {
+          "month": "09",
+          "node": "9001301",
+          "interval": "month",
+          "usage": "368524.5651550234",
+          "amount": "228485.23",
+          "seconds": 0.39
+        },
+        {
+          "month": "09",
+          "node": "9001301",
+          "interval": "year",
+          "usage": "368524.5651550234",
+          "amount": "228485.23",
+          "seconds": 0.375
+        },
+        {
+          "month": "09",
+          "node": "9001302",
+          "interval": "hour",
+          "usage": "367795.33749999175769",
+          "amount": "228033.11",
+          "seconds": 0.765
+        },
+        {
+          "month": "09",
+          "node": "9001302",
+          "interval": "day",
+          "usage": "367795.3374999917535",
+          "amount": "228033.11",
+          "seconds": 0.313
+        },
+        {
+          "month": "09",
+          "node": "9001302",
+          "interval": "month",
+          "usage": "367795.33749999176",
+          "amount": "228033.11",
+          "seconds": 0.281
+        },
+        {
+          "month": "09",
+          "node": "9001302",
+          "interval": "year",
+          "usage": "367795.33749999176",
+          "amount": "228033.11",
+          "seconds": 0.281
+        },
+        {
+          "month": "10",
+          "knownNodesMatched": 24,
+          "tree": "9001301"
+        },
+        {
+          "month": "10",
+          "knownNodesMatched": 20,
+          "tree": "9001302"
+        },
+        {
+          "month": "10",
+          "node": "9001301",
+          "interval": "hour",
+          "usage": "314127.82614508130937",
+          "amount": "194759.25",
+          "seconds": 9.375
+        },
+        {
+          "month": "10",
+          "node": "9001301",
+          "interval": "day",
+          "usage": "314127.826145081311",
+          "amount": "194759.25",
+          "seconds": 1.359
+        },
+        {
+          "month": "10",
+          "node": "9001301",
+          "interval": "month",
+          "usage": "314127.8261450813",
+          "amount": "194759.25",
+          "seconds": 1.313
+        },
+        {
+          "month": "10",
+          "node": "9001301",
+          "interval": "year",
+          "usage": "314127.8261450813",
+          "amount": "194759.25",
+          "seconds": 1.328
+        },
+        {
+          "month": "10",
+          "node": "9001302",
+          "interval": "hour",
+          "usage": "263959.43005113510222",
+          "amount": "163654.85",
+          "seconds": 1.328
+        },
+        {
+          "month": "10",
+          "node": "9001302",
+          "interval": "day",
+          "usage": "263959.430051135099",
+          "amount": "163654.85",
+          "seconds": 0.328
+        },
+        {
+          "month": "10",
+          "node": "9001302",
+          "interval": "month",
+          "usage": "263959.4300511351",
+          "amount": "163654.85",
+          "seconds": 0.328
+        },
+        {
+          "month": "10",
+          "node": "9001302",
+          "interval": "year",
+          "usage": "263959.4300511351",
+          "amount": "163654.85",
+          "seconds": 0.329
+        },
+        {
+          "month": "11",
+          "knownNodesMatched": 24,
+          "tree": "9001301"
+        },
+        {
+          "month": "11",
+          "knownNodesMatched": 20,
+          "tree": "9001302"
+        },
+        {
+          "month": "11",
+          "node": "9001301",
+          "interval": "hour",
+          "usage": "16139.10000000048246",
+          "amount": "10006.24",
+          "seconds": 1.765
+        },
+        {
+          "month": "11",
+          "node": "9001301",
+          "interval": "day",
+          "usage": "16139.100000000482",
+          "amount": "10006.24",
+          "seconds": 0.36
+        },
+        {
+          "month": "11",
+          "node": "9001301",
+          "interval": "month",
+          "usage": "16139.100000000482",
+          "amount": "10006.24",
+          "seconds": 0.375
+        },
+        {
+          "month": "11",
+          "node": "9001301",
+          "interval": "year",
+          "usage": "16139.100000000482",
+          "amount": "10006.24",
+          "seconds": 0.375
+        },
+        {
+          "month": "11",
+          "node": "9001302",
+          "interval": "hour",
+          "usage": "17798.70000000096796",
+          "amount": "11035.19",
+          "seconds": 0.422
+        },
+        {
+          "month": "11",
+          "node": "9001302",
+          "interval": "day",
+          "usage": "17798.700000000968",
+          "amount": "11035.19",
+          "seconds": 0.437
+        },
+        {
+          "month": "11",
+          "node": "9001302",
+          "interval": "month",
+          "usage": "17798.70000000097",
+          "amount": "11035.19",
+          "seconds": 0.469
+        },
+        {
+          "month": "11",
+          "node": "9001302",
+          "interval": "year",
+          "usage": "17798.70000000097",
+          "amount": "11035.19",
+          "seconds": 0.844
+        }
+      ]
+    },
+    "cloudLegacyMigration": {
+      "plans": 11,
+      "scopes": 7,
+      "jobsFailed": 0,
+      "queuedYear": 2026,
+      "olderYearsNotQueued": true,
+      "oldRecordsPreserved": true,
+      "jobsDoneAtInitialMigration": 77
+    },
+    "streetlightBaseline": {
+      "environment": "cloud",
+      "passed": true,
+      "targetDevices": 7,
+      "located": 7,
+      "online": 7,
+      "fieldRequests": 0,
+      "writes": 0,
+      "partySiteBaseline": "not-applicable: baseline belongs to cloud tenant/project; onsite check returned scope 404 and is not recorded as passed"
+    },
+    "publishedOfficeCockpit": {
+      "viewId": "99aa533acdba482490f2104ad817b3f8",
+      "version": "1.0.10",
+      "updatedAssets": [
+        "app.js",
+        "data.js"
+      ],
+      "ownerScopeOtherAssetsPreserved": true,
+      "browserAcceptancePending": true
+    },
+    "pending": [
+      "Full JBM and IoT menu-by-menu browser walk",
+      "Office cockpit production browser walk"
+    ],
+    "tests": {
+      "buildingBackend": 453,
+      "buildingFrontendFeeTests": 14,
+      "buildingFrontendNavigationTests": 83,
+      "jbmBackend": 40,
+      "jbmAdminFrontend": 21,
+      "jbmMigrationRequiredServiceIdRegression": 2,
+      "localFeeChecks": "20 purpose/grain reconciliations plus10 endpoint/purpose checks; missing November remains null",
+      "stackInventory": {
+        "expected": 24,
+        "actual": 24,
+        "passed": true
+      }
+    },
+    "rawTelemetryWrites": 0,
+    "fieldControlRequests": 0,
+    "supersededReleases": [
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.3",
+        "reason": "Real history exposed TD detail size limit and null measurement sorting; fixed in .4; no truncated bills published"
+      },
+      {
+        "platform": "jbm",
+        "version": "py-7.3-20261103.2",
+        "reason": "Production NOT NULL service_id migration failed transactionally before service replacement; fixed in .3"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.5",
+        "reason": "verified API/batch candidate; never promoted to production"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.6",
+        "reason": "API candidate local only; Web worker build failed before task execution, no production release"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.7",
+        "reason": "concurrent reservation only; no production artifacts"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.8",
+        "reason": "Web retained; intermediate backend superseded by history and identity fixes"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.9",
+        "reason": "verified API candidate, never promoted to production"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.10",
+        "reason": "API retained; batch superseded by targeted archive and detail-identity repair"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.11",
+        "reason": "archive repair promoted successfully; batch superseded by detail identity fix"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.12",
+        "reason": "detail identity repair promoted successfully; batch superseded by case-compatible source join"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.13",
+        "reason": "case-compatible source join promoted successfully; replaced by node-context coverage and empty-source fingerprint repair"
+      },
+      {
+        "platform": "building",
+        "version": "py-2.0-20261103.14",
+        "reason": "node-context repair and historical reconciliation completed; batch15 stabilizes cent ordering and API16 filters duplicate batch-node display rows without requeueing history"
+      }
+    ],
+    "privateEvidence": "D:/workspaces/iot-platform-jbm/output/billing-coverage-nodes-20261103; prior final/archive/fix and energy-pricing release directories retained privately; credentials/exports excluded from Git",
+    "partyStandaloneJbmWeb": "No such service; administration UI bundled in building/IoT beta61 hosts",
+    "partyLedgerAudit": {
+      "passed": true,
+      "readOnly": true,
+      "checks": [
+        {
+          "month": "08",
+          "ledgerRowsAudited": 163,
+          "nodesAudited": 17,
+          "maxNodeRoundingDelta": "0.07"
+        },
+        {
+          "month": "09",
+          "ledgerRowsAudited": 3340,
+          "nodesAudited": 33,
+          "maxNodeRoundingDelta": "0.51"
+        },
+        {
+          "month": "10",
+          "ledgerRowsAudited": 12586,
+          "nodesAudited": 44,
+          "maxNodeRoundingDelta": "0.53"
+        },
+        {
+          "month": "11",
+          "ledgerRowsAudited": 1037,
+          "nodesAudited": 44,
+          "maxNodeRoundingDelta": "0.28"
+        }
+      ]
+    },
+    "cloudCoverageAudit": {
+      "passed": true,
+      "checkedPeriods": 70,
+      "checks": [
+        {
+          "project": "1881952010406772738",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1881952010406772738",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1894287714345857025",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1897475037539643394",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-02-01",
+          "knownEnergies": 0
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1899744687732338690",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1916407303017435137",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1922122952781410305",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-01-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-02-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-03-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-04-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-05-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-06-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-07-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-08-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-09-01",
+          "knownEnergies": 1
+        },
+        {
+          "project": "1946406395383984130",
+          "period": "2026-10-01",
+          "knownEnergies": 1
+        }
+      ],
+      "pending": [],
+      "issues": []
+    },
+    "preparedDeviceSourceCheck": {
+      "readOnly": true,
+      "sampleAt": "2026-10-27 20:00:00",
+      "storedRows": 788,
+      "rowsWithStoredFlag": 0,
+      "currentFingerprintRows": 609,
+      "correctFingerprintRows": 609,
+      "billingFingerprintRows": 609,
+      "fixedMatchesBillingReader": true,
+      "knownNodesCompared": 44,
+      "quantityMismatches": [],
+      "pricedQuantityMismatches": []
+    },
+    "historicalDeviceFactsPreserved": {
+      "scope": {
+        "tenant": 1,
+        "project": "9001001",
+        "day": "2026-09-01"
+      },
+      "rows": 75330,
+      "sha256": "cced09b17a0d18cc2409004ea525ea450afe13a3bc405972153aa60c64db82af",
+      "matchesBefore": true
+    },
+    "automaticNodeContextRepair": {
+      "nodeContextVersion": 1,
+      "configurationPreserved": true,
+      "explicitDeviceBillingStillDeduplicatesPhysicalDevices": true,
+      "sharedNodesFollowQuantityCoverage": true,
+      "emptyWindowsFingerprintRecordedWithoutInventingMeterReadings": true
+    },
+    "deterministicCentBooking": {
+      "batchVersion": "py-2.0-20261103.15",
+      "historicalBillsRequeued": false,
+      "tiesIncludeNodeItemAndPlan": true
+    },
+    "batchNodeDisplay": {
+      "apiVersion": "py-2.0-20261103.16",
+      "requestedNodesOnly": true,
+      "knownQuantityAndKnownBillingCoverageCheckedInBothDirections": true,
+      "duplicateNullRowsRejected": true
+    },
+    "cloudSourceCaseCompatibility": {
+      "readOnly": true,
+      "sampleAt": "2026-10-31 23:45:00",
+      "storedEnergies": [
+        "ELECTRICITY",
+        "LENGSHUI"
+      ],
+      "configuredEnergies": [
+        "ELECTRICITY",
+        "lengshui"
+      ],
+      "storedRows": 19,
+      "rowsWithStoredFlag": 0,
+      "currentFingerprintRows": 19,
+      "correctFingerprintRows": 19,
+      "billingFingerprintRows": 19,
+      "fixedMatchesBillingReader": true,
+      "knownNodesCompared": 17,
+      "quantityMismatches": [],
+      "pricedQuantityMismatches": []
+    },
+    "closedPeriodStability": {
+      "passed": true,
+      "elapsedSeconds": 1047.3,
+      "unchanged": true,
+      "rows": [
+        {
+          "project_id": "1946406395383984130",
+          "period": "2026-09-01 00:00:00",
+          "state": "DONE",
+          "revision": 622,
+          "processed_revision": 622
+        },
+        {
+          "project_id": "1946406395383984130",
+          "period": "2026-10-01 00:00:00",
+          "state": "DONE",
+          "revision": 2473,
+          "processed_revision": 2473
+        }
+      ],
+      "readOnly": true,
+      "baselineRestarts": 0
+    },
+    "automaticRepair": {
+      "existingBatchWorker": true,
+      "newWorker": false,
+      "formatVersion": 6,
+      "mixedHistoricalArchives": {
+        "partyAffectedPeriod": "2026-08",
+        "completedRevision": 4,
+        "cloudAffectedJobs": 0
+      },
+      "detailIdentity": {
+        "partyAffectedPeriod": "2026-10",
+        "oldMissingBillRows": 93,
+        "oldMissingProjectionRows": 446,
+        "rootCause": "intraday subitem ownership change omitted itemId from persisted detail identity",
+        "immutableGenerationSalt": "detailIdentityVersion=1",
+        "cloudAffectedJobs": 0,
+        "onlyAffectedClosedPeriodsRequeued": true
+      },
+      "localDerivedSummaryFaultRecovery": {
+        "passed": true,
+        "preparedDeviceFactsUnchanged": true,
+        "beforeUsage": 30,
+        "recoveredUsage": 30
+      },
+      "sourceCaseCompatibility": {
+        "project": "1946406395383984130",
+        "configuredCode": "lengshui",
+        "storedCode": "LENGSHUI",
+        "oldFingerprintRows": 18,
+        "correctFingerprintRows": 19,
+        "configurationPreserved": true
+      }
+    },
+    "backups": [
+      {
+        "environment": "cloud",
+        "scope": "seven priced projects before format6 deployment",
+        "verified": true,
+        "sha256": "ecc087d2b20f1acd63b38c65594b935491aba2313cb53ba84aed76591e5af2ed"
+      },
+      {
+        "environment": "party",
+        "scope": "project9001001 before format6 deployment",
+        "verified": true,
+        "sha256": "45cc20c3a8c2d87d7e812fa296a7d9655e150a647cfcd745c90d4e5c74ee35b3"
+      },
+      {
+        "environment": "party",
+        "scope": "August mixed archive derived summaries/config/jobs/results",
+        "verified": true,
+        "sha256": "908096b9119958b7d34f324ef6d1fc21d905727363f84a0e0ff7d081906a058f"
+      },
+      {
+        "environment": "party",
+        "scope": "October detail identity derived summaries/config/jobs/results",
+        "verified": true,
+        "sha256": "a2d2cb2a94e78db7a980004f0601a961f8a773a83ab8ec7fa9a293a0c5c649ff"
+      },
+      {
+        "environment": "cloud",
+        "scope": "project1946406395383984130 September-November derived summaries/config/jobs/results",
+        "verified": true,
+        "sha256": "9e505cc0e32398ff81c4d458901ffd931de7af25233de087bc4df2932de727d3"
+      },
+      {
+        "environment": "cloud",
+        "scope": "all seven priced projects immediately before node-context release",
+        "verified": true,
+        "sha256": "209e047ef318f987bdf3896e3664dda91c7d18dc0bec3c6babfecdf1b1385383"
+      },
+      {
+        "environment": "party",
+        "scope": "project9001001 immediately before node-context release",
+        "verified": true,
+        "sha256": "b6817b561383519691ba5cdf49385113d73c9371a4a7a91096e14d159076f90f"
+      },
+      {
+        "environment": "cloud",
+        "scope": "prices/jobs/confirmations/result snapshots before cent-only update; immutable detail and full prior backups retained",
+        "verified": true,
+        "sha256": "8241846cb429ae9e40d608aa4157294cf7531b3844c794382f3e741744889a94"
+      },
+      {
+        "environment": "party",
+        "scope": "prices/jobs/confirmations/result snapshots before cent-only update; immutable detail and full prior backups retained",
+        "verified": true,
+        "sha256": "c3949a686b057bd97165e24c39d66992fd342cf1f7efa2e881dd3ab1032025e9"
+      }
+    ],
+    "projectCoverFeature": {
+      "status": "project-metadata-and-cover-feature-accepted",
+      "webVersion": "py-2.0-20261103.8",
+      "sourceCommit": "3c447640ea5842145bc43455581114f158b2145f",
+      "changeCommit": "dd18fa11dd8962e6b7b5a3c32af6d46c94538daf",
+      "accounts": [
+        "jgsdx-admin",
+        "zqnf_admin",
+        "wuye"
+      ],
+      "projectFormsChecked": 4,
+      "productionConfigWritesDuringPageAcceptance": 0,
+      "ministryDescriptionConfigured": true,
+      "ministryAddressAndCoordinatesPreserved": true,
+      "existingProjectFieldsPreserved": 13,
+      "scaleAndRealPhotoAwaitConfirmedData": true,
+      "cloudEvidence": "cloud-page-acceptance.json",
+      "partyEvidence": "party-page-acceptance.json",
+      "preservationEvidence": "cloud-project-preservation.json"
+    },
+    "projectMetadataPreservation": {
+      "passed": true,
+      "tenantId": "4977440219986903509",
+      "projectId": "2060601021270929412",
+      "allExistingMinistryFieldsPreserved": true,
+      "newCoverEmpty": true,
+      "otherProjectChanges": {},
+      "projectCount": 13,
+      "fieldRequests": 0,
+      "writes": 0
+    },
+    "tenantAdministratorNormalization": {
+      "record": "deploy/security/tenant-admin-unification-acceptance-20261103.json",
+      "runtimeImagesChanged": false,
+      "operationsCommit": "4651777"
+    }
+  }
+}
