@@ -41,9 +41,14 @@ def upgrade():
             authorities.c.authority == "ACTION_" + code, authorities.c.app_id == menu["app_id"])).scalar()
         if existing is None:
             action_id, authority_id = secrets.randbits(62), secrets.randbits(62)
-            conn.execute(actions.insert().values(action_id=action_id, action_code=code,
+            action_values = dict(action_id=action_id, action_code=code,
                 action_name="建筑业务运维", menu_id=menu["menu_id"], app_id=menu["app_id"],
-                status=1, is_persist=1, create_time=now, update_time=now))
+                status=1, is_persist=1, create_time=now, update_time=now)
+            if "service_id" in actions.c:
+                if not menu.get("service_id"):
+                    raise RuntimeError("建筑运维菜单缺少所属服务，不能注册权限操作")
+                action_values["service_id"] = menu["service_id"]
+            conn.execute(actions.insert().values(**action_values))
             conn.execute(authorities.insert().values(authority_id=authority_id, authority="ACTION_" + code,
                 resource_type="action", action_id=action_id, menu_id=menu["menu_id"], app_id=menu["app_id"],
                 status=1, create_time=now, update_time=now))

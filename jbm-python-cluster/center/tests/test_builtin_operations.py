@@ -45,17 +45,17 @@ def test_migration_installs_default_once_without_assigning_accounts():
     metadata = sa.MetaData()
     definitions = {
         'base_role': [('role_id', sa.BigInteger), ('role_code', sa.String), ('role_name', sa.String), ('role_desc', sa.String), ('is_persist', sa.Integer)],
-        'base_menu': [('menu_id', sa.BigInteger), ('app_id', sa.BigInteger), ('menu_code', sa.String)],
-        'base_action': [('action_id', sa.BigInteger), ('app_id', sa.BigInteger), ('menu_id', sa.BigInteger), ('action_code', sa.String), ('action_name', sa.String), ('is_persist', sa.Integer)],
+        'base_menu': [('menu_id', sa.BigInteger), ('app_id', sa.BigInteger), ('menu_code', sa.String), ('service_id', sa.String)],
+        'base_action': [('action_id', sa.BigInteger), ('app_id', sa.BigInteger), ('menu_id', sa.BigInteger), ('action_code', sa.String), ('action_name', sa.String), ('is_persist', sa.Integer), ('service_id', sa.String)],
         'base_authority': [('authority_id', sa.BigInteger), ('app_id', sa.BigInteger), ('menu_id', sa.BigInteger), ('action_id', sa.BigInteger), ('authority', sa.String), ('resource_type', sa.String)],
         'base_authority_role': [('id', sa.BigInteger), ('authority_id', sa.BigInteger), ('role_id', sa.BigInteger)],
     }
     for name, columns in definitions.items():
-        sa.Table(name, metadata, *[sa.Column(key, kind, primary_key=index == 0) for index, (key, kind) in enumerate(columns)],
+        sa.Table(name, metadata, *[sa.Column(key, kind, primary_key=index == 0, nullable=key != 'service_id' and index != 0) for index, (key, kind) in enumerate(columns)],
                  sa.Column('status', sa.Integer), sa.Column('create_time', sa.DateTime), sa.Column('update_time', sa.DateTime))
     metadata.create_all(engine)
     with engine.begin() as conn:
-        conn.execute(metadata.tables['base_menu'].insert(), {'menu_id': 10, 'app_id': 30, 'menu_code': 'building_group_energy', 'status': 1})
+        conn.execute(metadata.tables['base_menu'].insert(), {'menu_id': 10, 'app_id': 30, 'menu_code': 'building_group_energy', 'service_id': 'smart-building-python', 'status': 1})
         conn.execute(metadata.tables['base_authority'].insert(), [
             {'authority_id': 11, 'authority': 'MENU_building_dashboard', 'status': 1},
             {'authority_id': 12, 'authority': 'ACTION_iot.platform.admin', 'status': 1},
@@ -72,3 +72,4 @@ def test_migration_installs_default_once_without_assigning_accounts():
             metadata.tables['base_authority_role'], metadata.tables['base_authority'].c.authority_id == metadata.tables['base_authority_role'].c.authority_id)).scalars())
         assert granted == {'MENU_building_dashboard', 'ACTION_building.platform.operate'}
         assert conn.execute(sa.select(sa.func.count()).select_from(metadata.tables['base_action'])).scalar() == 1
+        assert conn.execute(sa.select(metadata.tables['base_action'].c.service_id)).scalar() == 'smart-building-python'
