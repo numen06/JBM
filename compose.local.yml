@@ -236,6 +236,7 @@ services:
       <<: *python-environment
       JBM_APP: doc
       JBM_HEALTH_PORT: "9999"
+      JBM_DOC_PROJECT_SCOPE_URL: ${JBM_DOC_PROJECT_SCOPE_URL:-http://smart-building-python-api-1:8015/api/v1/building/project-scope}
     command: ["python", "-m", "jbm_cluster_py.platform.doc.main"]
     ports: ["127.0.0.1:9999:9999"]
     depends_on:

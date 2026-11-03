@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Any, Dict, Optional
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Body, Depends, File, Header, HTTPException, Query, Request, UploadFile
@@ -10,6 +11,7 @@ from jbm_cluster_py.common.result import fail, ok
 from jbm_cluster_py.common.api_access import is_platform
 from jbm_cluster_py.platform.doc.schemas import DocPathForm, FileReqBody
 from jbm_cluster_py.platform.doc.service import DocService, normalize_path
+from jbm_cluster_py.platform.doc.project_images import authorize_project
 
 
 def _content_disposition(disposition: str, filename: str) -> str:
@@ -40,10 +42,18 @@ def build_doc_router(service: DocService) -> APIRouter:
             raise HTTPException(403, "文档访问缺少用户归属")
         path = request.url.path
         if path in {"/put", "/upload"}:
+            if str(request.query_params.get('group') or '').strip('/').startswith('project-images/'):
+                raise HTTPException(403, '项目图片请通过项目资料上传')
             return
         for prefix in ("/get/", "/download/", "/remove/"):
             if path.startswith(prefix):
                 doc = await service.repository.get_doc_by_path(normalize_path(path[len(prefix):]))
+                scope = re.fullmatch(r'project-images/(\d+)/(\d+)',str((doc or {}).get('docGroup') or ''))
+                if scope:
+                    if prefix == '/remove/':
+                        raise HTTPException(403,'项目图片请在项目信息中维护')
+                    await authorize_project(request,int(scope[1]),int(scope[2]),service.config)
+                    return
                 if doc and doc.get("creator") == owner:
                     return
                 raise HTTPException(403, "无权访问该文档")

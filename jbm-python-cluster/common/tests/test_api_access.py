@@ -8,6 +8,14 @@ from jbm_cluster_py.common.api_access import authorize_api, signature_payload
 from jbm_cluster_py.common.auth import UserInfoAuthClient
 
 
+def test_project_image_routes_authenticate_without_granting_private_document_access():
+    identity={'userId':42,'tenantId':7,'permissions':[]}
+    for method in ('GET','POST'):
+        authorize_api('doc',method,'/project-images/7/11',identity)
+        with pytest.raises(HTTPException):authorize_api('doc',method,'/project-images/7/11',{})
+    with pytest.raises(HTTPException):authorize_api('doc','GET','/get/private.png',identity)
+
+
 def person(*permissions):
     return {"userId": 42, "tenantId": 7, "clientId": "browser", "permissions": list(permissions)}
 

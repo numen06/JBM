@@ -16,11 +16,12 @@ from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.health import build_health_router
 from jbm_cluster_py.common.logging import configure_logging
-from jbm_cluster_py.integrations.nacos import NacosRegistrar
+from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient, NacosRegistrar
 from jbm_cluster_py.integrations.storage import FilesystemStorage, build_storage
 from jbm_cluster_py.platform.doc.repository import DocRepository
 from jbm_cluster_py.platform.doc.router import build_doc_router
 from jbm_cluster_py.platform.doc.service import DocService
+from jbm_cluster_py.platform.doc.project_images import build_project_image_router
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     repository = DocRepository(app_config.database)
     storage = build_storage(app_config.storage, app_config.minio)
     doc_service = DocService(app_config, repository, storage)
+    discovery = NacosDiscoveryClient(app_config.nacos_discovery)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
@@ -39,6 +41,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         app.state.config = app_config
         app.state.doc_service = doc_service
         app.state.nacos = nacos
+        app.state.project_discovery = discovery
         await repository.start()
         try:
             await storage.start()
@@ -48,9 +51,11 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             doc_service.storage = fallback
             await fallback.start()
         await nacos.start()
+        await discovery.start()
         try:
             yield
         finally:
+            await discovery.stop()
             await nacos.stop()
             await doc_service.stop()
 
@@ -123,6 +128,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
 
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_doc_router(doc_service))
+    app.include_router(build_project_image_router(doc_service))
     return app
 
 

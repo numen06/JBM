@@ -293,7 +293,7 @@ IOT_RULES = tuple(
 SERVICE_RULES = {
     "center": CENTER_RULES,
     "iot": IOT_RULES,
-    "doc": tuple(
+    "doc": (ApiRule('/project-images', authenticated=True),) + tuple(
         resource_rule(p, "documents", "doc_files", "doc_mgmt", "base_doc")
         for p in (
             "/put",
