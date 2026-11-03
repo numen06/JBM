@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import Dialog from './ui/Dialog.vue'
 import Button from './ui/Button.vue'
 
@@ -7,6 +7,7 @@ const props = defineProps<{ authBase: string; accessToken: string; securityUrl?:
 const emit = defineEmits<{ 'active-change': [active: boolean] }>()
 type LoginAlert = { id: string; time: string; clientId: string; previous: { ip: string; location: string; time: string }; current: { ip: string; location: string } }
 const alerts = ref<LoginAlert[]>([])
+const visibleAlerts = computed(() => alerts.value.slice(0, 3))
 const open = ref(false)
 const busy = ref(false)
 const error = ref('')
@@ -19,7 +20,7 @@ watch(open, value => emit('active-change', value))
 async function request(token: string, acknowledge = false) {
   const response = await fetch(`${props.authBase.replace(/\/$/, '')}/oauth2/security/login-alerts${acknowledge ? '/acknowledge' : ''}`, {
     method: acknowledge ? 'POST' : 'GET', headers: { Authorization: `Bearer ${token}`, ...(acknowledge ? { 'Content-Type': 'application/json' } : {}) },
-    ...(acknowledge ? { body: JSON.stringify({ ids: alerts.value.map(alert => alert.id) }) } : {}),
+    ...(acknowledge ? { body: JSON.stringify({ ids: visibleAlerts.value.map(alert => alert.id) }) } : {}),
   })
   const body = await response.json()
   if (!response.ok || !body.success) throw new Error(body.message || '登录安全提醒暂时不可用')
@@ -60,10 +61,11 @@ watch(() => props.accessToken, () => { alerts.value = []; open.value = false; vo
     <button type="button" class="underline" @click="alerts.length ? open = true : load()">{{ alerts.length ? '查看异常记录' : '重试' }}</button>
   </div>
   <Dialog :open="open" title="检测到异地登录" @update:open="open = $event">
-    <div class="space-y-4">
+    <div class="login-security-content">
       <p class="text-sm">以下登录地点与之前的成功登录不同，请确认是否为本人操作。</p>
-      <ul class="space-y-3">
-        <li v-for="alert in alerts" :key="alert.id" class="space-y-2 rounded border p-3 text-sm">
+      <p v-if="alerts.length > visibleAlerts.length" class="text-xs text-muted-foreground">显示最近 {{ visibleAlerts.length }} 条，共 {{ alerts.length }} 条待确认记录。</p>
+      <ul class="login-security-records space-y-3" aria-label="异地登录记录">
+        <li v-for="alert in visibleAlerts" :key="alert.id" class="space-y-2 rounded border p-3 text-sm">
           <p class="font-medium">{{ formatTime(alert.time) }}</p>
           <p>本次：{{ alert.current.location }} <span class="font-mono text-xs">{{ alert.current.ip }}</span></p>
           <p class="text-muted-foreground">此前：{{ alert.previous.location }} <span class="font-mono text-xs">{{ alert.previous.ip }}</span> · {{ formatTime(alert.previous.time) }}</p>
@@ -78,3 +80,9 @@ watch(() => props.accessToken, () => { alerts.value = []; open.value = false; vo
     </div>
   </Dialog>
 </template>
+
+<style scoped>
+.login-security-content { display: flex; flex-direction: column; gap: 1rem; min-height: 0; max-height: calc(100dvh - 10rem); overflow-wrap: anywhere; }
+.login-security-content > :not(.login-security-records) { flex-shrink: 0; }
+.login-security-records { min-height: 0; max-height: min(24rem, 42dvh); overflow-y: auto; overscroll-behavior: contain; }
+</style>
