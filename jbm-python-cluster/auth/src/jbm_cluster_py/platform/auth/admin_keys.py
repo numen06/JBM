@@ -42,7 +42,12 @@ class AdminKeys:
         account, user = await self.keys.account(int(user_id))
         if 'privateKey' in payload or payload.get('kind', 'FILE_KEY') != 'FILE_KEY':
             raise AuthError('管理员签发仅接受文件登录公钥', 400)
-        public_key = file_public_key(payload.get('publicKey'))
+        version = payload.get('fileVersion', 1)
+        if type(version) is not int or version not in (1, 2):
+            raise AuthError('不支持的密钥文件版本', 400)
+        public_key = file_public_key(payload.get('publicKey')) if version == 1 else None
+        if version == 2:
+            self.keys.file_cipher
         name = str(payload.get('name') or '').strip()
         reason = str(payload.get('reason') or '').strip()
         if not name or len(name) > 80 or not reason or len(reason) > 250:
@@ -55,11 +60,12 @@ class AdminKeys:
             'purpose': 'admin-register', 'kind': 'FILE_KEY', 'userId': int(user_id),
             'issuedBy': int(actor['userId']), 'issuedByAccount': str(actor['username']),
             'session': hashlib.sha256(token.encode()).hexdigest(), 'name': name,
-            'reason': reason, 'publicKey': public_key, 'accountVersion': _account_version(account),
+            'reason': reason, 'publicKey': public_key, 'fileVersion': version, 'accountVersion': _account_version(account),
             'createdAt': created, 'expiresAt': six_months_after(created) if validity == 'six_months' else None,
         })
         return {**self.keys.file_options(state), 'account': account['account'], 'userId': str(user_id),
-                'keyId': file_key_id(public_key), 'createdAt': created, 'expiresAt': state['expiresAt']}
+                **({'keyId': file_key_id(public_key)} if public_key else {'fileVersion': 2}),
+                'createdAt': created, 'expiresAt': state['expiresAt']}
 
     async def register(self, token, user_id, payload, context):
         actor = await self.actor(token)
@@ -72,14 +78,19 @@ class AdminKeys:
         account, user = await self.keys.account(int(user_id))
         if state['accountVersion'] != _account_version(account):
             raise AuthError('账号凭证已更新，请重新签发', 409)
-        try:
-            verify_file_signature(state['publicKey'], self.keys.file_options(state)['message'], payload['signature'])
-        except Exception as exc:
-            raise AuthError('公钥持有证明失败', 401) from exc
-        key_id = file_key_id(state['publicKey'])
-        data = {'publicKey': state['publicKey'], 'accountVersion': _account_version(account),
+        encrypted_file = None
+        if state.get('fileVersion') == 2:
+            key_id, data, encrypted_file = self.keys.encrypted_file(account, state)
+        else:
+            try:
+                verify_file_signature(state['publicKey'], self.keys.file_options(state)['message'], payload['signature'])
+            except Exception as exc:
+                raise AuthError('公钥持有证明失败', 401) from exc
+            key_id = file_key_id(state['publicKey'])
+            data = {'publicKey': state['publicKey']}
+        data.update({'accountVersion': _account_version(account),
                 'expiresAt': state['expiresAt'], 'issuedBy': state['issuedBy'],
-                'issuedByAccount': state['issuedByAccount'], 'issuanceReason': state['reason']}
+                'issuedByAccount': state['issuedByAccount'], 'issuanceReason': state['reason']})
         lock = 'credential-name:' + str(user_id) + ':' + hashlib.sha256(state['name'].casefold().encode()).hexdigest()
         try:
             async with self.keys.cache.lock(lock):
@@ -92,7 +103,7 @@ class AdminKeys:
                     await self.audit(conn, actor, user, key_id, 'ADMIN_KEY_ISSUE', state['name'], state['reason'], context)
         except IntegrityError as exc:
             raise AuthError('该公钥已绑定账号', 409) from exc
-        return {'id': key_id, 'userId': str(user_id), 'account': account['account'], 'name': state['name'], 'expiresAt': state['expiresAt']}
+        return encrypted_file or {'id': key_id, 'userId': str(user_id), 'account': account['account'], 'name': state['name'], 'expiresAt': state['expiresAt']}
 
     async def list(self, token, user_id):
         await self.actor(token)

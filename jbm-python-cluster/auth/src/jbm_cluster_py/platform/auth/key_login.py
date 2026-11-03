@@ -6,8 +6,10 @@ import base64
 import calendar
 import hashlib
 import json
+import os
 import secrets
 import time
+from functools import cached_property
 from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import urlsplit
@@ -45,6 +47,7 @@ from webauthn.helpers.structs import (
 from .repository import user_is_active
 from .service import AuthError, _account_version
 from .ssh_signature import canonical_public_key, verify_ssh_signature
+from .encrypted_file_key import EncryptedFileKey
 
 metadata = MetaData()
 credentials = Table(
@@ -145,6 +148,23 @@ class KeyLoginService:
     @property
     def engine(self):
         return self.auth.repository.engine
+
+    @cached_property
+    def file_cipher(self):
+        value = self.config.get("file-encryption-key") or os.getenv("JBM_FILE_KEY_ENCRYPTION_KEY")
+        if not value:
+            raise AuthError("加密密钥签发尚未配置，请联系管理员", 503)
+        try:
+            return EncryptedFileKey(decode(value), self.rp_id)
+        except (ValueError, TypeError) as exc:
+            raise AuthError("平台文件加密密钥配置无效", 503) from exc
+
+    def encrypted_file(self, account, state):
+        key_id, data, payload = self.file_cipher.issue()
+        file = {"format": "jbm-login-key", "version": 2, "payload": payload,
+                "account": account["account"], "name": state["name"], "keyId": key_id,
+                "rpId": self.rp_id, "createdAt": state["createdAt"], "expiresAt": state["expiresAt"]}
+        return key_id, data, file
 
     def require_enabled(self) -> None:
         if not self.enabled:
@@ -265,6 +285,8 @@ class KeyLoginService:
 
     async def registration_options(self, token: str, payload: dict) -> dict:
         self.require_enabled()
+        if "privateKey" in payload:
+            raise AuthError("服务端不接收私钥", 400)
         kind = str(payload.get("kind") or "PASSKEY")
         if kind not in {"PASSKEY", "SSH_KEY", "FILE_KEY"}:
             raise AuthError("不支持的密钥类型", 400)
@@ -296,9 +318,19 @@ class KeyLoginService:
         if kind == "SSH_KEY":
             data["publicKey"] = canonical_public_key(str(payload.get("publicKey") or ""))
         elif kind == "FILE_KEY":
-            data["publicKey"] = file_public_key(payload.get("publicKey"))
+            version = payload.get("fileVersion", 1)
+            if type(version) is not int or version not in (1, 2):
+                raise AuthError("不支持的密钥文件版本", 400)
+            if version == 2:
+                self.file_cipher  # Fail before creating a registration challenge if not configured.
+                data["fileVersion"] = 2
+            else:
+                data["publicKey"] = file_public_key(payload.get("publicKey"))
         state = await self.challenge(data)
         if kind == "FILE_KEY":
+            if state.get("fileVersion") == 2:
+                return {**self.file_options(state), "account": account["account"], "fileVersion": 2,
+                        "createdAt": state["createdAt"], "expiresAt": state["expiresAt"]}
             return {
                 **self.file_options(state),
                 "account": str(account["account"]),
@@ -380,8 +412,10 @@ class KeyLoginService:
             "expiresIn": 120,
         }
 
-    async def register(self, token: str, payload: dict) -> None:
+    async def register(self, token: str, payload: dict) -> dict | None:
         self.require_enabled()
+        if "privateKey" in payload:
+            raise AuthError("服务端不接收私钥", 400)
         kind = str(payload.get("kind") or "PASSKEY")
         account, user = await self.owner(token, allow_password_update=kind == "FILE_KEY")
         state = await self.consume(payload, "register", kind)
@@ -392,6 +426,7 @@ class KeyLoginService:
             raise AuthError("密钥绑定会话不匹配", 401)
         if kind == "FILE_KEY":
             await self.password_verification(token)
+        encrypted_file = None
         try:
             if kind == "PASSKEY":
                 verified = verify_registration_response(
@@ -416,11 +451,14 @@ class KeyLoginService:
                 key_id = hashlib.sha256(state["publicKey"].encode()).hexdigest()
                 count = 0
             elif kind == "FILE_KEY":
-                verify_file_signature(
-                    state["publicKey"], self.file_options(state)["message"], payload["signature"]
-                )
-                data = {"publicKey": state["publicKey"]}
-                key_id = file_key_id(state["publicKey"])
+                if state.get("fileVersion") == 2:
+                    key_id, data, encrypted_file = self.encrypted_file(account, state)
+                else:
+                    verify_file_signature(
+                        state["publicKey"], self.file_options(state)["message"], payload["signature"]
+                    )
+                    data = {"publicKey": state["publicKey"]}
+                    key_id = file_key_id(state["publicKey"])
                 count = 0
             else:
                 raise ValueError("Unsupported key")
@@ -464,6 +502,7 @@ class KeyLoginService:
                     )
         except IntegrityError as exc:
             raise AuthError("该密钥已绑定账号", 409) from exc
+        return encrypted_file
 
     async def login_options(self, payload: dict) -> dict:
         self.require_enabled()
@@ -500,6 +539,8 @@ class KeyLoginService:
             kind = str(form.get("loginType") or form.get("login_type")).upper()
             if kind == "PASSKEY":
                 return hashlib.sha256(decode(payload["credential"]["id"])).hexdigest()
+            if kind == "FILE_KEY" and "fileKey" in payload:
+                return self.file_cipher.open(payload["fileKey"])[0]
             public_key = (
                 file_public_key(payload.get("publicKey"))
                 if kind == "FILE_KEY"
@@ -623,7 +664,10 @@ class KeyLoginService:
             if kind == "PASSKEY":
                 key_id = hashlib.sha256(decode(payload["credential"]["id"])).hexdigest()
             elif kind == "FILE_KEY":
-                key_id = file_key_id(file_public_key(payload.get("publicKey")))
+                if "fileKey" in payload:
+                    key_id, file_secret_hash = self.file_cipher.open(payload["fileKey"])
+                else:
+                    key_id = file_key_id(file_public_key(payload.get("publicKey")))
             else:
                 public_key = canonical_public_key(payload["publicKey"])
                 key_id = hashlib.sha256(public_key.encode()).hexdigest()
@@ -653,11 +697,17 @@ class KeyLoginService:
                         )
                         count = verified.new_sign_count
                     elif kind == "FILE_KEY":
-                        verify_file_signature(
-                            data["publicKey"],
-                            self.file_options(state)["message"],
-                            payload["signature"],
-                        )
+                        if data.get("fileVersion") == 2:
+                            if "fileKey" not in payload or not secrets.compare_digest(data["secretHash"], file_secret_hash):
+                                raise ValueError("Invalid encrypted file credential")
+                        else:
+                            if "fileKey" in payload:
+                                raise ValueError("Credential format mismatch")
+                            verify_file_signature(
+                                data["publicKey"],
+                                self.file_options(state)["message"],
+                                payload["signature"],
+                            )
                     else:
                         verify_ssh_signature(
                             data["publicKey"],

@@ -1,0 +1,22 @@
+{
+  "roleCode": "operations",
+  "roleName": "运维",
+  "roleDesc": "租户内建筑、能源、设备及空调的日常运维；不含账号授权、共享目录及平台基础设施管理",
+  "isPersist": 1,
+  "status": 1,
+  "menuCodes": [
+    "building_group_workspace", "building_dashboard", "building_energy_map", "building_bigscreen", "building_campus_3d",
+    "building_group_energy", "building_energy_monitor", "building_water_topology", "building_history", "building_structures",
+    "building_ac_backend", "building_household_energy", "building_household_history", "building_household_structures",
+    "building_group_substation", "building_substation_scene", "building_substation_monitor", "building_substation_topology",
+    "building_transformer_monitor", "building_substation_history", "building_substation_structures", "building_substation_alarms",
+    "building_group_iot", "building_iot", "building_vrf_energy", "building_device_bindings",
+    "building_group_reports", "building_reports", "building_report_comparison", "building_report_benchmark",
+    "building_monthly_reports", "building_calculation_completeness",
+    "building_group_assets", "building_projects", "building_structure_types", "building_custom_structures",
+    "building_drawings", "building_structure_configs",
+    "iot_console", "iot_streetlights", "iot_air_conditioning", "iot_resources", "iot_operations", "iot_feige_access",
+    "iot_app_console", "iot_app_streetlights", "iot_app_resources", "iot_app_operations", "iot_app_feige_access"
+  ],
+  "operationCodes": ["iot.platform.read", "iot.platform.operate", "building.platform.operate"]
+}

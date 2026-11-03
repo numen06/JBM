@@ -10,6 +10,7 @@ import Input from '@/components/ui/Input.vue'
 import Select from '@/components/ui/Select.vue'
 import Card from '@/components/ui/Card.vue'
 import CardContent from '@/components/ui/CardContent.vue'
+import { generateInitialPassword, passwordPolicyError } from '@/lib/passwordPolicy'
 import { orgRowId, useOrgTree } from '@/composables/useOrgTree'
 import { useFeedback } from '@/composables/useFeedback'
 import {
@@ -130,14 +131,29 @@ function toggleExtraOrg(orgId?: string | number) {
   else selectedExtraOrgIds.value.push(id)
 }
 
+function generatePassword() {
+  formError.value = ''
+  try { form.value.password = generateInitialPassword() }
+  catch (error) { formError.value = error instanceof Error ? error.message : '密码生成失败' }
+}
+
+function startNewAccount() {
+  createMode.value = 'new'
+  if (!form.value.password) generatePassword()
+}
+
 async function handleSave() {
   if (!form.value.userName?.trim()) {
     formError.value = '用户名不能为空'
     return
   }
   if (isCreate.value && createMode.value === 'new' && !form.value.password?.trim()) {
-    formError.value = '新建用户须填写密码'
+    formError.value = '请先生成或填写初始密码，再保存账号'
     return
+  }
+  if ((createMode.value === 'new' || !isCreate.value) && form.value.password) {
+    const error = passwordPolicyError(form.value.password)
+    if (error) { formError.value = error; return }
   }
   saving.value = true
   formError.value = ''
@@ -201,7 +217,7 @@ async function handleSave() {
           <h2 class="text-sm font-semibold text-muted-foreground">基本信息</h2>
           <div v-if="isCreate" class="flex w-fit rounded-md border p-1">
             <Button size="sm" :variant="createMode === 'existing' ? 'default' : 'ghost'" @click="createMode = 'existing'">添加已有账号</Button>
-            <Button size="sm" :variant="createMode === 'new' ? 'default' : 'ghost'" @click="createMode = 'new'">创建新账号</Button>
+            <Button size="sm" :variant="createMode === 'new' ? 'default' : 'ghost'" @click="startNewAccount">创建新账号</Button>
           </div>
           <p v-if="isCreate && createMode === 'existing'" class="text-sm text-muted-foreground">
             输入对方已注册的用户名，只建立当前租户成员关系，不修改其密码、手机、邮箱和主租户。
@@ -226,7 +242,11 @@ async function handleSave() {
               </Select>
             </FormField>
             <FormField v-if="!isCreate || createMode === 'new'" :label="isCreate ? '初始密码' : '新密码（留空不改）'" :required="isCreate && createMode === 'new'">
-              <Input v-model="form.password" type="password" autocomplete="new-password" />
+              <div class="flex gap-2">
+                <Input v-model="form.password" :type="isCreate ? 'text' : 'password'" autocomplete="new-password" :placeholder="isCreate ? '先生成或填写初始密码' : ''" />
+                <Button v-if="isCreate" type="button" variant="outline" :disabled="saving" class="shrink-0" @click="generatePassword">重新生成</Button>
+              </div>
+              <p v-if="isCreate" class="mt-2 text-xs text-muted-foreground">自动生成10位密码，可修改。请确认并复制密码后再保存。</p>
             </FormField>
           </div>
         </section>

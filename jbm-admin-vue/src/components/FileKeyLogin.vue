@@ -26,7 +26,7 @@ async function selectFile(event: Event) {
 <template>
   <section class="my-4 space-y-3 rounded-lg border p-4" aria-label="密钥文件登录">
     <p class="text-sm font-medium">选择密钥文件，直接登录对应账号</p>
-    <p class="text-xs opacity-70">请选择登录后在用户中心下载的 .jbmkey 文件。无需输入账号密码，不调用系统认证。</p>
+    <p class="text-xs opacity-70">请选择用户中心下载的加密 .jbmkey 文件，平台验证后直接登录，无需输入口令。</p>
     <label class="block space-y-2 text-sm">
       <span>{{ busy ? '正在验证并登录…' : '选择密钥文件' }}</span>
       <input type="file" accept=".jbmkey,.json,application/json" :disabled="busy || disabled"

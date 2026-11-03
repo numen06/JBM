@@ -119,7 +119,7 @@ onBeforeUnmount(clearGenerated)
 <template>
   <section class="my-4 space-y-3 rounded-lg border p-4" :aria-label="title">
     <h3 class="font-semibold">{{ title }}</h3>
-    <p v-if="kind === 'FILE_KEY'" class="text-sm opacity-70">下载后可在登录页选择文件直接登录，无需系统认证。密钥文件等同登录凭证，请妥善保存；丢失后可在此移除。</p>
+    <p v-if="kind === 'FILE_KEY'" class="text-sm opacity-70">文件以密文保存，由平台识别，登录时无需额外口令。文件持有者可以登录，请妥善保存；丢失后可在此移除。</p>
     <p v-else class="text-sm opacity-70">{{ kind === 'PASSKEY' ? '通行密钥用于浏览器登录，可通过指纹、面容或设备 PIN 验证。' : 'SSH 公钥用于平台提供的签名登录；仅上传公钥，私钥留在本机。' }}</p>
     <label class="block text-sm">密钥名称<input v-model="name" maxlength="80" class="mt-1 block w-full rounded border bg-transparent p-2" /></label>
     <template v-if="kind === 'FILE_KEY'">
