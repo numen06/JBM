@@ -25,3 +25,10 @@ This branch is CodeGraph-enabled. The local index is intentionally not committed
 - 镜像主线前缀必须与 Git 主线同名，日期按 Asia/Shanghai，当天序号从 1 递增；新格式正式发布前须完成目录中登记的主线同名迁移，不在旧分支名上先出新前缀的正式包。
 
 - 统一入口：`python tools/release.py reserve` → 提交推送 VERSION 与生成配置 → `freeze` → `build <组件>` → `status <组件>`。完整规则同时写入 app2docker release 配置并由服务端校验。
+
+## 用户约定：时序数据统一 TDengine
+
+- 原始采集、属性/状态变化、上下线与流量历史、控制/策略日志、用量及日月年统计、计费事实、校正值与校正历史等时序数据统一进入 TDengine。MySQL 保留业务实体、配置、当前事务状态与必要关联；Redis 负责队列、锁和缓存，不作为唯一历史存储。
+- 事务 outbox 可短暂保留待归档正文；TD 写入、逐条回读及业务对账通过后，清理对应 MySQL 历史数据并移除旧读写/fallback 入口，禁止将长期双读或双份历史当作迁移完成。保留独立持久备份，不让备份接入在线查询；未归档、校验失败或并发变化的记录不得删除。
+- 历史迁移按 tenant/project/resource 与原 ID/版本限定，保留合法零值、未知、真实时间粒度和业务关联。混合资源表不能整表清空；产品事件定义和映射等配置不属于时序事件历史。
+- 分工、现状差距及清理验收标准统一见 IoT 仓库 `docs/operations/时序数据存储与迁移规范.md`。该规范中的待迁移项不能描述为已完成。
