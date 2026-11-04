@@ -1,0 +1,1458 @@
+{
+  "scopeStacks": [
+    "jbm7",
+    "iot",
+    "smart_building"
+  ],
+  "services": [
+    {
+      "service": "iot_control-history",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261104.1@sha256:e68694f208fd575a4dc8c3043433e17921e104530132d9d78b92b2dcaecc9bc9",
+      "sourceCommit": "02fd095b08f7e87e26ec70486e9a549f9e6c45e9",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -m iot_platform.control_history_worker --health"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 6
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_feige-ops-worker",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261104.1@sha256:e68694f208fd575a4dc8c3043433e17921e104530132d9d78b92b2dcaecc9bc9",
+      "sourceCommit": "02fd095b08f7e87e26ec70486e9a549f9e6c45e9",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "NONE"
+        ]
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-ac-worker-feiyi",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-worker-feiyi:py-2.0-20261102.4@sha256:c93664653f88e546765adc4f7e738c5980f84286a4d54f0c8c2068acdc1b05a9",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8020/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 5
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-http-receiver",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-http-receiver:py-2.0-20261102.4@sha256:201b807995b9c6c467d5badceeec19a2744648344aee059e3551c36a4dfa038a",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 2,
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8088/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-mqtt-receiver",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-mqtt-worker:py-2.0-20261102.4@sha256:df3ea222141321afcf156ae69589a599896fedcbff71989aad95ee98a5f2d52c",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 2,
+      "healthcheck": {},
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-platform-web",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261104.5@sha256:32b965541491e402256b3c276c53d209ed7189e89c91d496aff90c3ac3b34890",
+      "sourceCommit": "ed55a87ac579768fc1be73dd280fe353e689c280",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.5",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1/"
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_iot-usage-worker",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-usage-worker:py-2.0-20261102.4@sha256:dead548a9736b47738a0ae2e00e31f016d1f6aadfdb3a3bca293acf23ed2cad5",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8017/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_tpm-iot-platform",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform:py-2.0-20261104.1@sha256:e68694f208fd575a4dc8c3043433e17921e104530132d9d78b92b2dcaecc9bc9",
+      "sourceCommit": "02fd095b08f7e87e26ec70486e9a549f9e6c45e9",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3100/health/live', timeout=3).read()\""
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 180000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0,
+        "Window": 60000000000
+      }
+    },
+    {
+      "service": "iot_tpm-iot-protocol-feige",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-feige:py-2.0-20261102.4@sha256:63e635a3dc1d9e526e9597a944bd7da53c46777f802c95f91c47297553aa8590",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:18015/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_tpm-iot-rule-engine",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-rule-engine:py-2.0-20261102.4@sha256:f25088d603a25db57c0279a460918338430779d65c91c812715d218ce81f8f71",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8016/actuator/health', timeout=3)"
+        ],
+        "Interval": 10000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "iot_zqnf-vrf-demo",
+      "stack": "iot",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-ac-simulator:py-2.0-20261102.4@sha256:41bf72398a15ffc0215017e19bf20ec9d334a46d4437fdaf5927dd695b1f14d1",
+      "sourceCommit": "6ee01192de55fd42d8726460d207cabe12dd140e",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261102.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8021/health',timeout=3)\""
+        ],
+        "Interval": 10000000000,
+        "Timeout": 4000000000,
+        "Retries": 6
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-admin",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261104.6@sha256:1469820eb937143eefe7f05936fdbef54e66612ecccaa1b48b128eb9424acce9",
+      "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261104.6",
+      "replicas": 1,
+      "healthcheck": {},
+      "restartPolicy": {
+        "Condition": "on-failure",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-auth",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261103.3@sha256:a6a2357eebb9da0351dfba39f657d8ba5a51ba90d1f7c5502809ed1bfc44bdd3",
+      "sourceCommit": "552d98829ef2cb65064038b1e4699775fe567a25",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.3",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:5555/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-bigscreen",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3314/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-center",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261104.7@sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+      "sourceCommit": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261104.7",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:7777/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-doc",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261104.4@sha256:4d2b7f629908584a9593e67c594f91be83697351998e322ffcd5d6bb37fb88a1",
+      "sourceCommit": "b6c93283d81b83bd72e870936a21850bd72bd737",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261104.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:9999/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-gateway",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261104.6@sha256:0ce9ae4cb387446da4b21753e6dbfcf436b55f3e23ed6feb78ab666e5e73bdf5",
+      "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261104.6",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:6060/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-job",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261103.1@sha256:1033c322d8405a8de3bdb126e3ee3255d9ba9c7031fbdf5a26d58010ac2cb3ee",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:4444/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      },
+      "deployment": {
+        "singleActiveWorker": true,
+        "ownership": "exclusive-file-lock",
+        "startup": "background-retry-2s",
+        "restart": "stack-policy"
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-logs",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3312/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "jbm7_jbm-cluster-platform-push",
+      "stack": "jbm7",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261103.1@sha256:c8bf39ae16c37476cbc7f46520b55b3714284a3e84977edd53be6a2fb17cd092",
+      "sourceCommit": "8339f18fb568a38859f282917b8a56aff1010379",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261103.1",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:3313/actuator/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 30000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "smart_building_smart-building-app",
+      "stack": "smart_building",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261104.4@sha256:8795fb91e4ca844d875ffd5e70b982cba82b67955a0e203438977bfbbb72030b",
+      "sourceCommit": "eb83744a62d28bce19a68f4a08042fff6c47dd3c",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.4",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8015/health',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 45000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "smart_building_smart-building-data-batch",
+      "stack": "smart_building",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261103.15@sha256:152f13a5eb2bf39346ea8bab8d08f052a7ac00aa85f858c185c33e02f77467d5",
+      "sourceCommit": "afc77f9cecc4b98b7dea0068c40cb112927e0940",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261103.15",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8017/actuator/live',timeout=3)\""
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 45000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "smart_building_smart-building-flow",
+      "stack": "smart_building",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-flow:master-20261102.2@sha256:47d77314e1dca727e5623e3aa1d3ce18ce4f7c50b3c613df6d3ed1c5bd5306eb",
+      "sourceCommit": "56b82da82d9d5497d142f8bf5f2b1035fb6842f7",
+      "mainline": "master",
+      "version": "master-20261102.2",
+      "replicas": 1,
+      "healthcheck": {},
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    },
+    {
+      "service": "smart_building_smart-building-web",
+      "stack": "smart_building",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261104.7@sha256:21159e9824a1823bdd980998a3a786222b11adebf3856f7c476e9fa5a12ac2a0",
+      "sourceCommit": "09620d824381cac415d66aa281dfc639b7201624",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.7",
+      "replicas": 1,
+      "healthcheck": {
+        "Test": [
+          "CMD-SHELL",
+          "wget -q -O /dev/null http://127.0.0.1/"
+        ],
+        "Interval": 15000000000,
+        "Timeout": 5000000000,
+        "StartPeriod": 20000000000,
+        "Retries": 12
+      },
+      "restartPolicy": {
+        "Condition": "any",
+        "Delay": 5000000000,
+        "MaxAttempts": 0
+      }
+    }
+  ],
+  "releaseGroup": "20261104-feedback-captcha",
+  "schemaVersion": 1,
+  "checkedAt": "2026-11-04T17:15:31.751295+08:00",
+  "deploymentState": "completed-related-services-cloud-and-party",
+  "acceptanceState": "feature-api-and-local-browser-accepted; production-browser-navigation-blocked; preexisting-party-streetlight-baseline-failure",
+  "releaseType": "feedback-feature-and-password-captcha-refresh-fix",
+  "artifacts": {
+    "center": {
+      "digest": "sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261104.7",
+      "sourceCommit": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+      "component": "center",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261104.7@sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+      "taskIds": [
+        "da05f734-a079-4e51-af6d-1117fd87e364"
+      ],
+      "services": [
+        "jbm7_jbm-cluster-platform-center"
+      ],
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "dockerfileTarget": "jbm-cluster-platform-center",
+      "gitTag": "py-7.3-20261104.7",
+      "ociVersion": "py-7.3-20261104.7",
+      "ociRevision": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f"
+      ]
+    },
+    "gateway": {
+      "digest": "sha256:0ce9ae4cb387446da4b21753e6dbfcf436b55f3e23ed6feb78ab666e5e73bdf5",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261104.6",
+      "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "component": "gateway",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261104.6@sha256:0ce9ae4cb387446da4b21753e6dbfcf436b55f3e23ed6feb78ab666e5e73bdf5",
+      "taskIds": [
+        "7743f1eb-6e1d-4d49-963d-d238d72e91b4"
+      ],
+      "services": [
+        "jbm7_jbm-cluster-platform-gateway"
+      ],
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "dockerfileTarget": "jbm-cluster-platform-gateway",
+      "gitTag": "py-7.3-20261104.6",
+      "ociVersion": "py-7.3-20261104.6",
+      "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f"
+      ]
+    },
+    "jbm-web": {
+      "digest": "sha256:1469820eb937143eefe7f05936fdbef54e66612ecccaa1b48b128eb9424acce9",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261104.6",
+      "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261104.6@sha256:1469820eb937143eefe7f05936fdbef54e66612ecccaa1b48b128eb9424acce9",
+      "taskIds": [
+        "fba84e6d-e03e-46cd-99a0-8b6d6128df77"
+      ],
+      "services": [
+        "jbm7_jbm-admin"
+      ],
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "dockerfileTarget": "jbm-admin",
+      "gitTag": "py-7.3-20261104.6",
+      "ociVersion": "py-7.3-20261104.6",
+      "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+        "registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46"
+      ]
+    },
+    "iot-web": {
+      "digest": "sha256:32b965541491e402256b3c276c53d209ed7189e89c91d496aff90c3ac3b34890",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261104.5",
+      "sourceCommit": "ed55a87ac579768fc1be73dd280fe353e689c280",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261104.5@sha256:32b965541491e402256b3c276c53d209ed7189e89c91d496aff90c3ac3b34890",
+      "taskIds": [
+        "407fe8d1-07f0-42c3-a83f-b6da4e7dbcf6"
+      ],
+      "services": [
+        "iot_iot-platform-web"
+      ],
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/iot-platform.git",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba",
+      "dockerfile": "deploy/Dockerfile.release",
+      "dockerfileTarget": "frontend",
+      "gitTag": "py-2.0-20261104.5",
+      "ociVersion": "py-2.0-20261104.5",
+      "ociRevision": "ed55a87ac579768fc1be73dd280fe353e689c280",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+        "registry.cn-shanghai.aliyuncs.com/okc/iot-platform-frontend:py-2.0-20261104.1@sha256:d9b828729b3eba87e5eac595dd2a18605d6d5508129d124dbaf29f937af84228"
+      ]
+    },
+    "building-web": {
+      "digest": "sha256:21159e9824a1823bdd980998a3a786222b11adebf3856f7c476e9fa5a12ac2a0",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-2.0-20261104.7",
+      "sourceCommit": "09620d824381cac415d66aa281dfc639b7201624",
+      "component": "web",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261104.7@sha256:21159e9824a1823bdd980998a3a786222b11adebf3856f7c476e9fa5a12ac2a0",
+      "taskIds": [
+        "90818e24-fff5-4570-9def-0af3f5d089cb"
+      ],
+      "services": [
+        "smart_building_smart-building-web"
+      ],
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/smart-building-platform.git",
+      "pipelineId": "410b8d25-9567-4420-888e-368cd2d3afe6",
+      "dockerfile": "deploy/Dockerfile.release",
+      "dockerfileTarget": "smart-building-web",
+      "gitTag": "py-2.0-20261104.7",
+      "ociVersion": "py-2.0-20261104.7",
+      "ociRevision": "09620d824381cac415d66aa281dfc639b7201624",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+        "m.daocloud.io/docker.io/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+        "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261104.1@sha256:dba5966e3b2d42473184e7703b3cface06bb580ea712ef5fdbac0f3d2f8b4c5b"
+      ]
+    },
+    "packages": {
+      "digest": "sha256:2a9228a1090157b71c830f0b6a43314e36cf474d3da0825cad9f8c9b9470d1fa",
+      "architectures": [
+        "linux/amd64",
+        "linux/arm64"
+      ],
+      "version": "py-7.3-20261104.6",
+      "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "component": "packages",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages:py-7.3-20261104.6@sha256:2a9228a1090157b71c830f0b6a43314e36cf474d3da0825cad9f8c9b9470d1fa",
+      "taskIds": [
+        "12b161e3-578f-4689-8023-adcd36be5497"
+      ],
+      "services": [],
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+      "dockerfile": "Dockerfile.app2docker",
+      "dockerfileTarget": "jbm-admin-packages",
+      "gitTag": "py-7.3-20261104.6",
+      "ociVersion": "py-7.3-20261104.6",
+      "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+      "resolvedBaseImageReferences": [
+        "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+        "registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46"
+      ]
+    }
+  },
+  "platforms": [
+    {
+      "platform": "jbm",
+      "mainline": "py-7.3",
+      "version": "py-7.3-20261104.7",
+      "sourceCommit": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+      "componentVersions": {
+        "center": {
+          "digest": "sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+          "architectures": [
+            "linux/amd64",
+            "linux/arm64"
+          ],
+          "version": "py-7.3-20261104.7",
+          "sourceCommit": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+          "component": "center",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261104.7@sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+          "taskIds": [
+            "da05f734-a079-4e51-af6d-1117fd87e364"
+          ],
+          "services": [
+            "jbm7_jbm-cluster-platform-center"
+          ],
+          "repository": "https://gitee.com/numen06/JBM.git",
+          "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+          "dockerfile": "Dockerfile.app2docker",
+          "dockerfileTarget": "jbm-cluster-platform-center",
+          "gitTag": "py-7.3-20261104.7",
+          "ociVersion": "py-7.3-20261104.7",
+          "ociRevision": "49f73e30ad76f03f099c5ec70ce204e58c44b542",
+          "resolvedBaseImageReferences": [
+            "m.daocloud.io/docker.io/python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f"
+          ]
+        },
+        "gateway": {
+          "digest": "sha256:0ce9ae4cb387446da4b21753e6dbfcf436b55f3e23ed6feb78ab666e5e73bdf5",
+          "architectures": [
+            "linux/amd64",
+            "linux/arm64"
+          ],
+          "version": "py-7.3-20261104.6",
+          "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "component": "gateway",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261104.6@sha256:0ce9ae4cb387446da4b21753e6dbfcf436b55f3e23ed6feb78ab666e5e73bdf5",
+          "taskIds": [
+            "7743f1eb-6e1d-4d49-963d-d238d72e91b4"
+          ],
+          "services": [
+            "jbm7_jbm-cluster-platform-gateway"
+          ],
+          "repository": "https://gitee.com/numen06/JBM.git",
+          "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+          "dockerfile": "Dockerfile.app2docker",
+          "dockerfileTarget": "jbm-cluster-platform-gateway",
+          "gitTag": "py-7.3-20261104.6",
+          "ociVersion": "py-7.3-20261104.6",
+          "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "resolvedBaseImageReferences": [
+            "m.daocloud.io/docker.io/python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f"
+          ]
+        },
+        "jbm-web": {
+          "digest": "sha256:1469820eb937143eefe7f05936fdbef54e66612ecccaa1b48b128eb9424acce9",
+          "architectures": [
+            "linux/amd64",
+            "linux/arm64"
+          ],
+          "version": "py-7.3-20261104.6",
+          "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "component": "web",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261104.6@sha256:1469820eb937143eefe7f05936fdbef54e66612ecccaa1b48b128eb9424acce9",
+          "taskIds": [
+            "fba84e6d-e03e-46cd-99a0-8b6d6128df77"
+          ],
+          "services": [
+            "jbm7_jbm-admin"
+          ],
+          "repository": "https://gitee.com/numen06/JBM.git",
+          "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+          "dockerfile": "Dockerfile.app2docker",
+          "dockerfileTarget": "jbm-admin",
+          "gitTag": "py-7.3-20261104.6",
+          "ociVersion": "py-7.3-20261104.6",
+          "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "resolvedBaseImageReferences": [
+            "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+            "registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46"
+          ]
+        },
+        "packages": {
+          "digest": "sha256:2a9228a1090157b71c830f0b6a43314e36cf474d3da0825cad9f8c9b9470d1fa",
+          "architectures": [
+            "linux/amd64",
+            "linux/arm64"
+          ],
+          "version": "py-7.3-20261104.6",
+          "sourceCommit": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "component": "packages",
+          "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages:py-7.3-20261104.6@sha256:2a9228a1090157b71c830f0b6a43314e36cf474d3da0825cad9f8c9b9470d1fa",
+          "taskIds": [
+            "12b161e3-578f-4689-8023-adcd36be5497"
+          ],
+          "services": [],
+          "repository": "https://gitee.com/numen06/JBM.git",
+          "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2",
+          "dockerfile": "Dockerfile.app2docker",
+          "dockerfileTarget": "jbm-admin-packages",
+          "gitTag": "py-7.3-20261104.6",
+          "ociVersion": "py-7.3-20261104.6",
+          "ociRevision": "f388c1bfad4cdca51b31dc026c2856d7e73f588e",
+          "resolvedBaseImageReferences": [
+            "m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914",
+            "registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46"
+          ]
+        }
+      },
+      "scope": "Center final .7, unchanged Gateway/Web/packages .6; Auth retained at prior formal image",
+      "repository": "https://gitee.com/numen06/JBM.git",
+      "pipelineId": "b84547eb-558f-44e9-8b2f-241b2c9d97f2"
+    },
+    {
+      "platform": "iot",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.5",
+      "sourceCommit": "ed55a87ac579768fc1be73dd280fe353e689c280",
+      "scope": "Web only",
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/iot-platform.git",
+      "pipelineId": "863f4f5a-55c0-4030-ba67-f5b0be18e2ba"
+    },
+    {
+      "platform": "building",
+      "mainline": "py-2.0",
+      "version": "py-2.0-20261104.7",
+      "sourceCommit": "09620d824381cac415d66aa281dfc639b7201624",
+      "scope": "Web only",
+      "repository": "https://codeup.aliyun.com/604f9b79f11bae7ca07da657/okc/smart-building-platform.git",
+      "pipelineId": "410b8d25-9567-4420-888e-368cd2d3afe6"
+    }
+  ],
+  "changes": [
+    "JBM deployment-local feedback API and avatar dropdown entry in Building, IoT and standalone JBM",
+    "All authenticated users may submit; only standard platform_operator and super administrator may list, read and handle",
+    "Standard role platform_operator id=3 remains part of seed data; migration adds it only if absent and rejects ID collision",
+    "Building password CAPTCHA hint survives reload after a failed attempt and clears after successful login; server adaptive guard remains authoritative",
+    "Allow legitimate cloud super administrator userId=0 and preserve handledBy=0",
+    "New-user password is retained only as account hash, excluded from user profile"
+  ],
+  "adminPackageVersion": "7.3.0-beta.64",
+  "deploymentModes": {
+    "cloud": {
+      "jbm.feedback.deployment-mode": "cloud",
+      "storage": "cloud Center database"
+    },
+    "party": {
+      "jbm.feedback.deployment-mode": "local",
+      "storage": "party Center database"
+    },
+    "automaticCrossDeploymentForwarding": false
+  },
+  "migration": {
+    "revision": "20261104_29",
+    "verifiedEnvironments": [
+      "local",
+      "cloud",
+      "party"
+    ],
+    "preservesExistingRoleNamesStatusAndGrants": true,
+    "applicationRollbackKeepsFeedbackData": true
+  },
+  "environments": {
+    "cloud": {
+      "updatedServices": {
+        "jbm7_jbm-cluster-platform-center": "center",
+        "jbm7_jbm-cluster-platform-gateway": "gateway",
+        "jbm7_jbm-admin": "jbm-web",
+        "iot_iot-platform-web": "iot-web",
+        "smart_building_smart-building-web": "building-web"
+      },
+      "fullServiceInventory": 42,
+      "managedStackServices": 24,
+      "unrelatedServiceSpecsPreserved": true,
+      "rollbackDirectory": "/home/opt/backups/feedback-captcha-20261104"
+    },
+    "party": {
+      "updatedContainers": {
+        "/jbm73-standard-test-jbm-cluster-platform-center-1": "center",
+        "/jbm73-standard-test-jbm-cluster-platform-gateway-1": "gateway",
+        "/jxdx-platform-building-web-1": "building-web",
+        "/jxdx-platform-iot-web-1": "iot-web"
+      },
+      "fullContainerInventory": 36,
+      "unrelatedContainerIdsPreserved": true,
+      "rollbackDirectory": "/home/opt/jxdx-platform/backups/feedback-captcha-20261104"
+    },
+    "local": {
+      "originalDebug": "http://debug5175.feige.51jbm.cn",
+      "updatedContainers": [
+        "jbm73-python-jbm-cluster-platform-center-1",
+        "jbm73-python-jbm-cluster-platform-gateway-1",
+        "jbm73-python-jbm-admin-1",
+        "smart-building-python-web-1",
+        "iot-platform-frontend-1"
+      ],
+      "actualFormalArtifactsUsed": true,
+      "independentTestAccount": {
+        "username": "jbm_operator",
+        "standardRole": "platform_operator",
+        "superAdmin": false
+      },
+      "existingPasswordsReset": false
+    }
+  },
+  "validation": {
+    "feedbackAndAuthorizationUnitTests": {
+      "latestPassed": 56,
+      "includesCloudUserIdZero": true
+    },
+    "localCandidateFeedbackApiChecks": {
+      "passed": 34,
+      "candidateCenterVersion": "py-7.3-20261104.6"
+    },
+    "finalLocalCenterCheck": {
+      "finalFormalCenter": "py-7.3-20261104.7",
+      "originalDebug": "http://debug5175.feige.51jbm.cn",
+      "separateStandardOperatorAccount": true,
+      "submitReadHandlePassed": true,
+      "feedbackId": "1a1b9304e8344adebf536cd65c873138",
+      "otherAdminSessionNotUsed": true
+    },
+    "localAdministratorContract": {
+      "name": "JBM administration menus",
+      "passed": true,
+      "checks": [
+        {
+          "path": "/center/feedback/context",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/feedback?size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/extend-field/forms",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/api-docs/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer/pending",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/gateway/gray-routes",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+          "status": 200,
+          "passed": true
+        }
+      ],
+      "businessWrites": 0
+    },
+    "cloudAdministratorContract": {
+      "name": "JBM administration menus",
+      "passed": true,
+      "checks": [
+        {
+          "path": "/center/feedback/context",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/feedback?size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/extend-field/forms",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/api-docs/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer/pending",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/gateway/gray-routes",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+          "status": 200,
+          "passed": true
+        }
+      ],
+      "businessWrites": 0
+    },
+    "partyAdministratorContract": {
+      "name": "JBM administration menus",
+      "passed": true,
+      "checks": [
+        {
+          "path": "/center/feedback/context",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/feedback?size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/extend-field/forms",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/api-docs/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/center/developer/pending",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/gateway/gray-routes",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/sources",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+          "status": 200,
+          "passed": true
+        },
+        {
+          "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+          "status": 200,
+          "passed": true
+        }
+      ],
+      "businessWrites": 0
+    },
+    "productionFeedback": {
+      "passed": 24,
+      "failed": 0,
+      "checks": [
+        {
+          "name": "cloud-root real admin",
+          "passed": true
+        },
+        {
+          "name": "cloud-root mode and manage",
+          "passed": true
+        },
+        {
+          "name": "cloud-root receipt only",
+          "passed": true
+        },
+        {
+          "name": "cloud-root server identity",
+          "passed": true
+        },
+        {
+          "name": "cloud-root server deployment",
+          "passed": true
+        },
+        {
+          "name": "tenant administrator cannot manage",
+          "passed": true
+        },
+        {
+          "name": "tenant denied /center/feedback",
+          "passed": true
+        },
+        {
+          "name": "tenant denied /center/feedback/ef8bdd4401864e6583f1b20b7eda2477",
+          "passed": true
+        },
+        {
+          "name": "tenant cannot handle",
+          "passed": true
+        },
+        {
+          "name": "cloud-root conflict protection",
+          "passed": true
+        },
+        {
+          "name": "cloud-root handled by real administrator",
+          "passed": true
+        },
+        {
+          "name": "cloud-root list business success",
+          "passed": true
+        },
+        {
+          "name": "cloud-root cross deployment data isolated",
+          "passed": true
+        },
+        {
+          "name": "cloud-root anonymous denied",
+          "passed": true
+        },
+        {
+          "name": "party real admin",
+          "passed": true
+        },
+        {
+          "name": "party mode and manage",
+          "passed": true
+        },
+        {
+          "name": "party receipt only",
+          "passed": true
+        },
+        {
+          "name": "party server identity",
+          "passed": true
+        },
+        {
+          "name": "party server deployment",
+          "passed": true
+        },
+        {
+          "name": "party conflict protection",
+          "passed": true
+        },
+        {
+          "name": "party handled by real administrator",
+          "passed": true
+        },
+        {
+          "name": "party list business success",
+          "passed": true
+        },
+        {
+          "name": "party cross deployment data isolated",
+          "passed": true
+        },
+        {
+          "name": "party anonymous denied",
+          "passed": true
+        }
+      ],
+      "scope": "cloud-and-party",
+      "fieldControls": 0
+    },
+    "productionPasswordGuard": [
+      {
+        "origin": "https://emc.hz-aitech.com",
+        "firstAttemptNeedsNoCaptcha": true,
+        "newSessionAfterFailureRequiresCaptcha": true,
+        "existingAccountsTouched": 0,
+        "captchaSolved": false
+      },
+      {
+        "origin": "https://jxdx.project.hz-aitech.com",
+        "firstAttemptNeedsNoCaptcha": true,
+        "newSessionAfterFailureRequiresCaptcha": true,
+        "existingAccountsTouched": 0,
+        "captchaSolved": false
+      }
+    ],
+    "webAssets": [
+      {
+        "environment": "cloud",
+        "component": "building-web",
+        "origin": "https://emc.hz-aitech.com",
+        "prefix": "/",
+        "entryAndRelatedAssetsMatchRunningImage": true,
+        "verifiedAssets": [
+          "/assets/index-DIgVf3mV.js",
+          "/assets/LoginPage-BjDatOQz.js",
+          "/assets/LoginPage-CrrtHuyp-CAM-JgvL.js",
+          "/assets/FeedbackPage-DrxpzQzD-CulDxEVY.js"
+        ],
+        "rootRedirectObserved": null,
+        "routeChecked": "/"
+      },
+      {
+        "environment": "cloud",
+        "component": "iot-web",
+        "origin": "https://feige.hz-aitech.com",
+        "prefix": "/",
+        "entryAndRelatedAssetsMatchRunningImage": true,
+        "verifiedAssets": [
+          "/assets/main-Bdy0jC3_.js",
+          "/assets/FeedbackPage-DrxpzQzD-ATsHd31o.js",
+          "/assets/LoginPage-CrrtHuyp-CIhKH0re.js"
+        ],
+        "rootRedirectObserved": null,
+        "routeChecked": "/"
+      },
+      {
+        "environment": "party",
+        "component": "building-web",
+        "origin": "https://jxdx.project.hz-aitech.com",
+        "prefix": "/",
+        "entryAndRelatedAssetsMatchRunningImage": true,
+        "verifiedAssets": [
+          "/assets/index-DIgVf3mV.js",
+          "/assets/LoginPage-BjDatOQz.js",
+          "/assets/LoginPage-CrrtHuyp-CAM-JgvL.js",
+          "/assets/FeedbackPage-DrxpzQzD-CulDxEVY.js"
+        ],
+        "rootRedirectObserved": null,
+        "routeChecked": "/"
+      },
+      {
+        "environment": "party",
+        "component": "iot-web",
+        "origin": "https://jxdx.project.hz-aitech.com",
+        "prefix": "/iot/",
+        "entryAndRelatedAssetsMatchRunningImage": true,
+        "verifiedAssets": [
+          "/assets/main-Bdy0jC3_.js",
+          "/assets/FeedbackPage-DrxpzQzD-ATsHd31o.js",
+          "/assets/LoginPage-CrrtHuyp-CIhKH0re.js"
+        ],
+        "rootRedirectObserved": "http://jxdx.project.hz-aitech.com/iot/console",
+        "routeChecked": "/iot/console"
+      }
+    ],
+    "stack": {
+      "passed": true,
+      "expectedServices": 24,
+      "actualServices": 24,
+      "stackServiceCounts": {
+        "iot": 11,
+        "jbm7": 9,
+        "smart_building": 4
+      },
+      "issues": [],
+      "businessWrites": 0
+    },
+    "localBrowser": {
+      "feedbackSubmitDeniedManageAndAdministratorHandling": "passed",
+      "captchaFreshAttemptFailureReloadAndSuccessClear": "passed",
+      "formalCaptchaScreenshot": "output/feedback-captcha-release-20261104/formal-local-captcha-after-reload.png"
+    },
+    "productionBrowser": {
+      "passed": false,
+      "reason": "Chrome navigation to https://emc.hz-aitech.com/login timed out and remained about:blank; production authenticated UI interaction was not completed. Real authenticated APIs and served assets were checked separately."
+    },
+    "partyStreetlightIntegrity": {
+      "passed": false,
+      "preexistingBeforeRelease": true,
+      "afterReleaseSameFailure": true,
+      "baseline": "deploy/integrity/party-school-streetlights.json",
+      "firstFailure": "GET /streetlightArea/410960/illuminance-control: HTTP 404 当前校区没有该路灯区域",
+      "scope": "Read-only; IoT API, devices, coordinates, rules, database configuration and field control services were not updated by this release.",
+      "deviceDataRepairPerformed": false
+    }
+  },
+  "limitations": [
+    "Production browser UI acceptance remains incomplete due browser navigation timeout; API and static-resource results are not represented as full UI acceptance.",
+    "Party streetlight baseline fails before and after this release; no device data repair or control was performed.",
+    "Party /iot/ root returned an existing HTTP-scheme redirect to /iot/console; assets were verified through the HTTPS /iot/console route. Redirect configuration was retained."
+  ],
+  "rollback": {
+    "baseline": "Original service/container specs and database migration/standard-role snapshot saved privately before mutations; final Center .7 checkpoint is additional, not replacement of original rollback.",
+    "method": "Restore original pinned images and original complete service/Compose environment from private snapshots, update only affected services, then rerun read-only contracts. Do not drop feedback table or standard role.",
+    "privateEvidenceDirectory": ".codex-tmp/feedback-captcha-release-20261104"
+  },
+  "fieldControlRequests": 0,
+  "deviceBusinessDataWrites": 0,
+  "secretsCommitted": false,
+  "supersededCenter": {
+    "version": "py-7.3-20261104.6",
+    "reason": "Cloud administrator userId=0 rejected by truthiness check. Fixed and replaced with immutable .7 Center; other unchanged .6 artifacts retained."
+  },
+  "externalServices": [
+    {
+      "service": "app2docker_app2docker",
+      "image": "registry.cn-shanghai.aliyuncs.com/51jbm/app2docker:2.0.5@sha256:8b727b403e8127aa8efff05be892f4fbfed2ab4bfd09c82500ff7f0992f21532",
+      "configurationPreserved": true
+    },
+    {
+      "service": "database_influxdb",
+      "image": "docker.jajachina.com/public/influxdb:1.8@sha256:3dbc8a60e9084d17ee9add1f5772912e2d9fd1a49cdc36378eed1d2b4ea5a027",
+      "configurationPreserved": true
+    },
+    {
+      "service": "database_mysql",
+      "image": "docker.jajachina.com/public/mysql:5.7@sha256:4b6c4935195233bc10b617df3cc725a9ddd5a7f10351a7bf573bea0b5ded7649",
+      "configurationPreserved": true
+    },
+    {
+      "service": "database_mysql8",
+      "image": "docker.jajachina.com/public/mysql:8@sha256:7c6a49430969267ab38b4dbe118377935fd104bbe9728ec686936fbc4a9d6005",
+      "configurationPreserved": true
+    },
+    {
+      "service": "database_openobserve",
+      "image": "docker.jajachina.com/public/openobserve/openobserve:latest",
+      "configurationPreserved": true
+    },
+    {
+      "service": "iot-location-service",
+      "image": "registry.cn-shanghai.aliyuncs.com/51jbm/jbm-weather:5d29f78@sha256:41bb44caf95f2c757c26c91805ba1fc89181be0a8b35520f06e50160bba72a88",
+      "configurationPreserved": true
+    },
+    {
+      "service": "kafka_kafka",
+      "image": "docker.jajachina.com/public/wurstmeister/kafka:latest@sha256:2d4bbf9cc83d9854d36582987da5f939fb9255fb128d18e3cf2c6ad825a32751",
+      "configurationPreserved": true
+    },
+    {
+      "service": "kafka_zookeeper",
+      "image": "docker.jajachina.com/public/zookeeper:latest@sha256:e12cace7b5fcfaadf17d6532e83fd8fe71fdf40ab73f22370ccc314bcf7a38b4",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_emqx",
+      "image": "docker.jajachina.com/public/emqx/emqx:latest",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_minio",
+      "image": "docker.jajachina.com/public/minio/minio:latest",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_nacos",
+      "image": "docker.jajachina.com/public/nacos/nacos-server:v1.4.3",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_nacos2",
+      "image": "m.daocloud.io/docker.io/qingpan/rnacos:v0.6.6@sha256:871a1f0921e45f323b9922ecd74b083723da913321769f3743dd2d8e6afe06d6",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_nginx-web",
+      "image": "registry.cn-shanghai.aliyuncs.com/numen/nginx-webui:1.1.6@sha256:650c0034ff38dbf7038c493a7de9c4e3825051f83433cf4d2207e3625e8899ad",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_rabbitmq",
+      "image": "docker.jajachina.com/public/rabbitmq:3-management",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_redis",
+      "image": "docker.jajachina.com/public/redis:latest",
+      "configurationPreserved": true
+    },
+    {
+      "service": "middleware_redis7",
+      "image": "docker.jajachina.com/public/redis:latest",
+      "configurationPreserved": true
+    },
+    {
+      "service": "observability_loki",
+      "image": "m.daocloud.io/docker.io/grafana/loki:3.7.0@sha256:c316b7c7589a5eeca843b6926c7446149d18300b79ac8538dc4ae063bc478da2",
+      "configurationPreserved": true
+    },
+    {
+      "service": "tdengine_tdengine",
+      "image": "m.daocloud.io/docker.io/tdengine/tsdb@sha256:44f58e6f9b013bccb94c4a27dd0ec7bca2982474fd3b390cafb48f709db1f0b1",
+      "configurationPreserved": true
+    }
+  ]
+}
