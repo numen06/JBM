@@ -38,6 +38,8 @@ export const coreModule = defineJbmModule({
   routes: [
     { path: 'dashboard', name: 'dashboard', component: () => import('@/views/dashboard/DashboardPage.vue'), meta: { title: '仪表盘', menuCode: 'dashboard' } },
     { path: 'profile', name: 'profile', component: () => import('@/views/profile/ProfilePage.vue'), meta: { title: '用户中心' } },
+    { path: 'feedback', name: 'feedback', component: () => import('@/views/feedback/FeedbackPage.vue'), meta: { title: '意见反馈' } },
+    { path: 'feedback/manage', name: 'feedback-manage', component: () => import('@/views/feedback/FeedbackPage.vue'), props: { manage: true }, meta: { title: '意见反馈管理' } },
   ],
 })
 

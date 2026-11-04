@@ -184,6 +184,9 @@ CENTER_RULES = tuple(
 ) + (
     ApiRule("/internal", internal_only=True),
     ApiRule("/current", authenticated=True),
+    ApiRule("/feedback", platform_only=True),
+    ApiRule("/feedback/context", authenticated=True),
+    ApiRule("/feedback/submit", authenticated=True),
     ApiRule("/role/all", authenticated=True),
     ApiRule("/tenant-features/context", authenticated=True),
     ApiRule("/tenant-features", write=(frozenset({"tenant.features.manage"}),)),

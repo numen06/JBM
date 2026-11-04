@@ -2,6 +2,8 @@
   "name": "JBM administration menus",
   "sourceBranch": "py-7.3",
   "checks": [
+    {"method": "GET", "path": "/center/feedback/context"},
+    {"method": "GET", "path": "/center/feedback?size=1"},
     {"method": "GET", "path": "/center/extend-field/forms"},
     {"method": "GET", "path": "/center/api-docs/sources"},
     {"method": "GET", "path": "/center/developer"},

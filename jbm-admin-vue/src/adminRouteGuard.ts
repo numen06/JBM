@@ -30,7 +30,7 @@ export function installJbmAdminRouteGuard(router: Router) {
     if (!menuStore.loaded) await menuStore.fetchMenus()
     if (!auth.isLoggedIn) return { name: 'login', query: { redirect: to.fullPath } }
     if (isMessageAdminRoute(to.path) && isMessageAdminToolAllowed(auth.user)) return true
-    if (to.name === 'profile') return true
+    if (to.name === 'profile' || to.name === 'feedback' || to.name === 'feedback-manage') return true
     if (to.meta.menuCode && menuStore.allowedMenuCodes.has(to.meta.menuCode)) return true
     if (!menuStore.isRouteAllowed(to.path)) return { name: 'dashboard' }
     return true

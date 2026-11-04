@@ -6,7 +6,7 @@ export interface NavigationCatalogItem { workspace: WorkspaceKey; group: string;
 export interface NavigationGroup { label: string; items: Array<{ path: string; label: string }> }
 export const workspaceNames = { building: '建筑', iot: '物连', jbm: '系统' } as const
 export const emptyNavigation = (): TenantNavigationPreferences => ({ workspaces: {}, menus: {}, groups: {} })
-export const isSystemBusinessMenu = (path: string) => !['/jbm/dashboard', '/jbm/profile', '/jbm/message-center'].includes(path)
+export const isSystemBusinessMenu = (path: string) => !['/jbm/dashboard', '/jbm/profile', '/jbm/message-center', '/jbm/feedback', '/jbm/feedback/manage'].includes(path)
 
 // Only transform already authorized entries. Preferences are never permissions.
 export function applyNavigation<T extends NavigationGroup>(groups: T[], preferences: TenantNavigationPreferences, workspace: WorkspaceKey): T[] {

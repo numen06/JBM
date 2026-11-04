@@ -7,6 +7,9 @@ spring:
     name: jbm-cluster-platform-center
 
 jbm:
+  feedback:
+    # Independent installations keep their feedback in their own Center database.
+    deployment-mode: local
   python:
     app: center
     module: jbm-cluster-platform-center

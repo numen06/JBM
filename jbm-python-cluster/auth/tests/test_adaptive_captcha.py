@@ -27,6 +27,8 @@ def test_first_password_login_needs_no_captcha_but_retry_cannot_bypass_it(tmp_pa
         wrong = client.post(endpoint, data={**form, "password": "wrong"})
         assert wrong.status_code in (400, 401)
         assert wrong.json()["captcha_required"] is True
+        # A page reload/new HTTP session cannot remove the server-side challenge.
+        client.cookies.clear()
         missing = client.post(endpoint, data=form)
         assert missing.status_code == 400
         assert missing.json()["captcha_required"] is True

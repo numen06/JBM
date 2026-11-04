@@ -1116,6 +1116,7 @@ class CompatibilityService:
             raise ValueError("创建新账号必须设置初始密码")
         validate_password(password, self.password_policy)
         user_payload = dict(payload)
+        user_payload.pop("password", None)
         user_payload.pop("mobile", None)
         user_payload.pop("email", None)
         user = await self.store.save(

@@ -27,6 +27,7 @@ from jbm_cluster_py.platform.center.modules.governance.infrastructure.repository
 )
 from jbm_cluster_py.platform.center.modules.governance.infrastructure.crud_store import CrudStore
 from jbm_cluster_py.platform.center.modules.governance.infrastructure.openapi_catalog import OpenApiCatalog
+from jbm_cluster_py.platform.center.feedback import build_feedback_router
 
 
 def create_app(config: AppConfig | None = None) -> FastAPI:
@@ -124,6 +125,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         }
 
     app.include_router(build_governance_router(service))
+    app.include_router(build_feedback_router(repository.engine, app_config.get("jbm.feedback", {}) or {}))
     app.include_router(build_compatibility_router(compatibility))
     install_bearer_openapi(app, auth.public_paths)
     return app

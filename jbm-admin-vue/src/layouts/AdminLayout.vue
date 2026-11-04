@@ -27,6 +27,7 @@ const app = useAppStore()
 const menuStore = useMenuStore()
 const messageStore = useMessageStore()
 const messagesOpen = ref(false)
+const userMenuOpen = ref(false)
 const mobileSidebarOpen = ref(false)
 const passwordReminderDismissed = ref(false)
 const loginSecurityOpen = ref(false)
@@ -251,11 +252,14 @@ watch(
               </div>
             </section>
           </div>
+          <div class="relative" @keydown.esc.stop="userMenuOpen = false">
+            <div v-if="userMenuOpen" class="fixed inset-0 z-30" @click="userMenuOpen = false" />
           <button
             type="button"
-            class="flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent hover:text-accent-foreground"
+            class="relative z-40 flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent hover:text-accent-foreground"
             title="个人中心"
-            @click="openProfile"
+            :aria-expanded="userMenuOpen" aria-haspopup="menu" aria-label="用户菜单"
+            @click="userMenuOpen = !userMenuOpen"
           >
             <img
               v-if="avatarSrc"
@@ -274,6 +278,11 @@ watch(
               <span v-if="roleHint" class="block truncate text-xs text-muted-foreground">{{ roleHint }}</span>
             </span>
           </button>
+            <div v-if="userMenuOpen" class="absolute right-0 top-full z-40 mt-2 w-44 rounded-lg border bg-card p-1 shadow-lg" role="menu" aria-label="账户信息与操作">
+              <button class="block w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" role="menuitem" @click="userMenuOpen = false; openProfile()">用户中心</button>
+              <button class="block w-full rounded px-3 py-2 text-left text-sm hover:bg-muted" role="menuitem" @click="userMenuOpen = false; router.push({ name: 'feedback', query: { from: route.path } })">意见反馈</button>
+            </div>
+          </div>
           <Button variant="outline" size="sm" aria-label="退出登录" @click="handleLogout">
             <LogOut class="h-4 w-4" />
             <span class="hidden sm:inline">退出</span>

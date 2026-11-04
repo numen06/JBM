@@ -74,7 +74,7 @@ export const useMenuStore = defineStore('menu', () => {
   function isRouteAllowed(path: string): boolean {
     if (!platformAccount.value && isPlatformAdminPath(path)) return false
     if (superAdmin.value) return true
-    if (path === '/message-center') return true
+    if (path === '/message-center' || path === '/feedback' || path === '/feedback/manage') return true
     if (!loaded.value) {
       return path === '/dashboard' || [...SELF_SERVICE_PATHS].some((p) => isPathInBase(path, p))
     }
