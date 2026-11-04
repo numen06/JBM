@@ -382,7 +382,7 @@
     }
   ],
   "remoteDefaultBranchPolicy": "unchanged-by-user-instruction",
-  "deploymentInventory": "deploy/releases/20261103-workspace-logo-left.json",
+  "deploymentInventory": "deploy/releases/20261104-jinggangshan-import-fix.json",
   "stackValidation": "tools/check_stack_release.py",
   "protectedBranches": [
     "7.2",
