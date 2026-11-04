@@ -47,7 +47,8 @@ async def test_feedback_privacy_identity_and_handling(mode):
             with pytest.raises(HTTPException) as denied:
                 authorize_api("jbm-cluster-platform-center", "GET", "/feedback", actor)
             assert denied.value.status_code == 403
-        for actor in [operator, {**operator, "admin": True, "roles": ["super_admin"]}]:
+        zero_admin = {**operator, "userId": 0, "admin": True, "roles": []}
+        for actor in [operator, {**operator, "admin": True, "roles": ["super_admin"]}, zero_admin]:
             current.identity = actor
             assert (await client.get("/feedback/context")).json()["result"]["canManage"] is True
             listing = (await client.get("/feedback")).json()["result"]
@@ -60,6 +61,10 @@ async def test_feedback_privacy_identity_and_handling(mode):
         assert (await client.put(f"/feedback/{key}", json={"status": "resolved", "handleNote": "已完成", "revision": 2})).status_code == 200
         row = (await client.get("/feedback", params={"status": "resolved"})).json()["result"]["items"][0]
         assert row["status"] == "resolved" and row["handleNote"] == "已完成" and row["handledBy"] == "40"
+        current.identity = zero_admin
+        assert (await client.put(f"/feedback/{key}", json={"status": "resolved", "revision": 3})).status_code == 200
+        assert (await client.get(f"/feedback/{key}")).json()["result"]["handledBy"] == "0"
+        assert (await client.post("/feedback/submit", json=body)).status_code == 200
         assert (await client.get("/feedback", params={"page": 0})).status_code == 422
         current.identity = {"clientId": "service", "scope": "internal"}
         assert (await client.post("/feedback/submit", json=body)).status_code == 403

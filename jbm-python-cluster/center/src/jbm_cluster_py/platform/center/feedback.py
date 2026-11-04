@@ -60,7 +60,7 @@ class HandleFeedback(BaseModel):
 
 def user_identity(request):
     identity = request.state.identity
-    if not identity.get("userId") or not identity.get("tenantId"):
+    if identity.get("userId") is None or identity.get("tenantId") is None:
         raise HTTPException(403, "请使用已登录的用户账号提交意见反馈")
     return identity
 
@@ -79,7 +79,7 @@ def item(row):
         "deploymentMode": row["deployment_mode"], "feedbackType": row["feedback_type"],
         "title": row["title"], "description": row["description"], "contact": row["contact"],
         "sourcePage": row["source_page"], "status": row["status"], "handleNote": row["handle_note"],
-        "handledBy": str(row["handled_by"]) if row["handled_by"] else None,
+        "handledBy": str(row["handled_by"]) if row["handled_by"] is not None else None,
         "revision": row["revision"],
         "createdAt": row["created_at"].isoformat() + "Z",
         "updatedAt": row["updated_at"].isoformat() + "Z",
