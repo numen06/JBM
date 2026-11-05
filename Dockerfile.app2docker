@@ -1,7 +1,7 @@
-ARG PYTHON_RUNTIME=m.daocloud.io/docker.io/python:3.12
-ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine
-ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine
-ARG MYSQL_CLIENT_IMAGE=mysql:8.4
+ARG PYTHON_RUNTIME=m.daocloud.io/docker.io/python:3.12@sha256:17b9724493d916f56565c131f389faff2597f46dec6ce09516f95125bc9f519f
+ARG NODE_BUILD_IMAGE=m.daocloud.io/docker.io/library/node:22-alpine@sha256:fe4f6d74e20370acb04ad889077d14d0f64a9c8ea6a42bc60cddf1e844699914
+ARG NGINX_RUNTIME_IMAGE=registry.cn-shanghai.aliyuncs.com/numen/nginx:1.30.4-alpine@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46
+ARG MYSQL_CLIENT_IMAGE=registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261105.12@sha256:5a5ee5572e3a6dd775a35f6b2a920bd540c3e638e0abee2ab25625202254cdc2
 ARG RELEASE_TARGET=jbm-admin
 
 FROM ${MYSQL_CLIENT_IMAGE} AS mysql-client
@@ -56,7 +56,8 @@ FROM jbm-runtime AS jbm-cluster-platform-doc
 FROM jbm-runtime AS jbm-cluster-platform-push
 FROM jbm-runtime AS jbm-cluster-platform-job
 USER root
-COPY --from=mysql-client /usr/bin/mysql /usr/bin/mysqldump /usr/local/bin/
+# Reuse only verified MySQL client binaries; no service source is copied.
+COPY --from=mysql-client /usr/local/bin/mysql /usr/local/bin/mysqldump /usr/local/bin/
 RUN mysql --version && mysqldump --version
 USER appuser
 FROM jbm-runtime AS jbm-cluster-platform-logs
