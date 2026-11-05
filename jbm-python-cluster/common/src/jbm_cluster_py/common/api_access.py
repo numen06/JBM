@@ -88,6 +88,13 @@ def tenant_administration_api(service: str, method: str, path: str, identity: Ma
     )
 
 
+def tenant_audit_api(service: str, method: str, path: str, identity: Mapping[str, Any]) -> bool:
+    return service_key(service) == "logs" and "tenant_admin" in role_codes(identity) and (
+        (method.upper() == "POST" and path == "/securityAudit/query")
+        or (method.upper() == "GET" and path == "/securityAudit/status")
+    )
+
+
 def normalized_path(path: str) -> str:
     if (
         not path.startswith("/")
@@ -312,6 +319,8 @@ SERVICE_RULES = {
     ),
     "job": (ApiRule("/sysJob", platform_only=True), ApiRule("/sysJobLog", platform_only=True)),
     "logs": (
+        ApiRule("/loginLogs", platform_only=True),
+        ApiRule("/securityAudit", read=(frozenset({"ACTION_security.audit.read", "security.audit.read"}),)),
         ApiRule("/GatewayLogs/ingest", internal_only=True),
         ApiRule("/GatewayLogs", platform_only=True),
         ApiRule("/clusterAccess", platform_only=True),
@@ -474,6 +483,10 @@ def authorize_api(
 ) -> None:
     path = normalized_path(path)
     require_api_boundary(service, path, identity)
+    if identity.get("passwordExpired") is True and not (
+        service_key(service) == "center" and path in {"/current/user", "/current/user/password"}
+    ):
+        raise HTTPException(403, "密码已到期，请先修改密码后继续操作")
     if service_key(service) == "iot" and path == "/workers/heartbeat" and is_service(identity):
         return
     matches = [
@@ -491,6 +504,8 @@ def authorize_api(
     elif is_platform(identity):
         allowed = True
     elif tenant_administration_api(service, method, path, identity):
+        allowed = True
+    elif tenant_audit_api(service, method, path, identity):
         allowed = True
     elif rule.platform_only or is_service(identity):
         allowed = False

@@ -2,6 +2,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from jbm_cluster_py.common.result import fail, ok
+from jbm_cluster_py.common.api_access import is_platform
+from jbm_cluster_py.common.admin_security import source_ip
 
 from .jwt import JwtError
 from .service import AuthError
@@ -9,6 +11,23 @@ from .service import AuthError
 
 def build_login_security_router(service):
     router = APIRouter(prefix="/oauth2/security")
+
+    @router.get("/admin-policy")
+    async def admin_policy(request: Request):
+        header = request.headers.get("authorization", "")
+        try:
+            identity = await service.userinfo(header[7:] if header.lower().startswith("bearer ") else "")
+            if not is_platform(identity):
+                raise AuthError("仅平台管理员可查看管理接入策略", 403)
+            policy = service.admin_access
+            ip = source_ip(request.client.host if request.client else "", request.headers, policy.proxies)
+            return JSONResponse(content=ok({"mode": policy.mode, "allowedNetworks": [str(v) for v in policy.networks],
+                "currentSource": ip, "currentSourceAllowed": policy.evaluate(identity, ip),
+                "passwordMaxAgeDays": int(service.password_policy.get("max-age-days") or 0),
+                "roles": sorted(policy.roles)}), headers={"Cache-Control": "no-store"})
+        except (AuthError, JwtError) as exc:
+            code = getattr(exc, "code", 401)
+            return JSONResponse(status_code=code, content=fail(None, str(exc), code))
 
     async def run(request, acknowledge=False):
         try:

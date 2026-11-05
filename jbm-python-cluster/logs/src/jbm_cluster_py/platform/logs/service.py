@@ -12,11 +12,33 @@ from jbm_cluster_py.platform.logs.repository import LogsRepository
 
 
 class GatewayLogIngestService:
-    def __init__(self, repository: LogsRepository, loki: LokiSink) -> None:
+    def __init__(self, repository: LogsRepository, loki: LokiSink, security_audit=None) -> None:
         self.repository = repository
         self.loki = loki
+        self.security_audit = security_audit
 
     async def handle(self, payload: Mapping[str, Any]) -> None:
+        if self.security_audit is not None and self.security_audit.enabled:
+            from jbm_cluster_py.common.security_audit import audit_event
+            from sqlalchemy import text
+            async with self.repository.engine.connect() as conn:
+                existing = (await conn.execute(text("SELECT * FROM gateway_logs WHERE access_id=:id"), {"id": payload.get("accessId")})).mappings().first()
+            if existing is not None:
+                # An old Kafka delivery may be replayed after its SQL commit.
+                # Use the same identity and exact projection as the migration.
+                from .archive_legacy import event_for
+                event, _ = event_for("gateway_logs", "access_id", dict(existing))
+                await self.security_audit.handle(event)
+                return
+            event = audit_event("gateway-legacy-transport", userId=payload.get("requestUserId"), account=payload.get("requestRealName"),
+                tenantId=payload.get("tenantId"), operation=payload.get("operationType") or payload.get("method"), target=payload.get("path"),
+                ip=payload.get("ip"), success=int(payload.get("httpStatus") or 0) < 400, httpStatus=payload.get("httpStatus"), requestId=payload.get("requestId"))
+            event.update(eventId=hashlib.sha256(("gateway_logs:"+str(payload.get("accessId"))).encode()).hexdigest()[:32], category="access", originalId=payload.get("accessId"), method=payload.get("method"), serviceId=payload.get("serviceId"), gateway=dict(payload))
+            if payload.get("requestTime"):
+                parsed = datetime.fromisoformat(str(payload["requestTime"]).replace("Z", "+00:00"))
+                event["timestamp"] = int(parsed.replace(tzinfo=UTC).timestamp() * 1000) if parsed.tzinfo is None else int(parsed.timestamp() * 1000)
+            await self.security_audit.handle(event)
+            return
         matched = await self.repository.matching_rules(payload)
         if matched:
             await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])

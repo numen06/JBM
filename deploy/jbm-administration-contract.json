@@ -9,6 +9,7 @@
     {"method": "GET", "path": "/center/developer"},
     {"method": "GET", "path": "/center/developer/pending"},
     {"method": "GET", "path": "/gateway/gray-routes"},
+    {"method": "GET", "path": "/logs/securityAudit/status"},
     {"method": "GET", "path": "/job/sysJob/database-backups/sources"},
     {"method": "GET", "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1"},
     {"method": "GET", "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1"}

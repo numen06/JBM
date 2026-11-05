@@ -216,7 +216,7 @@ def build_governance_router(service: GovernanceService) -> APIRouter:
                     row
                     for row in rows
                     if row.get("roleCode")
-                    not in {"super_admin", "platform_operator", "iot_operator"}
+                    not in {"super_admin", "platform_operator", "iot_operator", "security_auditor"}
                 ]
             )
         page = await service.roles(1, 100, {}, request.state.identity)

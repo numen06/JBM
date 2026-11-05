@@ -111,11 +111,13 @@ services:
   loki-backend:
     image: m.daocloud.io/docker.io/grafana/loki:3.7.3
     restart: unless-stopped
-    command: ["-config.file=/etc/loki/local-config.yaml"]
-    volumes: ["loki-data:/tmp/loki"]
+    command: ["-config.file=/etc/loki/jbm-config.yml"]
+    volumes:
+      - loki-data:/tmp/loki
+      - ./docker/local-cluster/loki/config.yml:/etc/loki/jbm-config.yml:ro
     networks: [loki-internal]
     healthcheck:
-      test: ["CMD", "/usr/bin/loki", "--config.file=/etc/loki/local-config.yaml", "--verify-config=true"]
+      test: ["CMD", "/usr/bin/loki", "--config.file=/etc/loki/jbm-config.yml", "--verify-config=true"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -275,6 +277,7 @@ services:
 
   jbm-cluster-platform-logs:
     <<: *python-service
+    volumes: ["security-audit-backup:/app/data/security-audit-backup"]
     environment:
       <<: *python-environment
       JBM_APP: logs
@@ -338,6 +341,7 @@ networks:
     internal: true
 
 volumes:
+  security-audit-backup:
   database-backups:
   mysql-data:
   redis-data:

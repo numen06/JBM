@@ -7,7 +7,8 @@ import httpx
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 
-from jbm_cluster_py.common.auth import install_bearer_openapi, request_authorization
+from jbm_cluster_py.common.auth import install_bearer_openapi, request_authorization, request_source_ip, denied_audit_actor
+from jbm_cluster_py.common.admin_security import AdminAccessPolicy, source_ip, attach_audit_actor, UNSET_AUDIT_TENANT
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
 from jbm_cluster_py.common.logging import configure_logging
@@ -37,6 +38,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     repository = SqlGovernanceRepository(app_config.database)
     service = GovernanceService(repository)
     store = CrudStore(repository.engine)
+    admin_policy = AdminAccessPolicy(app_config.get("jbm.admin-access", {}) or {})
     client = httpx.AsyncClient(timeout=httpx.Timeout(30.0, connect=5.0), trust_env=False)
     discovery = NacosDiscoveryClient(app_config.nacos_discovery)
     compatibility = CompatibilityService(
@@ -45,6 +47,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         OpenApiCatalog(store, discovery, client),
         app_config.get("jbm.security.password-policy", {}) or {},
     )
+    compatibility.logs_service_enabled = bool(app_config.get("jbm.security-audit.enabled", False))
     auth = CenterAuthClient(dict(app_config.get("jbm.center.security", {}) or {}), client)
     nonce_redis = RedisClient(app_config.redis)
     access = RequestAccessService(repository, nonce_redis, auth)
@@ -87,8 +90,11 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             return await call_next(request)
         try:
             request.state.identity = await auth.authenticate_request(request, app_config.service_name)
+            request.state.source_ip = source_ip(request.client.host if request.client else "", request.headers, admin_policy.proxies)
+            admin_policy.require(request.state.identity, request.state.source_ip)
         except HTTPException as exc:
-            return JSONResponse(status_code=exc.status_code, content=fail(None, exc.detail, exc.status_code))
+            response = JSONResponse(status_code=exc.status_code, content=fail(None, exc.detail, exc.status_code))
+            return attach_audit_actor(response, await denied_audit_actor(auth, request)) if exc.status_code == 403 else response
         except PermissionError as exc:
             return JSONResponse(status_code=401, content=fail(None, str(exc), 401))
         except ConnectionError:
@@ -97,10 +103,13 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                 content=fail(None, "认证服务不可用", 503),
             )
         marker = request_authorization.set(request.headers.get("Authorization", ""))
+        source_marker = request_source_ip.set(request.state.source_ip)
         try:
-            return await call_next(request)
+            response = await call_next(request)
+            return attach_audit_actor(response, request.state.identity, getattr(request.state, "audit_tenant_id", UNSET_AUDIT_TENANT))
         finally:
             request_authorization.reset(marker)
+            request_source_ip.reset(source_marker)
 
     install_exception_handlers(app)
 

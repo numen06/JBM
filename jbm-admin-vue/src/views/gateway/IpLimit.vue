@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { Plus, Pencil } from 'lucide-vue-next'
 import PageHeader from '@/components/PageHeader.vue'
 import DataTableShell from '@/components/DataTableShell.vue'
@@ -16,10 +16,17 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { useFeedback } from '@/composables/useFeedback'
 import { listIpLimits, createIpLimit, updateIpLimit, deleteIpLimit } from '@/api/gateway'
 import type { GatewayIpLimit } from '@/api/types'
+import { get, unwrap } from '@/api/request'
 
 const keyword = ref('')
 const policyTypeFilter = ref('')
 const feedback = useFeedback()
+const adminPolicy = ref<{ mode: string; allowedNetworks: string[]; currentSource: string; passwordMaxAgeDays: number } | null>(null)
+const adminPolicyError = ref('')
+onMounted(async () => {
+  try { adminPolicy.value = unwrap(await get<NonNullable<typeof adminPolicy.value>>('/oauth2/security/admin-policy')) }
+  catch (error) { adminPolicyError.value = error instanceof Error ? error.message : '管理接入策略读取失败' }
+})
 
 const { items, total, page, loading, error, load, pageSize } = usePagedList<GatewayIpLimit>(
   (p, s) =>
@@ -89,7 +96,7 @@ async function handleDelete(row: GatewayIpLimit) {
 
 <template>
   <div>
-    <PageHeader title="IP 限制" description="GET /gateway/limit/ip">
+    <PageHeader title="IP 限制" description="管理员接入范围与接口访问策略">
       <template #actions>
         <Input
           v-model="keyword"
@@ -109,6 +116,15 @@ async function handleDelete(row: GatewayIpLimit) {
         </Button>
       </template>
     </PageHeader>
+    <section class="mb-4 space-y-2 rounded-lg border p-4" aria-label="管理员接入策略">
+      <div class="flex items-center justify-between gap-3"><h2 class="font-medium">管理员接入限制</h2><Badge v-if="adminPolicy" variant="secondary">{{ adminPolicy.mode === 'enforce' ? '已启用拦截' : '观察模式 尚未拦截' }}</Badge></div>
+      <p v-if="adminPolicyError" class="text-sm text-destructive">{{ adminPolicyError }}</p>
+      <template v-if="adminPolicy">
+        <p class="text-sm text-muted-foreground">当前来源 <span class="font-mono">{{ adminPolicy.currentSource }}</span>；允许范围 {{ adminPolicy.allowedNetworks.join('、') || '尚未配置' }}。</p>
+        <p class="text-sm text-muted-foreground">由统一安全配置管理，作用于登录和已登录的管理请求。启用前须核对办公及运维网段，避免锁定现有管理员。</p>
+        <p v-if="adminPolicy.passwordMaxAgeDays" class="text-sm text-muted-foreground">密码定期更换周期 {{ adminPolicy.passwordMaxAgeDays }} 天，已有密码保持不变并从首次验证起计时。</p>
+      </template>
+    </section>
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">
       <Table>
         <thead>

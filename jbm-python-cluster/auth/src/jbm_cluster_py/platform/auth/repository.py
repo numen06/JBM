@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import logging
 import secrets
 import time
@@ -15,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 from sqlalchemy.pool import NullPool
 
 from jbm_cluster_py.integrations.database import configured_database_url, require_tables
+from jbm_cluster_py.common.security_audit import audit_event
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ class AuthRepository:
     def __init__(self, database_config: Mapping[str, Any]) -> None:
         database_url = configured_database_url(database_config) or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         self.database_url = database_url
+        self.security_audit = None
         self._sqlite = database_url.startswith("sqlite+aiosqlite:///")
         self._authority_relation_app_columns: tuple[bool, bool] | None = None
         if self._sqlite:
@@ -59,6 +62,20 @@ class AuthRepository:
 
     async def stop(self) -> None:
         await self.engine.dispose()
+
+    async def password_age(self, account, now):
+        """Only a real password change resets age; profile edits cannot extend it."""
+        fingerprint = hashlib.sha256(str(account.get("password") or "").encode()).hexdigest()
+        params = {"id": int(account["account_id"]), "hash": fingerprint, "now": int(now)}
+        if self._sqlite:
+            insert = "INSERT OR IGNORE INTO base_account_password_age VALUES (:id,:hash,:now)"
+        else:
+            insert = "INSERT IGNORE INTO base_account_password_age VALUES (:id,:hash,:now)"
+        async with self.engine.begin() as conn:
+            await conn.execute(text(insert), params)
+            await conn.execute(text("UPDATE base_account_password_age SET fingerprint=:hash,changed_at=:now WHERE account_id=:id AND fingerprint<>:hash"), params)
+            changed_at = (await conn.execute(text("SELECT changed_at FROM base_account_password_age WHERE account_id=:id"), params)).scalar_one()
+        return max(0, int(now) - int(changed_at))
 
     async def has_table(self, table_name: str) -> bool:
         async with self.engine.begin() as conn:
@@ -145,6 +162,35 @@ class AuthRepository:
         message: str = "登录成功",
         details: Mapping[str, Any] | None = None,
     ) -> None:
+        if self.security_audit is not None and self.security_audit.enabled:
+            details = dict(details or {})
+            now = datetime.now(UTC).isoformat()
+            event = audit_event("auth", userId=user_id, account=account, operation=login_type,
+                ip=ip, success=status == 1, requestId=details.get("request_id"), clientId=details.get("client_id"), phase="AUTH_RESULT")
+            event.update(category="login", loginType=login_type, userAgent=user_agent[:512],
+                loginLocation=details.get("login_location") or "", riskLevel=details.get("risk_level") or "normal",
+                riskDetail=details.get("risk_detail"), message=str(message or "")[:512])
+            user = await self.find_user(int(user_id)) if user_id is not None else None
+            owner = user.get("company_id") if user else None
+            global_actor = bool(user and (user.get("user_name") == "admin" or user.get("user_type") in {"platform", "super", "super_admin", "admin", "platform_operator"}))
+            if user and not global_actor:
+                async with self.engine.connect() as conn:
+                    global_actor = bool((await conn.execute(text("SELECT 1 FROM base_role_user ru JOIN base_role r ON r.role_id=ru.role_id WHERE ru.user_id=:id AND r.role_code IN ('super_admin','platform_operator','security_auditor') LIMIT 1"), {"id": user_id})).first())
+            event.update(actorTenantId=owner, platformActor=global_actor, tenantId=str(owner) if owner and not global_actor else None,
+                         tenantScopeVerified=bool(owner and not global_actor))
+            await self.security_audit.record(event)
+            # These tables hold only the latest security state and outstanding
+            # alerts. Historical login facts are owned by the logs service.
+            if user_id is not None:
+                async with self.engine.begin() as conn:
+                    if status == 1 and login_type in {"PASSWORD", "SMS", "FILE_KEY", "SSH_KEY", "PASSKEY", "WECHAT", "MINIAPP", "FACE", "THIRD_PARTY"}:
+                        suffix = "ON CONFLICT(user_id) DO UPDATE SET ip=excluded.ip,login_time=excluded.login_time" if self._sqlite else "ON DUPLICATE KEY UPDATE ip=VALUES(ip),login_time=VALUES(login_time)"
+                        await conn.execute(text("INSERT INTO base_login_security_state (user_id,ip,login_time) VALUES (:id,:ip,:now) " + suffix), {"id": user_id, "ip": ip[:64], "now": now})
+                    if details.get("risk_level") == "warning":
+                        alert_id = secrets.randbits(63) or 1
+                        alert = {"id": str(alert_id), "time": now, "clientId": details.get("client_id") or "", **json.loads(details.get("risk_detail") or "{}")}
+                        await conn.execute(text("INSERT INTO base_login_security_alert (alert_id,user_id,payload) VALUES (:id,:user,:payload)"), {"id": alert_id, "user": user_id, "payload": json.dumps(alert, ensure_ascii=False)})
+            return
         if not await self.has_table("base_account_logs"):
             return
         now = datetime.now(UTC).replace(tzinfo=None)
@@ -172,6 +218,9 @@ class AuthRepository:
             )
 
     async def require_login_security_schema(self) -> None:
+        if self.security_audit is not None and self.security_audit.enabled:
+            await require_tables(self.engine, ("base_login_security_state", "base_login_security_alert", "security_audit_outbox"))
+            return
         async with self.engine.connect() as conn:
             columns = {row["name"] for row in await conn.run_sync(lambda sync: inspect(sync).get_columns("base_account_logs"))}
         if not {"login_location", "client_id", "credential_id", "request_id", "risk_level", "risk_detail", "risk_ack_time"} <= columns:
@@ -186,6 +235,10 @@ class AuthRepository:
         return columns, primary
 
     async def recent_successful_logins(self, user_id: int) -> list[dict]:
+        if self.security_audit is not None and self.security_audit.enabled:
+            async with self.engine.connect() as conn:
+                row = (await conn.execute(text("SELECT ip,login_time FROM base_login_security_state WHERE user_id=:id"), {"id": user_id})).mappings().first()
+            return [{"ip": row["ip"], "time": row["login_time"]}] if row else []
         columns, primary = await self._login_columns()
         ip = "login_ip" if "login_ip" in columns else "ip"
         status = "login_status" if "login_status" in columns else "status"
@@ -195,6 +248,10 @@ class AuthRepository:
         return [{"ip": str(row["ip"] or ""), "time": str(row["login_time"] or "")} for row in rows]
 
     async def login_alerts(self, user_id: int) -> list[dict]:
+        if self.security_audit is not None and self.security_audit.enabled:
+            async with self.engine.connect() as conn:
+                rows = (await conn.execute(text("SELECT payload FROM base_login_security_alert WHERE user_id=:id ORDER BY alert_id DESC LIMIT 20"), {"id": user_id})).all()
+            return [json.loads(row[0]) for row in rows]
         _, primary = await self._login_columns()
         async with self.engine.connect() as conn:
             rows = (await conn.execute(text(f"SELECT {primary} AS id, login_time, risk_detail, client_id FROM base_account_logs WHERE user_id=:user_id AND risk_level='warning' AND risk_ack_time IS NULL ORDER BY {primary} DESC LIMIT 20"), {"user_id": user_id})).mappings().all()
@@ -202,6 +259,11 @@ class AuthRepository:
 
     async def acknowledge_login_alerts(self, user_id: int, ids: list[int]) -> None:
         from sqlalchemy import bindparam
+        if self.security_audit is not None and self.security_audit.enabled:
+            await self.security_audit.record(audit_event("auth", userId=user_id, operation="ACK_LOGIN_ALERTS", target=",".join(str(i) for i in ids), success=True))
+            async with self.engine.begin() as conn:
+                await conn.execute(text("DELETE FROM base_login_security_alert WHERE user_id=:user AND alert_id IN :ids").bindparams(bindparam("ids", expanding=True)), {"user": user_id, "ids": ids})
+            return
         _, primary = await self._login_columns()
         async with self.engine.begin() as conn:
             await conn.execute(text(f"UPDATE base_account_logs SET risk_ack_time=:now WHERE user_id=:user_id AND {primary} IN :ids AND risk_level='warning'").bindparams(bindparam("ids", expanding=True)), {"user_id": user_id, "ids": ids, "now": datetime.now()})
@@ -1203,6 +1265,9 @@ def user_is_active(user: Mapping[str, Any]) -> bool:
 
 
 SQLITE_DDL = [
+    "CREATE TABLE IF NOT EXISTS base_login_security_state (user_id INTEGER PRIMARY KEY, ip VARCHAR(64), login_time VARCHAR(64))",
+    "CREATE TABLE IF NOT EXISTS base_login_security_alert (alert_id BIGINT PRIMARY KEY, user_id BIGINT NOT NULL, payload TEXT NOT NULL)",
+    "CREATE TABLE IF NOT EXISTS base_account_password_age (account_id INTEGER PRIMARY KEY, fingerprint VARCHAR(64) NOT NULL, changed_at BIGINT NOT NULL)",
     """
     CREATE TABLE IF NOT EXISTS base_auth_subject (
       user_id BIGINT PRIMARY KEY,

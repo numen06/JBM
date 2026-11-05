@@ -28,6 +28,8 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from jbm_cluster_py.integrations.redis import RedisClient
 from jbm_cluster_py.common.security import validate_password
+from jbm_cluster_py.common.admin_security import AdminAccessPolicy
+from fastapi import HTTPException
 from jbm_cluster_py.platform.auth.jwt import JwtError, JwtSigner
 from jbm_cluster_py.platform.auth.repository import (
     AuthRepository,
@@ -353,8 +355,10 @@ class AuthService:
         self.repository = repository
         self.cache = cache
         self.config = dict(config)
+        self.admin_access = AdminAccessPolicy(self.config.get("admin-access"))
         self.discovery = discovery
         self.http_client = http_client
+        self.audit = None
         jwt_config = dict(self.config.get("jwt") or {})
         issuer = str(jwt_config.get("issuer") or "http://localhost:5555")
         audience = str(jwt_config.get("audience") or "jbm-api")
@@ -471,6 +475,7 @@ class AuthService:
                 "accountVersion": _account_version(account),
                 "credentialId": account.get("credential_id"),
                 "mustChangePassword": bool(account.get("must_change_password")),
+                "passwordExpired": bool(account.get("password_expired")),
                 "scope": scope,
                 "loginType": str(form.get("loginType") or "PASSWORD").upper(),
                 "codeChallenge": code_challenge,
@@ -645,6 +650,7 @@ class AuthService:
             "credential_id": cached.get("credentialId"),
             "user_id": user_id,
             "must_change_password": cached.get("mustChangePassword"),
+            "password_expired": cached.get("passwordExpired"),
             "login_type": cached.get("loginType") or "PASSWORD",
             "auth_time": cached.get("authTime"),
         }
@@ -659,6 +665,32 @@ class AuthService:
         return await self._issue_user_token(client, account, user, scope)
 
     async def _authenticate_user_for_client(
+        self,
+        client: Mapping[str, Any],
+        form: Mapping[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, Any], str]:
+        account, user, scope = await self._authenticate_user_credentials(client, form)
+        max_age = int(self.password_policy.get("max-age-days") or 0)
+        if max_age > 0 and str(form.get("loginType") or "PASSWORD").upper() == "PASSWORD":
+            age = await self.repository.password_age(account, int(time.time()))
+            if age >= max_age * 86400:
+                account = {**account, "must_change_password": True, "password_expired": True}
+        if self.admin_access.mode == "enforce":
+            roles = await self.repository.user_roles(int(user["user_id"]), int(client.get("appId") or 0), int(user.get("company_id") or 0))
+            try:
+                self._require_admin_source({"username": user.get("user_name"), "roles": [row.get("role_code") for row in roles], "admin": any(int(row.get("role_id") or 0) == 1 for row in roles)}, form)
+            except AuthError as exc:
+                exc.login_audit = {"username": account.get("account"), "account_type": account.get("account_type"), "credential_id": account.get("credential_id", "")}
+                raise
+        return account, user, scope
+
+    def _require_admin_source(self, identity, context):
+        try:
+            self.admin_access.require(identity, str((context or {}).get("login_ip") or ""))
+        except HTTPException as exc:
+            raise AuthError(str(exc.detail), exc.status_code, "access_denied") from exc
+
+    async def _authenticate_user_credentials(
         self,
         client: Mapping[str, Any],
         form: Mapping[str, Any],
@@ -1107,6 +1139,7 @@ class AuthService:
         account = {
             "user_id": user_id,
             "must_change_password": state.get("mustChangePassword"),
+            "password_expired": state.get("passwordExpired"),
             "account": state.get("account") or state.get("username") or user.get("user_name"),
             "account_type": state.get("accountType"),
             "credential_version": state.get("accountVersion"),
@@ -1266,6 +1299,7 @@ class AuthService:
             "permissions": permissions,
             "scope": claims.get("scope"),
             "mustChangePassword": bool(claims.get("must_change_password")),
+            "passwordExpired": bool(claims.get("password_expired")),
             "authTime": policy["authenticatedAt"] if policy else claims.get("iat"),
             "recentAuthSeconds": int(self.session_policy_config["recent-auth-seconds"]),
         }
@@ -2170,6 +2204,7 @@ class AuthService:
         role_codes = sorted({str(row["role_code"]) for row in roles if row.get("role_code")})
         role_ids = {int(row["role_id"]) for row in roles if row.get("role_id") is not None}
         root = username == "admin" or 1 in role_ids
+        self._require_admin_source({"username": username, "roles": role_codes, "admin": root}, login_context)
         permissions = await self.repository.user_authorities(user_id, root, app_id, tenant_id)
         now = int(time.time())
         refresh_token = secrets.token_urlsafe(36)
@@ -2210,6 +2245,7 @@ class AuthService:
             "auth_time": policy["authenticatedAt"],
             "scope": scope,
             "must_change_password": bool(account.get("must_change_password")),
+            "password_expired": bool(account.get("password_expired")),
             "iat": now,
             "nbf": now,
             "exp": now + self.access_seconds,
@@ -2235,6 +2271,7 @@ class AuthService:
             "refreshSeconds": refresh_seconds,
             "scope": scope,
             "mustChangePassword": bool(account.get("must_change_password")),
+            "passwordExpired": bool(account.get("password_expired")),
             "familyId": family_id,
             "accessKey": access_key,
             "accessJti": jti,

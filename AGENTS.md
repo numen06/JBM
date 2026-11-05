@@ -28,6 +28,8 @@ This branch is CodeGraph-enabled. The local index is intentionally not committed
 
 ## 用户约定：时序数据统一 TDengine
 
+- 2026-11-05 用户明确的存储分工优先：访问、登录、安全审计等纯日志统一经过 JBM 日志服务进入 Loki；TDengine 保存控制、状态变化、能耗计费等业务历史。纯日志不得因下文“时序”统称迁入 TD，也不新建旁路日志服务。MySQL 只保留短期可靠投递 outbox、最新登录安全状态及未确认告警，不保留新的纯日志历史；迁移校验和清理流程见 `docs/operations/security-audit-log-service.md`。
+
 - 原始采集、属性/状态变化、上下线与流量历史、控制/策略日志、用量及日月年统计、计费事实、校正值与校正历史等时序数据统一进入 TDengine。MySQL 保留业务实体、配置、当前事务状态与必要关联；Redis 负责队列、锁和缓存，不作为唯一历史存储。
 - 事务 outbox 可短暂保留待归档正文；TD 写入、逐条回读及业务对账通过后，清理对应 MySQL 历史数据并移除旧读写/fallback 入口，禁止将长期双读或双份历史当作迁移完成。保留独立持久备份，不让备份接入在线查询；未归档、校验失败或并发变化的记录不得删除。
 - 历史迁移按 tenant/project/resource 与原 ID/版本限定，保留合法零值、未知、真实时间粒度和业务关联。混合资源表不能整表清空；产品事件定义和映射等配置不属于时序事件历史。

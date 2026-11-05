@@ -180,7 +180,7 @@ async function openGatewayLogDetail(row: GatewayLog, index: number) {
   if (!accessId) return
   gatewayDetailLoading.value = true
   try {
-    selectedGatewayLog.value = await getGatewayLogDetail(accessId)
+    selectedGatewayLog.value = await getGatewayLogDetail(accessId, row.requestTime)
   } catch {
     selectedGatewayLog.value = row
   } finally {
@@ -310,6 +310,13 @@ onUnmounted(stopAutoRefresh)
       <Input v-model="loginFilters.account" placeholder="登录账号" @keyup.enter="search" />
       <Input v-model="loginFilters.loginIp" placeholder="登录 IP" @keyup.enter="search" />
       <Input v-model="loginFilters.accountType" placeholder="登录方式" @keyup.enter="search" />
+      <Select :model-value="String(loginFilters.loginStatus ?? '')" @update:model-value="loginFilters.loginStatus = String($event)">
+        <option value="">全部结果</option>
+        <option value="true">成功</option>
+        <option value="false">失败</option>
+      </Select>
+      <label class="space-y-1 text-xs text-muted-foreground">开始时间<Input v-model="loginFilters.beginTime" type="datetime-local" /></label>
+      <label class="space-y-1 text-xs text-muted-foreground">结束时间<Input v-model="loginFilters.endTime" type="datetime-local" /></label>
       <div class="flex gap-2 md:col-span-4">
         <Button size="sm" @click="search">搜索</Button>
         <Button size="sm" variant="outline" @click="resetFilters">重置</Button>
@@ -338,7 +345,7 @@ onUnmounted(stopAutoRefresh)
 
     <div v-if="!isLoginLogs" class="grid gap-3 md:grid-cols-3">
       <div class="rounded-lg border p-4">
-        <div class="text-sm text-muted-foreground">访问总量</div>
+        <div class="text-sm text-muted-foreground">近 30 天访问</div>
         <div class="mt-2 text-2xl font-semibold">{{ stats.total ?? 0 }}</div>
       </div>
       <div class="rounded-lg border p-4">
@@ -349,7 +356,7 @@ onUnmounted(stopAutoRefresh)
         <div class="text-sm text-muted-foreground">采集状态</div>
         <div class="mt-3">
           <Badge :variant="statsError ? 'destructive' : 'secondary'">
-            {{ statsError || (autoRefreshEnabled ? 'RabbitMQ 消费中 · 每 10 秒刷新' : 'RabbitMQ 消费中') }}
+            {{ statsError || (autoRefreshEnabled ? '日志服务 · 每 10 秒刷新' : '日志服务') }}
           </Badge>
         </div>
       </div>

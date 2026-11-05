@@ -65,6 +65,15 @@ class CrudStore:
         clauses: list[str] = []
         params: dict[str, Any] = {}
         for key, value in (filters or {}).items():
+            if resource == "accountLogs" and key in {"beginTime", "endTime"} and value:
+                from datetime import datetime, UTC
+                from zoneinfo import ZoneInfo
+                parsed = datetime.fromisoformat(str(value))
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=ZoneInfo("Asia/Shanghai"))
+                params[key] = parsed.astimezone(UTC).replace(tzinfo=None)
+                clauses.append("login_time " + (">=" if key == "beginTime" else "<=") + " :" + key)
+                continue
             column = _snake(key)
             if resource == "accountLogs" and column not in columns:
                 column = {"login_type": "account_type", "ip": "login_ip", "status": "login_status",

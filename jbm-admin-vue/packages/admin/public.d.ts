@@ -4,6 +4,7 @@ import type { Router, RouteRecordRaw } from 'vue-router'
 import type { JbmClient } from '@jbm7/sdk'
 import type { JbmAccessProvider, JbmFrontendModule } from '@jbm7/vue-core'
 import type { Plugin } from 'vue'
+export const JbmSecurityAuditPanel: import('vue').DefineComponent
 
 export const FileKeyLogin: import('vue').DefineComponent<{
   authBase: string

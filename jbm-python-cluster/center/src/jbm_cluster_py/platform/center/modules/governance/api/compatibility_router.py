@@ -256,6 +256,7 @@ def _handler(service: CompatibilityService, method: str, template: str):
                     body = dict(await request.form())
             except Exception:
                 body = {}
+        request.state.audit_tenant_id = await service.audit_tenant_scope(request.state.identity, template, request.path_params, body)
         return await service.handle(
             method,
             template,

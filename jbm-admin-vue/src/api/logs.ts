@@ -11,6 +11,8 @@ import type {
 import { DEFAULT_PAGE_SIZE } from '@/constants/pagination'
 
 export interface AccountLogQuery {
+  beginTime?: string
+  endTime?: string
   account?: string
   loginIp?: string
   accountType?: string
@@ -47,8 +49,8 @@ export interface GatewayLogQuery {
   keyword?: string
 }
 
-export async function getGatewayLogDetail(accessId: string) {
-  const res = await post<GatewayLog>('/logs/GatewayLogs/getByAccessId', { accessId })
+export async function getGatewayLogDetail(accessId: string, requestTime?: string) {
+  const res = await post<GatewayLog>('/logs/GatewayLogs/getByAccessId', { accessId, requestTime })
   return unwrap(res)
 }
 

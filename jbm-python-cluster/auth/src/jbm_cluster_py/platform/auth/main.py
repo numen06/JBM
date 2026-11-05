@@ -7,7 +7,10 @@ from urllib.parse import urlsplit
 
 import httpx
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from jbm_cluster_py.common.admin_security import source_ip, attach_audit_actor
+from jbm_cluster_py.platform.auth.service import AuthError
+from jbm_cluster_py.platform.auth.jwt import JwtError
 from jbm_cluster_py.common.auth import install_api_protection
 from fastapi.responses import JSONResponse
 from sqlalchemy import text
@@ -23,6 +26,8 @@ from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.auth.repository import AuthRepository
 from jbm_cluster_py.platform.auth.router import build_auth_router
 from jbm_cluster_py.platform.auth.service import AuthService, TokenCache
+from jbm_cluster_py.common.security_audit import AuditOutbox
+from jbm_cluster_py.integrations.kafka import KafkaClient
 
 
 def create_app(config: AppConfig | None = None) -> FastAPI:
@@ -35,6 +40,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     init_telemetry(app_config.telemetry)
     repository = AuthRepository(app_config.database)
     auth_config = dict(app_config.get("jbm.auth", {}) or {})
+    auth_config["admin-access"] = dict(app_config.get("jbm.admin-access", {}) or {})
     _validate_production_auth_config(app_config.profile, auth_config)
     profile = str(app_config.profile).strip().lower()
     cache = TokenCache(
@@ -50,6 +56,9 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     auth_service = AuthService(
         repository, cache, auth_config, discovery=discovery, http_client=http_client
     )
+    audit_kafka = KafkaClient(app_config.kafka)
+    auth_service.audit = AuditOutbox(app_config.get("jbm.security-audit", {}) or {}, audit_kafka, app_config.database)
+    repository.security_audit = auth_service.audit
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
@@ -64,6 +73,12 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             stack.push_async_callback(http_client.aclose)
             stack.push_async_callback(repository.stop)
             await repository.start()
+            if int(auth_service.password_policy.get("max-age-days") or 0) > 0:
+                from jbm_cluster_py.integrations.database import require_tables
+                await require_tables(repository.engine, ("base_account_password_age",))
+            await auth_service.audit.start()
+            stack.push_async_callback(audit_kafka.stop)
+            stack.push_async_callback(auth_service.audit.stop)
             await auth_service.key_login.start()
             await auth_service.login_security.start()
             if oidc_enabled:
@@ -89,6 +104,26 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    @app.middleware("http")
+    async def management_source(request: Request, call_next):
+        header = request.headers.get("authorization", "")
+        identity = {}
+        if header.lower().startswith("bearer "):
+            try:
+                identity = await auth_service.userinfo(header[7:])
+                # Userinfo validates credentials for resource-service RPCs; each
+                # resource enforces the original management-terminal source.
+                if request.url.path != "/oauth2/userinfo":
+                    auth_service.admin_access.require(identity, source_ip(request.client.host if request.client else "", request.headers, auth_service.admin_access.proxies))
+            except HTTPException as exc:
+                code = getattr(exc, "status_code", getattr(exc, "code", 401))
+                return attach_audit_actor(JSONResponse(status_code=code, content={"success": False, "code": code, "message": exc.detail, "result": None}), identity)
+            except (AuthError, JwtError):
+                # Public login/bootstrap endpoints must still work with a stale
+                # browser token. Protected handlers keep their own validation.
+                identity = {}
+        response = await call_next(request)
+        return attach_audit_actor(response, identity) if identity else response
     install_api_protection(app, app_config, protected_prefixes=("/docs", "/redoc", "/openapi.json", "/v3/api-docs", "/v2/api-docs"))
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_auth_router(auth_service))

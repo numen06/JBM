@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import os
 import json
 import logging
@@ -15,6 +16,9 @@ from fastapi import Request, WebSocket
 from fastapi.responses import JSONResponse, Response, StreamingResponse
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.result import fail
+from jbm_cluster_py.common.api_access import read_operation
+from jbm_cluster_py.common.admin_security import source_ip
+from jbm_cluster_py.common.security_audit import audit_event
 from jbm_cluster_py.integrations.kafka import KafkaClient
 from jbm_cluster_py.integrations.nacos import NacosDiscoveryClient
 from jbm_cluster_py.platform.gateway.circuit_breaker import CircuitBreakerRegistry
@@ -70,19 +74,17 @@ def utc_iso() -> str:
 
 
 def client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",", 1)[0].strip()
-    if request.client:
-        return request.client.host
-    return ""
+    return getattr(request.state, "source_ip", None) or source_ip(
+        request.client.host if request.client else "", request.headers,
+        ["127.0.0.0/8", "::1/128", "172.16.0.0/12"],
+    )
 
 
 def sanitize_headers(headers: Mapping[str, str]) -> dict[str, str]:
     redacted = {}
     for key, value in headers.items():
         lowered = key.lower()
-        if lowered in {"authorization", "x-internal-authorization", "x-signature", "cookie", "set-cookie"}:
+        if any(part in lowered.replace("-", "").replace("_", "") for part in ("authorization", "signature", "cookie", "token", "secret", "password", "credential", "apikey")):
             redacted[key] = "***"
         else:
             redacted[key] = value
@@ -186,6 +188,23 @@ class AccessLogger:
             await self.kafka.stop()
 
     async def record(self, row: Mapping[str, Any]) -> None:
+        audit = getattr(self, "audit", None)
+        path = str(row.get("path") or "")
+        if audit and audit.enabled and not path.startswith(("/actuator/", "/health")):
+            outcome = row.get("businessSuccess")
+            if outcome is None:
+                outcome = int(row.get("httpStatus") or 0) < 400 and row.get("error") is None
+            event = audit_event("gateway", userId=row.get("requestUserId"), account=row.get("requestRealName"),
+                tenantId=row.get("tenantId"), appId=row.get("appId"), operation=row.get("operationType") or row.get("method"),
+                target=path, ip=row.get("ip"), success=outcome, httpStatus=row.get("httpStatus"), requestId=row.get("requestId"), phase="RESULT")
+            event["clientId"] = row.get("clientId")
+            event["tenantScopeVerified"] = row.get("tenantScopeVerified") is True
+            event["actorTenantId"] = row.get("actorTenantId")
+            event["platformActor"] = row.get("platformActor") is True
+            event.update(category="access", originalId=row.get("accessId"), method=row.get("method"), serviceId=row.get("serviceId"), gateway=dict(row))
+            await audit.record(event)
+            self.recent.appendleft(dict(row))
+            return
         if not self.enabled:
             return
         payload = dict(row)
@@ -278,6 +297,7 @@ class GatewayProxy:
             await self._log_http(request, request_path, route, 503, 0, message)
             return JSONResponse(status_code=503, content=fail(None, message, 503))
         started = time.perf_counter()
+        request.state.audit_started = utc_iso()
         body = await request.body()
         body_decision = self.security.inspect_body(body, request.headers.get("content-type"))
         if not body_decision.allowed:
@@ -302,6 +322,23 @@ class GatewayProxy:
                 headers=headers,
             )
             elapsed = time.perf_counter() - started
+            upstream_actor = response.headers.get("x-jbm-audit-actor", "")
+            if upstream_actor and len(upstream_actor) <= 4096 and str(service_id or "").startswith("jbm-cluster-platform-"):
+                try:
+                    actor = json.loads(base64.urlsafe_b64decode(upstream_actor))
+                    if isinstance(actor, dict):
+                        request.state.identity = actor
+                except (ValueError, TypeError):
+                    pass
+            # Record business outcome too: HTTP 200 may still be a rejected change.
+            request.state.audit_business_success = None
+            if "application/json" in response.headers.get("content-type", "") and len(response.content) <= 1048576:
+                try:
+                    payload = response.json()
+                    if isinstance(payload, dict) and isinstance(payload.get("success"), bool):
+                        request.state.audit_business_success = payload["success"]
+                except ValueError:
+                    pass
             self.circuit_breakers.after_request(circuit_key, status_code=response.status_code)
             await self._log_http(request, request_path, route, response.status_code, elapsed, None)
             return StreamingResponse(
@@ -361,7 +398,7 @@ class GatewayProxy:
         headers = {
             key: value
             for key, value in request.headers.items()
-            if key.lower() not in HOP_BY_HOP_HEADERS
+            if key.lower() not in HOP_BY_HOP_HEADERS | {"x-jbm-audit-actor"}
         }
         token = await self.service_tokens.get_token()
         if token:
@@ -370,14 +407,15 @@ class GatewayProxy:
         headers["X-Internal-Instance"] = "%s:%s" % (self.config.service_name, self.config.port)
         headers["X-Original-Path"] = original_path
         if request.client:
-            headers.setdefault("X-Forwarded-For", request.client.host)
+            # Forward only the source verified at our proxy trust boundary.
+            headers["X-Forwarded-For"] = client_ip(request)
         return headers
 
     def _response_headers(self, headers: Mapping[str, str]) -> dict[str, str]:
         return {
             key: value
             for key, value in headers.items()
-            if key.lower() not in HOP_BY_HOP_HEADERS
+            if key.lower() not in HOP_BY_HOP_HEADERS | {"x-jbm-audit-actor"}
         }
 
     async def _log_http(
@@ -390,6 +428,8 @@ class GatewayProxy:
         error: Optional[str],
     ) -> None:
         now = utc_iso()
+        identity = getattr(request.state, "identity", None) or {}
+        operation = not read_operation(request.method, path)
         row = {
             "loglevel": 1,
             "accessId": uuid.uuid4().hex,
@@ -399,12 +439,23 @@ class GatewayProxy:
             "useTime": int(round(elapsed * 1000)),
             "ip": client_ip(request),
             "serviceId": route.service_id if route else self.config.service_name,
-            "requestTime": now,
+            "requestTime": getattr(request.state, "audit_started", now),
             "responseTime": utc_iso(),
             "userAgent": request.headers.get("user-agent"),
             "headers": json.dumps(sanitize_headers(dict(request.headers)), ensure_ascii=False),
-            "appId": request.headers.get("X-App-Id") or request.headers.get("x-app-id"),
+            "appId": identity.get("appId") or request.headers.get("X-App-Id") or request.headers.get("x-app-id"),
             "error": error,
+            "requestUserId": str(identity.get("userId") or identity.get("user_id") or "") or None,
+            "requestRealName": identity.get("username") or identity.get("userName") or identity.get("realName") or identity.get("nickname"),
+            "tenantId": str(identity.get("tenantId") or identity.get("companyId") or identity.get("tenant_id") or ""),
+            "actorTenantId": identity.get("actorTenantId"),
+            "platformActor": identity.get("platformActor") is True,
+            "tenantScopeVerified": identity.get("tenantScopeVerified") is True,
+            "operationType": request.method.upper() if operation else "READ",
+            "businessSuccess": getattr(request.state, "audit_business_success", None),
+            "requestId": getattr(request.state, "audit_request_id", None) or uuid.uuid4().hex,
+            "clientId": identity.get("clientId"),
+            "adminSourceAllowed": getattr(request.state, "admin_source_allowed", None),
         }
         await self.access_logger.record(row)
 

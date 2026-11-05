@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import json
 import uuid
+from jbm_cluster_py.common.admin_security import source_ip
 from functools import lru_cache
 from pathlib import Path
 
@@ -14,22 +15,10 @@ def add_login_context(form, request):
     networks = (config.get("login-security") or {}).get(
         "trusted-proxy-networks", ["127.0.0.0/8", "::1/128", "172.16.0.0/12"]
     )
-    trusted = [ipaddress.ip_network(value) for value in networks]
     peer = request.client.host if request.client else ""
-    try:
-        current = ipaddress.ip_address(peer)
-        forwarded = request.headers.get("x-forwarded-for", "").split(",")
-        if len(forwarded) <= 16:
-            for value in reversed(forwarded):
-                if not any(current in network for network in trusted):
-                    break
-                if not value.strip():
-                    break
-                current = ipaddress.ip_address(value.strip())
-        peer = str(current)
-    except ValueError:
-        # Invalid forwarding chains cannot select a forged first entry.
-        peer = request.client.host if request.client else ""
+    if config.get("admin-access", {}).get("trusted-proxy-networks") is not None:
+        networks = config["admin-access"]["trusted-proxy-networks"]
+    peer = source_ip(peer, request.headers, networks)
     form["login_ip"] = peer[:64]
     form["user_agent"] = request.headers.get("user-agent", "")[:512]
     form["request_id"] = uuid.uuid4().hex

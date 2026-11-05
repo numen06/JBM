@@ -13,8 +13,22 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from jbm_cluster_py.common.api_access import metadata_path, normalized_path
+from jbm_cluster_py.common.admin_security import AdminAccessPolicy, source_ip, attach_audit_actor, UNSET_AUDIT_TENANT
 
 request_authorization: ContextVar[str] = ContextVar("jbm_request_authorization", default="")
+request_source_ip: ContextVar[str] = ContextVar("jbm_request_source_ip", default="")
+
+
+async def denied_audit_actor(auth, request):
+    identity = getattr(request.state, "identity", None)
+    if identity:
+        return identity
+    # Authorization can fail after a valid login. Verify the credential rather
+    # than trusting caller-supplied actor headers or decoding an unsigned JWT.
+    try:
+        return await auth.authenticate(request.headers.get("authorization"))
+    except (PermissionError, ConnectionError):
+        return {}
 
 
 class UserInfoAuthClient:
@@ -186,6 +200,7 @@ def install_api_protection(
         dict(config.get("jbm.api-access", {}) or {}), client, default_public_paths=public_paths
     )
     auth.bind_app(app, profile=config.profile)
+    admin_policy = AdminAccessPolicy(config.get("jbm.admin-access", {}) or {})
 
     previous_lifespan = app.router.lifespan_context
 
@@ -213,8 +228,12 @@ def install_api_protection(
             return await call_next(request)
         try:
             request.state.identity = await auth.authenticate_request(request, config.service_name)
+            request.state.source_ip = source_ip(
+                request.client.host if request.client else "", request.headers, admin_policy.proxies
+            )
+            request.state.admin_source_allowed = admin_policy.require(request.state.identity, request.state.source_ip)
         except HTTPException as exc:
-            return JSONResponse(
+            response = JSONResponse(
                 status_code=exc.status_code,
                 content={
                     "success": False,
@@ -223,7 +242,9 @@ def install_api_protection(
                     "result": None,
                 },
             )
-        return await call_next(request)
+            return attach_audit_actor(response, await denied_audit_actor(auth, request)) if exc.status_code == 403 else response
+        response = await call_next(request)
+        return attach_audit_actor(response, request.state.identity, getattr(request.state, "audit_tenant_id", UNSET_AUDIT_TENANT))
 
 
 def identity_user_id(identity: Mapping[str, Any]) -> int:

@@ -29,12 +29,16 @@ def build_logs_router(
     async def find_gateway_logs(
         body: dict[str, Any] | None = Body(default=None),
     ) -> dict[str, Any]:
+        if gateway_ingest.security_audit is not None and gateway_ingest.security_audit.enabled:
+            return ok(await gateway_ingest.security_audit.gateway_page(body or {}), "查询分页列表成功")
         return ok(await repository.page_gateway_logs(body or {}), "查询分页列表成功")
 
     @router.post("/GatewayLogs/findOperationLogs", tags=["网关日志"])
     async def find_operation_logs(
         body: dict[str, Any] | None = Body(default=None),
     ) -> dict[str, Any]:
+        if gateway_ingest.security_audit is not None and gateway_ingest.security_audit.enabled:
+            return ok(await gateway_ingest.security_audit.gateway_page(body or {}, True), "查询分页列表成功")
         return ok(
             await repository.page_gateway_logs(body or {}, True),
             "查询分页列表成功",
@@ -42,6 +46,17 @@ def build_logs_router(
 
     @router.post("/GatewayLogs/getByAccessId", tags=["网关日志"])
     async def get_gateway_log(body: dict[str, Any]) -> dict[str, Any]:
+        store = gateway_ingest.security_audit
+        if store is not None and store.enabled:
+            query = {"category": "access", "originalId": str(body.get("accessId") or ""), "size": 1}
+            if body.get("requestTime"):
+                from datetime import datetime, UTC
+                raw = datetime.fromisoformat(str(body["requestTime"]).replace("Z", "+00:00"))
+                if raw.tzinfo is None:
+                    raw = raw.replace(tzinfo=UTC)
+                query.update(beginTime=int(raw.timestamp()*1000)-1000, endTime=int(raw.timestamp()*1000)+86400000)
+            result = await store.query(query)
+            return ok(result["records"][0]["gateway"] if result["records"] else None, "查询日志成功")
         return ok(
             await repository.gateway_log(str(body.get("accessId") or "")),
             "查询日志成功",
@@ -91,6 +106,16 @@ def build_logs_router(
 
     @router.post("/clusterAccess/getClusterAccessInfo", tags=["网关日志"])
     async def cluster_access() -> dict[str, Any]:
+        store = gateway_ingest.security_audit
+        if store is not None and store.enabled:
+            import time
+            now = int(time.time()*1000)
+            from datetime import datetime
+            from zoneinfo import ZoneInfo
+            today = datetime.now(ZoneInfo("Asia/Shanghai")).replace(hour=0,minute=0,second=0,microsecond=0)
+            month = await store.query({"category": "access", "beginTime": now-30*86400000, "endTime": now, "size": 1})
+            daily = await store.query({"category": "access", "beginTime": int(today.timestamp()*1000), "endTime": now, "size": 1})
+            return ok({"time": datetime.now().isoformat(), "total": month["total"], "today": daily["total"], "maxQps": 0, "periodDays": 30}, "查询访问统计成功")
         return ok(await repository.cluster_access(), "查询访问统计成功")
 
     @router.post("/businessLog/create", tags=["业务日志"])

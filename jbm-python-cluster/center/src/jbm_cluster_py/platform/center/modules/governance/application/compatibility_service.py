@@ -85,6 +85,23 @@ class CompatibilityService:
         self.governance = governance
         self.openapi = openapi
         self.password_policy = dict(password_policy or {})
+        self.logs_service_enabled = False
+
+    async def audit_tenant_scope(self, identity, path, params, body):
+        if not is_platform(identity):
+            return identity.get("tenantId") or identity.get("companyId") or None
+        target = params.get("userId")
+        if target is not None and path.startswith("/user/"):
+            user = await self.store.get("user", target)
+            if user and not self._privileged_user(user):
+                roles = await self.governance.repository.user_roles(int(target), None, None)
+                if not any(str(role.get("roleId", role.get("role_id"))) == "1" or role.get("roleCode", role.get("role_code")) in {"super_admin", "platform_operator", "iot_operator", "security_auditor"} for role in roles):
+                    return user.get("companyId")
+        if path == "/user" and isinstance(body, Mapping):
+            owner = body.get("companyId")
+            if owner and await self.store.get("org", owner):
+                return owner
+        return None
 
     async def handle(
         self,
@@ -563,7 +580,7 @@ class CompatibilityService:
                 if (row.get("appId") is None or str(row["appId"]) == str(app_id))
                 and (is_platform(identity) or (
                     str(row.get("roleId")) != "1"
-                    and row.get("roleCode") not in {"super_admin", "platform_operator", "iot_operator"}
+                    and row.get("roleCode") not in {"super_admin", "platform_operator", "iot_operator", "security_auditor"}
                     and row.get("status", 1) == 1
                 ))
             ]
@@ -948,7 +965,7 @@ class CompatibilityService:
             code = role.get("roleCode", role.get("role_code"))
             if str(role.get("roleId", role.get("role_id"))) == "1" or code == "super_admin":
                 require_super_admin(identity)
-            elif code in {"platform_operator", "iot_operator"}:
+            elif code in {"platform_operator", "iot_operator", "security_auditor"}:
                 require_platform(identity)
         if not is_platform(identity):
             require_tenant_admin(identity)
@@ -960,7 +977,7 @@ class CompatibilityService:
     @staticmethod
     def _privileged_role(role: Mapping[str, Any]) -> bool:
         return str(role.get("roleId")) == "1" or role.get("roleCode") in {
-            "admin", "super_admin", "platform_operator", "iot_operator",
+            "admin", "super_admin", "platform_operator", "iot_operator", "security_auditor",
         }
 
     @staticmethod
@@ -997,6 +1014,22 @@ class CompatibilityService:
         self, method: str, path: str, resource: str, alias: str, body: Mapping[str, Any]
     ) -> dict[str, Any]:
         operation = path.rsplit("/", 1)[-1]
+        if resource == "accountLogs" and self.logs_service_enabled:
+            from fastapi import HTTPException
+            from jbm_cluster_py.common.auth import request_authorization, request_source_ip
+            if operation != "pageList":
+                raise HTTPException(405, "登录审计记录只读，请通过日志服务查询")
+            instance = await self.openapi.discovery.choose_instance("jbm-cluster-platform-logs")
+            if not instance:
+                raise HTTPException(503, "日志服务暂不可用，请稍后重试")
+            response = await self.openapi.client.post("http://%s:%s/loginLogs/pageList" % (instance["ip"], instance["port"]),
+                json=dict(body), headers={"Authorization": request_authorization.get(), "X-Forwarded-For": request_source_ip.get()})
+            if response.status_code >= 400:
+                raise HTTPException(response.status_code, "日志服务查询失败")
+            result = response.json()
+            if result.get("success") is not True:
+                raise HTTPException(503, "日志服务查询未完成")
+            return result
         entity = body.get(alias) if isinstance(body.get(alias), Mapping) else body.get("masterData")
         entity = dict(entity) if isinstance(entity, Mapping) else {}
         if resource == "accountLogs":
