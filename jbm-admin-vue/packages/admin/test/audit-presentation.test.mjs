@@ -8,6 +8,7 @@ test('business audit shows supplied object identity, submitted fields and actual
   assert.equal(auditChanges(event),'名称：教学楼；状态：0')
   assert.equal(auditAction(event),'修改业务资料')
   assert.equal(auditObject({...event,submittedChanges:{}}),'建筑结构 · 42')
+  assert.equal(auditObject({target:'/api/v1/building/master-data/structure-types/52',submittedChanges:{structureTypeName:'楼宇'}}),'结构类型 · 楼宇')
 })
 test('audit summaries never expose credentials or invent missing values', () => {
   assert.equal(auditChanges({submittedChanges:{password:'x',access_token:'y',privateKey:'z',name:'[已脱敏]'}}),'')

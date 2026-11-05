@@ -18,7 +18,9 @@ const resources: Record<string, string> = {
   baseProject: '项目', baseStructure: '建筑结构', baseEnergy: '能源档案',
 }
 const fields: Record<string, string> = {
-  name: '名称', title: '标题', code: '编码', projectName: '项目名称', structureName: '结构名称',
+  name: '名称', title: '标题', code: '编码', projectName: '项目名称', abbreviation: '项目名称', structureName: '结构名称',
+  projectId: '项目编号', structureTypeName: '结构类型', structureTypeCode: '类型编码', structureCode: '结构编码',
+  structure_type_name: '结构类型', structure_type_code: '类型编码', structure_name: '结构名称', device_name: '设备名称',
   deviceName: '设备名称', gatewayName: '网关名称', productName: '产品名称', nickName: '昵称',
   status: '状态', enabled: '启用', type: '类型', value: '值', description: '说明',
 }
@@ -37,7 +39,7 @@ export function auditModule(event: Event) { return services[event.serviceId || '
 export function auditObject(event: Event) {
   const resource = (event.target || '').split('/').map(part => resources[part]).reverse().find(Boolean) || ''
   const values = body(event)
-  const name = ['projectName', 'structureName', 'deviceName', 'gatewayName', 'productName', 'name', 'title', 'code'].map(key => text(values[key])).find(Boolean)
+  const name = ['projectName', 'abbreviation', 'structureTypeName', 'structure_type_name', 'structureName', 'structure_name', 'deviceName', 'device_name', 'gatewayName', 'productName', 'name', 'title', 'code'].map(key => text(values[key])).find(Boolean)
   const ids = Object.entries(object(event.resourceIds)).filter(([key]) => !hidden.test(key) && key !== 'resource').map(([, value]) => text(value)).filter(Boolean)
   return [resource, name || ids.join(' / ')].filter(Boolean).join(' · ') || event.target || '身份认证'
 }
