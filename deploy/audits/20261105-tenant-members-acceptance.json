@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "acceptedAt": "2026-11-05T11:31:37.199074+08:00",
+  "scope": "党校租户管理员成员管理、JBM组织与角色隔离；井冈山只读大屏账号交付",
+  "actingTenantAdministrator": {
+    "account": "jxdx_admin",
+    "userId": "2100",
+    "tenantId": "1"
+  },
+  "unchangedRealMembers": [
+    {
+      "account": "xinxizhongxin",
+      "userId": "1793682674696944"
+    },
+    {
+      "account": "wuye",
+      "userId": "1793682673791536"
+    },
+    {
+      "account": "zongwuchu",
+      "userId": "1793682672855370"
+    }
+  ],
+  "realMemberPasswordsChanged": false,
+  "originalProfilesAndRoleLinkMetadataRestored": true,
+  "fixes": [
+    "建筑宿主中的租户管理员不再显示系统工作区，成员管理归入租户设置；保留已授权建筑与IoT业务入口和个人服务",
+    "统一管理组件识别后端内置租户管理员成员新建与编辑能力，继续由后端约束成员归属和可分配角色",
+    "修复成员搜索分页对象被当成数组导致空列表",
+    "编辑页加载期间不开放空表单，避免异步加载覆盖用户输入",
+    "新密码通过专用凭据接口提交；资料保存成功而重置失败时明确告知，避免假成功",
+    "非法角色在成员资料、开户或成员关系写入前拒绝；添加已有账号不能移除其受保护的平台角色",
+    "角色列表和所有成员角色授权入口统一比较大整数应用编号，并复用同一角色校验"
+  ],
+  "verification": {
+    "backendTests": 160,
+    "adminComponentTests": 24,
+    "buildingNavigationTests": 85,
+    "liveJbmOrganizationAndRoleChecks": 33,
+    "threeExistingMembers": "逐个撤销运维角色，原会话操作能力200→403；恢复后403→200；成员不可管理其他用户",
+    "localTenantAdminFlow": "原debug5175实际运行服务：开户、搜索、编辑、临时成员重置密码；新密码可登录，旧密码拒绝；3个临时账号已清理",
+    "productionTenantAdminUi": "3个既有成员搜索/编辑可用，无平台角色选项；组织、角色、数据库运维、旧项目授权页面不能进入",
+    "officialAdminContract": "本地、云平台、党校各10项成功；云平台与党校各8个实际JBM页面成功",
+    "integrity": "党校路灯生产基线7/7通过；只读API核对，无现场请求",
+    "limitation": "本轮针对租户成员、组织、角色及相关入口；不等同于整个系统或二级等保全面验收"
+  },
+  "deployment": {
+    "verifiedArtifacts": {
+      "building-api": {
+        "digest": "sha256:d8d4560b4e5954814f09147aad9e57e0b2f8e7380f783dfdb258b0575eea69fa",
+        "architectures": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "version": "py-2.0-20261105.10",
+        "sourceCommit": "3c189a219e12f20080166b5959f504fd4ec15aa2",
+        "component": "api",
+        "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-app:py-2.0-20261105.10@sha256:d8d4560b4e5954814f09147aad9e57e0b2f8e7380f783dfdb258b0575eea69fa",
+        "taskIds": [
+          "6e202e3e-1d37-4b27-bfba-ff939eb6b782"
+        ],
+        "services": [
+          "smart_building_smart-building-app"
+        ]
+      },
+      "building-batch": {
+        "digest": "sha256:cbe997d2bea16457f44ae13ea003b51eecc35542c214b9c40e72e00420c60e6a",
+        "architectures": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "version": "py-2.0-20261105.10",
+        "sourceCommit": "3c189a219e12f20080166b5959f504fd4ec15aa2",
+        "component": "batch",
+        "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-data-batch:py-2.0-20261105.10@sha256:cbe997d2bea16457f44ae13ea003b51eecc35542c214b9c40e72e00420c60e6a",
+        "taskIds": [
+          "558906b3-a8ce-48c2-a4f9-7b5972ed867e"
+        ],
+        "services": [
+          "smart_building_smart-building-data-batch"
+        ]
+      },
+      "building-web": {
+        "digest": "sha256:75102547eb1234d4826e066a6fb8f46ccb0eed36a1ac113b7b1a7329515e81d5",
+        "architectures": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "version": "py-2.0-20261105.10",
+        "sourceCommit": "3c189a219e12f20080166b5959f504fd4ec15aa2",
+        "component": "web",
+        "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261105.10@sha256:75102547eb1234d4826e066a6fb8f46ccb0eed36a1ac113b7b1a7329515e81d5",
+        "taskIds": [
+          "1a9497e5-4d3d-41b2-9439-57a3d0943d48"
+        ],
+        "services": [
+          "smart_building_smart-building-web"
+        ]
+      },
+      "jbm-center": {
+        "digest": "sha256:495f51bfd881eb880de165788b2128558ff8e91a2e50da24b6ec40185d9b543f",
+        "architectures": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "version": "py-7.3-20261105.2",
+        "sourceCommit": "263237f1751195a00c82f352f4f86d90a1edaf2d",
+        "component": "center",
+        "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261105.2@sha256:495f51bfd881eb880de165788b2128558ff8e91a2e50da24b6ec40185d9b543f",
+        "taskIds": [
+          "1819c04a-a557-4feb-875e-d5562d25dd4b"
+        ],
+        "services": [
+          "jbm7_jbm-cluster-platform-center"
+        ]
+      },
+      "jbm-web": {
+        "digest": "sha256:06ab997aaffac403fe43cae0e9183ffdca8328baa2562af63f0404b2041a555a",
+        "architectures": [
+          "linux/amd64",
+          "linux/arm64"
+        ],
+        "version": "py-7.3-20261105.1",
+        "sourceCommit": "8955dcbd1028ec3cb3885de02000001e065d42c5",
+        "component": "web",
+        "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261105.1@sha256:06ab997aaffac403fe43cae0e9183ffdca8328baa2562af63f0404b2041a555a",
+        "taskIds": [
+          "ac550211-cd2e-45e3-becb-c817f9ab911c"
+        ],
+        "services": [
+          "jbm7_jbm-admin"
+        ]
+      }
+    },
+    "sites": {
+      "local": [
+        "building-api",
+        "building-batch",
+        "building-web",
+        "jbm-center",
+        "jbm-web"
+      ],
+      "cloud": [
+        "building-api",
+        "building-batch",
+        "building-web",
+        "jbm-center",
+        "jbm-web"
+      ],
+      "party": [
+        "building-api",
+        "building-batch",
+        "building-web",
+        "jbm-center"
+      ]
+    },
+    "configurationAndPersistencePreserved": true,
+    "releaseMethod": "干净且已推送主线 reserve→commit/push→freeze→原App2Docker build/status/verify→先本地后线上"
+  },
+  "jgsScreenAccount": {
+    "passed": true,
+    "account": "jgs_screen",
+    "userId": "1793848158904484",
+    "tenantId": "1916406825156673537",
+    "projectId": "1916407303017435137",
+    "passwordLoginPassed": true,
+    "keyLoginPassed": true,
+    "onlyOneProject": true,
+    "screenDeployed": true,
+    "foreignTenantDenied": true,
+    "controlCommandsSent": 0
+  },
+  "evidence": {
+    "three-member-interleaved.json": {
+      "sha256": "28ff663db4727c2d8bfc70053aed2f155705fe4b4606f04aa7e867734f3068c2",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\three-member-interleaved.json"
+    },
+    "jbm-organization-role-audit.json": {
+      "sha256": "40877a2c66f3812c847b07553e3c15c6f5fe467d59d560f08b4bc5f2c3a0f238",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\jbm-organization-role-audit.json"
+    },
+    "party-member-ui.json": {
+      "sha256": "7238d4a0c2de79206744bd08f4230ed213ac9f1f61c49bab670c738ac95e8495",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\party-member-ui.json"
+    },
+    "local-member-ui.json": {
+      "sha256": "ebf7b9573a3e6cd75a8018750c02740c7e62a0bc249e4a0d4bf3d27e019c5dcd",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\local-member-ui.json"
+    },
+    "local-member-mutations.json": {
+      "sha256": "3aa3139f511242240380f5d7f132e3adf032dadfdb34917435f7aa2c6098e7cc",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\local-member-mutations.json"
+    },
+    "local-fixture-cleanup.json": {
+      "sha256": "08d920b1e4b8cb7f6021df4cfb76c7189a625783c807b2927d612d76a6c18e8d",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\local-fixture-cleanup.json"
+    },
+    "jgs-screen-account-acceptance.json": {
+      "sha256": "ffa8a1746853da93fb829645ec4df18263b788eb39c96368b0a9cacc16aafd51",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\jgs-screen-account-acceptance.json"
+    },
+    "jgs-screen-viewer-ui.json": {
+      "sha256": "2f7084a25d83e2bd01e12092623fd3db33e986fbea30c847e9232ea3ed12b76f",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\jgs-screen-viewer-ui.json"
+    },
+    "local-jbm-contract.json": {
+      "sha256": "153c80f467b4686a1f73be4f05c266cab19b4a0cb9437735a64918dd9701f143",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\local-jbm-contract.json"
+    },
+    "party-jbm-contract.json": {
+      "sha256": "153c80f467b4686a1f73be4f05c266cab19b4a0cb9437735a64918dd9701f143",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\party-jbm-contract.json"
+    },
+    "cloud-jbm-contract.json": {
+      "sha256": "153c80f467b4686a1f73be4f05c266cab19b4a0cb9437735a64918dd9701f143",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\cloud-jbm-contract.json"
+    },
+    "screens/party-admin-pages-final.json": {
+      "sha256": "67c77a20fe0307e02b0ad36063527746afcca4754d6c66e0d6b3bb939018d829",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\screens\\party-admin-pages-final.json"
+    },
+    "screens/cloud-admin-pages-final.json": {
+      "sha256": "ac2a152e6a5f31ebdb12cdd5ed9e3a6da364019db6e958ebbbc3a52c377c41a7",
+      "localPath": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\screens\\cloud-admin-pages-final.json"
+    }
+  },
+  "fieldControlCommands": 0,
+  "permissionOperationsUsedSuperAdminInsteadOfTenantAdmin": false
+}
