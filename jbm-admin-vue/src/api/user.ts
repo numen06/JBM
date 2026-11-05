@@ -16,17 +16,8 @@ export interface UserListFilters {
 
 /** GET /user — 分页；带 keyword 时走 params=keyword 检索 */
 export async function listUsers(page = 1, size = DEFAULT_PAGE_SIZE, keyword?: string) {
-  if (keyword?.trim()) {
-    const res = await get<BaseUser[]>('/user', { params: { keyword: keyword.trim() } })
-    const list = unwrap(res) ?? []
-    return {
-      contents: list,
-      total: list.length,
-      pageForm: { currPage: 1, pageSize: size },
-    } satisfies DataPaging<BaseUser>
-  }
   const res = await get<DataPaging<BaseUser>>('/user', {
-    params: pageParams(page, size),
+    params: { ...pageParams(page, size), ...(keyword?.trim() ? { keyword: keyword.trim() } : {}) },
   })
   return unwrap(res)
 }
@@ -73,8 +64,17 @@ export async function updateUser(
   userId: SnowflakeId,
   data: Partial<BaseUser> & { roleIds?: string[]; orgIds?: string[] },
 ) {
-  const res = await put<BaseUser>(`/user/${toSnowflakeIdString(userId)}`, data)
-  return unwrap(res)
+  const { password, ...profile } = data
+  const id = toSnowflakeIdString(userId)
+  const res = await put<BaseUser>(`/user/${id}`, profile)
+  const user = unwrap(res)
+  if (password) {
+    try { unwrap(await put<void>(`/user/${id}/password`, { password })) }
+    catch (error) {
+      throw new Error(`成员资料已保存，密码重置未完成：${error instanceof Error ? error.message : '请重试'}`)
+    }
+  }
+  return user
 }
 
 export async function closeUser(userId: SnowflakeId) {

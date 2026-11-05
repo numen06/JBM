@@ -1,6 +1,6 @@
 import { computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
-import { isPlatformAdministrator, isSuperAdministrator, platformMenuCodes } from '@/lib/adminAccess'
+import { canAdministerTenantMembers, isPlatformAdministrator, isSuperAdministrator, platformMenuCodes } from '@/lib/adminAccess'
 
 /** 按钮/菜单权限：authority 形如 MENU_users、ACTION_users_add */
 export function usePermission() {
@@ -29,6 +29,8 @@ export function usePermission() {
 
   function hasAction(actionCode: string) {
     if (!isPlatformAdmin.value && [...platformMenuCodes].some(code => actionCode === code || actionCode.startsWith(code + '_'))) return false
+    // Match Center's built-in tenant-administration boundary; this grants no platform actions.
+    if (['users_add', 'users_edit'].includes(actionCode) && canAdministerTenantMembers(auth.user, auth.tenantId, auth.activeTenantId)) return true
     return hasAuthority(`ACTION_${actionCode}`)
   }
 

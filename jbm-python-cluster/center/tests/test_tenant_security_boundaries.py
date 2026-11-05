@@ -123,3 +123,37 @@ def test_human_scope_cannot_impersonate_internal_service():
     with pytest.raises(HTTPException):
         require_internal({**TENANT, "scope": "internal", "clientId": "browser"})
     require_internal({"userId": None, "scope": "internal", "clientId": "registered-service"})
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("creating", [True, False])
+@pytest.mark.parametrize("role", [
+    {"roleId": 1, "roleCode": "super_admin"},
+    {"roleId": 3, "roleCode": "platform_operator"},
+    {"roleId": 8, "roleCode": "foreign_app_role", "appId": 9000},
+])
+async def test_invalid_member_roles_are_rejected_before_any_account_or_profile_write(creating, role):
+    api, store = service()
+    member = {"userId": 4000, "userName": "member", "userType": "normal", "companyId": 2000}
+    store.get.side_effect = lambda resource, key: role if resource == "role" else member
+    with pytest.raises(HTTPException) as error:
+        if creating:
+            await api._create_user({"userName": "new", "password": "Unused#2026", "roleIds": [role["roleId"]]}, TENANT)
+        else:
+            await api._item("PUT", "user", 4000, {"nickName": "must not be saved", "roleIds": [role["roleId"]]}, TENANT)
+    assert error.value.status_code == 403
+    store.save.assert_not_awaited()
+    store.ensure_link.assert_not_awaited()
+    store.replace_scoped_links.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_join_existing_member_cannot_strip_protected_platform_role():
+    api, store = service()
+    store.find_user_by_username.return_value = store.get.return_value
+    api.governance.repository.user_roles.return_value = [{"roleId": 3, "roleCode": "platform_operator"}]
+    with pytest.raises(HTTPException) as error:
+        await api._create_user({"userName": "member", "existingOnly": True, "roleIds": []}, TENANT)
+    assert error.value.status_code == 403
+    store.ensure_link.assert_not_awaited()
+    store.replace_scoped_links.assert_not_awaited()

@@ -8,6 +8,11 @@ export function isPlatformAdministrator(user: AdminIdentity): boolean {
   return isSuperAdministrator(user) || user?.roles?.some(role => role.roleCode === 'platform_operator') === true
 }
 
+export function canAdministerTenantMembers(user: AdminIdentity, tenantId: string, activeTenantId: string): boolean {
+  return Boolean(user && tenantId && tenantId !== '0' && tenantId === activeTenantId
+    && user.roles?.some(role => role.roleCode === 'tenant_admin'))
+}
+
 const platformPaths = ['/system/apps', '/system/menus', '/system/roles', '/system/database-backups', '/authority', '/api', '/gateway']
 export const platformMenuCodes = new Set([
   'apps', 'app', 'roles', 'role', 'authority', 'authority_catalog', 'user_perm', 'user_permissions',

@@ -35,7 +35,7 @@ const userId = computed(() =>
   isCreate.value ? undefined : toSnowflakeIdString(route.params.userId as string),
 )
 
-const loading = ref(false)
+const loading = ref(true)
 const saving = ref(false)
 const formError = ref('')
 const createMode = ref<'existing' | 'new'>('existing')
@@ -75,15 +75,12 @@ const accountTypeLabel: Record<string, string> = {
 }
 
 onMounted(async () => {
-  await loadOrgs()
   try {
-    allRoles.value = await listAllRoles()
-  } catch {
-    allRoles.value = []
-  }
-  if (!isCreate.value && userId.value) {
-    await loadUser(userId.value)
-  }
+    await loadOrgs()
+    try { allRoles.value = await listAllRoles() }
+    catch { allRoles.value = [] }
+    if (!isCreate.value && userId.value) await loadUser(userId.value)
+  } finally { loading.value = false }
 })
 
 async function loadUser(id: string) {

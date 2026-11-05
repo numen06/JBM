@@ -249,6 +249,8 @@ class CompatibilityService:
         scoped_payload = dict(payload)
         if resource == "user" and method in {"PUT", "PATCH"}:
             scoped_payload = self._safe_user_payload(identity, scoped_payload, existing)
+            if "roleIds" in scoped_payload:
+                await self._validated_user_roles(identity, scoped_payload)
         if resource == "user":
             for key, label in (("mobile", "手机号"), ("email", "邮箱")):
                 if key not in scoped_payload:
@@ -1082,6 +1084,8 @@ class CompatibilityService:
     ) -> dict[str, Any]:
         if identity is not None:
             payload = self._safe_user_payload(identity, payload)
+            if "roleIds" in payload:
+                await self._validated_user_roles(identity, payload)
         username = str(payload.get("userName") or payload.get("username") or payload.get("account") or "").strip()
         if not username:
             raise ValueError("用户名不能为空")
@@ -1103,6 +1107,15 @@ class CompatibilityService:
                 or not await self.store.is_user_member(existing["userId"], target_tenant_id)
             ):
                 require_platform(identity)
+            if "roleIds" in payload:
+                current_roles = await self.governance.repository.user_roles(
+                    int(existing["userId"]), _app_id(identity), target_tenant_id,
+                )
+                for role in current_roles:
+                    if str(role.get("roleId")) == "1" or role.get("roleCode") == "super_admin":
+                        require_super_admin(identity)
+                    elif role.get("roleCode") in {"platform_operator", "iot_operator"}:
+                        require_platform(identity)
             await self.store.ensure_link(
                 "base_user_org", "user_id", existing["userId"], "org_id", target_tenant_id
             )
@@ -1153,15 +1166,11 @@ class CompatibilityService:
             await self._replace_user_roles(identity, user, payload, target_tenant_id)
         return user
 
-    async def _replace_user_roles(
+    async def _validated_user_roles(
         self,
         identity: Mapping[str, Any],
-        user: Mapping[str, Any],
         payload: Mapping[str, Any],
-        target_tenant_id: int | None = None,
-    ) -> None:
-        if self._privileged_user(user):
-            require_super_admin(identity)
+    ) -> list[dict[str, Any]]:
         role_ids = _values(payload, "roleIds")
         app_id = _app_id(identity)
         roles = [row for value in role_ids if (row := await self.store.get("role", value))]
@@ -1173,10 +1182,23 @@ class CompatibilityService:
             forbidden = [
                 row for row in roles
                 if str(row.get("roleId")) == "1" or row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
-                or row.get("appId") not in (None, app_id)
+                or (row.get("appId") is not None and str(row["appId"]) != str(app_id))
             ]
             if forbidden:
                 require_platform(identity)
+        return roles
+
+    async def _replace_user_roles(
+        self,
+        identity: Mapping[str, Any],
+        user: Mapping[str, Any],
+        payload: Mapping[str, Any],
+        target_tenant_id: int | None = None,
+    ) -> None:
+        if self._privileged_user(user):
+            require_super_admin(identity)
+        app_id = _app_id(identity)
+        roles = await self._validated_user_roles(identity, payload)
         await self.store.replace_scoped_links(
             "base_role_user",
             "user_id",

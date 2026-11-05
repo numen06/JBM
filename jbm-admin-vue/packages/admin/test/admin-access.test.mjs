@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { isPlatformAdministrator, isSuperAdministrator, isPlatformAdminPath, platformMenuCodes } from '../../../src/lib/adminAccess.ts'
+import { canAdministerTenantMembers, isPlatformAdministrator, isSuperAdministrator, isPlatformAdminPath, platformMenuCodes } from '../../../src/lib/adminAccess.ts'
+
+test('built-in tenant member actions require an owner administrator in its own tenant', () => {
+  const user = { roles: [{ roleCode: 'tenant_admin' }] }
+  assert.equal(canAdministerTenantMembers(user, '1', '1'), true)
+  assert.equal(canAdministerTenantMembers(user, '1', '2000'), false)
+  assert.equal(canAdministerTenantMembers(user, '0', '0'), false)
+  assert.equal(canAdministerTenantMembers({ roles: [{ roleCode: 'operations' }] }, '1', '1'), false)
+  assert.equal(canAdministerTenantMembers({ roles: [{ roleCode: 'iot_admin' }] }, '1', '1'), false)
+  assert.equal(canAdministerTenantMembers(null, '1', '1'), false)
+})
 
 test('a numeric role ID cannot turn a tenant account into a platform administrator', () => {
   const tenant = { userName: 'tenant_admin', roles: [{ roleId: 1, roleCode: 'tenant_admin' }] }

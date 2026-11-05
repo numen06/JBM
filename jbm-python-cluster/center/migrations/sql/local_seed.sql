@@ -127,7 +127,7 @@ INSERT IGNORE INTO `base_authority_role` VALUES (2085037958045372417,NULL,NULL,N
 INSERT IGNORE INTO `base_authority_role` (`id`,`authority_id`,`role_id`,`create_time`,`update_time`)
 SELECT 300000 + `authority_id`,`authority_id`,3,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM `base_authority` WHERE `status`=1;
 INSERT IGNORE INTO `base_authority_role` (`id`,`authority_id`,`role_id`,`create_time`,`update_time`)
-SELECT 400000 + `authority_id`,`authority_id`,4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM `base_authority` WHERE `authority_id` IN (102,108,110,142,151,171);
+SELECT 400000 + `authority_id`,`authority_id`,4,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP FROM `base_authority` WHERE `authority_id` IN (102,110,151,171);
 INSERT IGNORE INTO `base_dic` VALUES (900000,'启用状态','sys_status',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,NULL,1,'900000','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);
 INSERT IGNORE INTO `base_dic` VALUES (900001,'启用','1',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,900000,2,'900000,900001','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);
 INSERT IGNORE INTO `base_dic` VALUES (900002,'停用','0',NULL,NULL,NULL,'jbm-cluster-platform-center',NULL,900000,2,'900000,900002','2026-08-05 16:11:36','2026-08-05 16:11:36',NULL);
