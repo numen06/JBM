@@ -18,8 +18,10 @@ const archiveError = ref(false)
 interface AuditEvent { eventId: string; timestamp: number; account?: string; userId?: string; clientId?: string; tenantId?: string; operation?: string; operationName?: string; target?: string; ip?: string; requestId?: string; operationId?: string; phase?: string; operationStatus?: string; message?: string; submittedChanges?: unknown; businessRef?: Record<string, unknown>; expectedTasks?: number; businessRevision?: number; completionKind?: string; resourceIds?: unknown; success?: boolean; integrityVerified?: boolean }
 const detailOpen = ref(false), detailLoading = ref(false), detailError = ref('')
 const detailRows = ref<AuditEvent[]>([]), selected = ref<AuditEvent | null>(null)
+const detailIncomplete = ref(false)
 const detailSummary = computed(() => {
-  const expectedIds = new Set(detailRows.value.flatMap(row => row.phase === 'ACCEPTED' && Array.isArray(row.businessRef?.taskIds) ? row.businessRef.taskIds.map(String) : []))
+  if (detailIncomplete.value) return '记录较多，当前显示部分结果；请通过关联业务任务核对完整执行情况。'
+  const expectedIds = new Set(detailRows.value.flatMap(row => Array.isArray(row.businessRef?.taskIds) ? row.businessRef.taskIds.map(String) : []))
   const expected = Math.max(expectedIds.size, ...detailRows.value.map(row => row.expectedTasks || 0))
   if (expected) {
     const results = new Map<string, AuditEvent>()
@@ -38,13 +40,16 @@ const detailSummary = computed(() => {
 function outcome(row: AuditEvent) { return ({ STARTED: '已开始', ACCEPTED: '已受理', COMMITTED: '业务已提交', SUCCEEDED: '成功', FAILED: '失败', WRITTEN: '设备已应答', UNKNOWN: '结果待核查' } as Record<string, string>)[row.operationStatus || ''] || (row.success === true ? '成功' : row.success === false ? '失败' : '结果未知') }
 function format(value: unknown) { return JSON.stringify(value, null, 2) }
 async function details(row: AuditEvent) {
-  selected.value = row; detailOpen.value = true; detailLoading.value = true; detailError.value = ''
+  selected.value = row; detailOpen.value = true; detailLoading.value = true; detailError.value = ''; detailIncomplete.value = false
   try {
     if (!row.operationId) { detailRows.value = [row]; return }
     const range = { beginTime: new Date(row.timestamp - 86400000).toISOString(), endTime: new Date(Math.min(Date.now() + 1000, row.timestamp + 29 * 86400000)).toISOString(), size: 100 }
-    const result = unwrap(await post<{ records: AuditEvent[] }>('/logs/securityAudit/query', { operationId: row.operationId, ...range }))
+    const result = unwrap(await post<{ records: AuditEvent[]; total: number }>('/logs/securityAudit/query', { operationId: row.operationId, ...range }))
+    detailIncomplete.value = result.total > result.records.length
     const taskIds = [...new Set(result.records.flatMap(item => Array.isArray(item.businessRef?.taskIds) ? item.businessRef.taskIds.map(String) : []))].slice(0, 100)
-    const related = taskIds.length ? unwrap(await post<{ records: AuditEvent[] }>('/logs/securityAudit/query', { businessTaskIds: taskIds, ...range })).records : []
+    const relatedResult = taskIds.length ? unwrap(await post<{ records: AuditEvent[]; total: number }>('/logs/securityAudit/query', { businessTaskIds: taskIds, ...range })) : null
+    const related = relatedResult?.records || []
+    detailIncomplete.value ||= !!relatedResult && relatedResult.total > related.length
     detailRows.value = [...new Map([...result.records, ...related].map(item => [item.eventId, item])).values()].sort((a, b) => a.timestamp - b.timestamp || (a.businessRevision || 0) - (b.businessRevision || 0))
   } catch (error) { detailError.value = error instanceof Error ? error.message : '读取操作详情失败' }
   finally { detailLoading.value = false }

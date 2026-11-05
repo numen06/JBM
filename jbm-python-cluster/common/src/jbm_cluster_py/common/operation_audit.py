@@ -141,8 +141,15 @@ def operation_result(status, raw):
         "written",
         "confirming",
         "processing",
+        "received",
+        "issued",
+        "waiting",
     }
-    accepted = status == 202 or any(state in pending_states for state in states)
+    accepted = status == 202 or any(state in pending_states for state in states) or any(
+        state == "success" and item.get("confirmationMode") == "state"
+        for state, item in zip(states, candidates)
+    )
+    unknown = any(state in {"timeout", "unknown", "uncertain"} for state in states)
     failed = (
         status >= 400
         or success is False
@@ -166,6 +173,8 @@ def operation_result(status, raw):
         if failed
         else "ACCEPTED"
         if accepted
+        else "UNKNOWN"
+        if unknown
         else "SUCCEEDED"
         if success is True or status == 204
         else "UNKNOWN"

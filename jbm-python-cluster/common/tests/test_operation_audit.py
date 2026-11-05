@@ -191,6 +191,16 @@ def test_background_publisher_startup_failure_prevents_silent_worker_start(tmp_p
     assert not auditor.background_thread.is_alive()
 
 
+@pytest.mark.parametrize("state,mode,expected", [
+    ("success", "state", "ACCEPTED"), ("success", "write_ack", "SUCCEEDED"),
+    ("timeout", "state", "UNKNOWN"), ("unknown", "state", "UNKNOWN"),
+    ("received", None, "ACCEPTED"), ("issued", None, "ACCEPTED"),
+])
+def test_device_ack_and_timeout_never_invent_final_success(state, mode, expected):
+    body = {"success": True, "result": {"requestId": "r", "status": state, "confirmationMode": mode}}
+    assert operation_result(200, json.dumps(body))[0] == expected
+
+
 @pytest.mark.asyncio
 async def test_mutation_has_durable_start_and_actual_result_with_redacted_changes(tmp_path):
     auditor = OperationAuditor(Config(tmp_path))
