@@ -545,7 +545,7 @@ class OperationAuditMiddleware:
     async def __call__(self, scope, receive, send):
         state = scope.setdefault("state", {})
         identity = state.get("identity") or {}
-        if scope["type"] != "http" or not (identity.get("userId") or identity.get("user_id")):
+        if scope["type"] != "http" or (identity.get("userId") is None and identity.get("user_id") is None):
             return await self.app(scope, receive, send)
         headers = dict(
             (k.decode("latin1").lower(), v.decode("latin1")) for k, v in scope.get("headers", [])
@@ -590,7 +590,7 @@ class OperationAuditMiddleware:
             actor = audit_actor(identity, state.get("audit_tenant_id", UNSET_AUDIT_TENANT))
             row = audit_event(
                 "operation",
-                userId=actor.get("userId") or identity.get("user_id"),
+                userId=actor.get("userId") if actor.get("userId") is not None else identity.get("user_id"),
                 account=actor.get("userName") or actor.get("username"),
                 tenantId=actor.get("tenantId"),
                 appId=actor.get("appId"),
@@ -780,13 +780,13 @@ async def record_denied_operation(app, request, identity, status=403):
     if (
         not auditor
         or not auditor.enabled
-        or not (identity.get("userId") or identity.get("user_id"))
+        or (identity.get("userId") is None and identity.get("user_id") is None)
     ):
         return
     actor = audit_actor(identity)
     row = audit_event(
         "operation",
-        userId=actor.get("userId") or identity.get("user_id"),
+        userId=actor.get("userId") if actor.get("userId") is not None else identity.get("user_id"),
         account=actor.get("userName") or actor.get("username"),
         tenantId=actor.get("tenantId"),
         operation=request.method,

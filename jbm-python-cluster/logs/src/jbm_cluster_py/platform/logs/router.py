@@ -113,8 +113,10 @@ def build_logs_router(
             from datetime import datetime
             from zoneinfo import ZoneInfo
             today = datetime.now(ZoneInfo("Asia/Shanghai")).replace(hour=0,minute=0,second=0,microsecond=0)
-            month = await store.query({"category": "access", "beginTime": now-30*86400000, "endTime": now, "size": 1})
-            daily = await store.query({"category": "access", "beginTime": int(today.timestamp()*1000), "endTime": now, "size": 1})
+            month, daily = await asyncio.gather(
+                store.query({"category": "access", "beginTime": now-30*86400000, "endTime": now, "countOnly": True}),
+                store.query({"category": "access", "beginTime": int(today.timestamp()*1000), "endTime": now, "countOnly": True}),
+            )
             return ok({"time": datetime.now().isoformat(), "total": month["total"], "today": daily["total"], "maxQps": 0, "periodDays": 30}, "查询访问统计成功")
         return ok(await repository.cluster_access(), "查询访问统计成功")
 

@@ -36,6 +36,7 @@ def test_audit_persistence_runs_after_response_and_cannot_rewrite_business_succe
             return JSONResponse({'success': True, 'result': 'operation completed'})
         service._proxy_http = upstream
         scope = {'type': 'http', 'method': 'GET', 'path': '/center/current/user', 'headers': [], 'client': ('198.51.100.1', 1234), 'server': ('localhost', 80), 'scheme': 'http', 'query_string': b''}
+        scope['state'] = {'identity': {'userId': 0, 'username': 'admin'}}
         response = await service.proxy_http(Request(scope), 'center/current/user')
         assert service.access_logger.record.await_count == 0
         async def send(message): sent.append(message)
@@ -44,6 +45,7 @@ def test_audit_persistence_runs_after_response_and_cannot_rewrite_business_succe
         assert response.status_code == 200
         assert b'operation completed' in sent[-1]['body']
         assert service.access_logger.record.await_count == 1
+        assert service.access_logger.record.call_args.args[0]['requestUserId'] == '0'
     asyncio.run(run())
 
 

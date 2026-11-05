@@ -56,6 +56,29 @@ async def test_grouped_query_verifies_all_facts_before_grouping_filtering_and_pa
 
 
 @pytest.mark.asyncio
+async def test_count_only_preserves_scope_without_fetching_or_expanding_event_payloads(tmp_path):
+    sink = LokiSink({"enabled": True, "url": "http://test/loki/api/v1/push", "username": "test", "password": "test"})
+    store = SecurityAuditStore({"integrity-key": "x" * 32, "backup-directory": str(tmp_path)}, loki=sink)
+    requests = []
+    async def count(request):
+        requests.append(request)
+        return httpx.Response(200, json={"status": "success", "data": {"result": [{"value": [1, "7"]}]}})
+    sink.client = httpx.AsyncClient(transport=httpx.MockTransport(count))
+    store._range = AsyncMock(side_effect=AssertionError("Counting must not fetch log bodies"))
+    body = audit_query_scope({"category": "access", "countOnly": True, "beginTime": 1000, "endTime": 1001, "userId": 0}, "7")
+    result = await store.query(body)
+    assert result["total"] == 7 and result["records"] == []
+    query = requests[0].url.params["query"]
+    assert '| tenantId = "7"' in query and '| tenantScopeVerified = "true"' in query
+    assert '| userId = "0"' in query and '| keep job' in query and '[2ms]' in query
+    assert 'eventId=' not in query and 'submittedChanges=' not in query
+    assert query.index('|~') < query.index('| json')
+    with pytest.raises(ValueError):
+        await store.query({"category": "operation", "groupOperations": True, "countOnly": True})
+    await sink.stop()
+
+
+@pytest.mark.asyncio
 async def test_partial_async_results_never_appear_as_a_success(tmp_path):
     sink = LokiSink({"enabled": True, "url": "http://test/loki/api/v1/push", "username": "test", "password": "test"})
     store = SecurityAuditStore({"integrity-key": "x" * 32, "backup-directory": str(tmp_path)}, loki=sink)

@@ -177,6 +177,8 @@ class SecurityAuditStore:
         grouped = body.get("groupOperations") is True
         if grouped and body.get("category") != "operation":
             raise ValueError("仅业务操作支持按操作汇总")
+        if grouped and body.get("countOnly") is True:
+            raise ValueError("操作汇总不能省略原始事件核验")
         def timestamp(raw, default):
             if not raw:
                 return default
@@ -186,17 +188,33 @@ class SecurityAuditStore:
             if parsed.tzinfo is None:
                 parsed = parsed.replace(tzinfo=ZoneInfo("Asia/Shanghai"))
             return int(parsed.timestamp() * 1000000000)
-        end = timestamp(body.get("endTime"), time.time_ns())
-        start = timestamp(body.get("beginTime"), end - 86400 * 1000000000)
+        end = timestamp(body.get("endTime"), time.time_ns()) // 1000000 * 1000000
+        start = timestamp(body.get("beginTime"), end - 86400 * 1000000000) // 1000000 * 1000000
         if end < start or end - start > 31 * 86400 * 1000000000:
             raise ValueError("每次请选择不超过31天的查询区间，历史日志可按日期分段查询")
         page = max(1, int(body.get("page", 1)))
         size = max(1, min(100, int(body.get("size", 20))))
         if page * size > 4900:
             raise ValueError("结果较多，请缩小时间或账号范围后查询")
-        selector = '{job="jbm-security-audit"} | json'
+        fields = {name for name in ("userId", "account", "tenantId", "operation", "category", "originalId", "httpStatus", "ip", "method", "serviceId", "operationId", "requestId", "businessTaskId") if body.get(name) not in (None, "")}
+        if body.get("businessTaskIds"): fields.add("businessTaskId")
+        if body.get("path"): fields.add("target")
+        if body.get("accountContains"): fields.add("account")
+        if body.get("ipContains"): fields.add("ip")
+        if body.get("operationOnly"): fields.update(("userId", "operation"))
+        if not grouped and body.get("success") is not None: fields.add("success")
+        if body.get("tenantScopeVerified") is True: fields.add("tenantScopeVerified")
+        selector = '{job="jbm-security-audit"}'
+        # Filter cheap line content before parsing, while retaining the exact
+        # top-level field check below. Whitespace accepts historical JSON format.
+        for name in ("category", "operationId"):
+            if body.get(name) and str(body[name]).isascii():
+                pattern = re.escape(json.dumps(name)) + r"\s*:\s*" + re.escape(json.dumps(str(body[name])))
+                selector += " |~ " + json.dumps(pattern)
+        if fields:
+            selector += " | json " + ", ".join(name + "=" + json.dumps(name) for name in sorted(fields))
         for name in ("userId", "account", "tenantId", "operation", "category", "originalId", "httpStatus", "ip", "method", "serviceId", "operationId", "requestId", "businessTaskId"):
-            if body.get(name):
+            if body.get(name) not in (None, ""):
                 selector += " | " + name + " = " + json.dumps(str(body[name]))
         if body.get('businessTaskIds'):
             ids=body['businessTaskIds']
@@ -216,7 +234,7 @@ class SecurityAuditStore:
             selector += ' | tenantScopeVerified = "true"'
         # Group the complete bounded interval before pagination. Never group a
         # sampled page and present its count as the total number of operations.
-        rows = await self._range(selector, start, end, 4901 if grouped else page * size + 1)
+        rows = [] if body.get("countOnly") is True else await self._range(selector, start, end, 4901 if grouped else page * size + 1)
         if grouped and len(rows) > 4900:
             raise ValueError("操作事件较多，请缩小时间、人员或业务模块范围后查询")
         result = []
@@ -267,8 +285,8 @@ class SecurityAuditStore:
                     "keepDays": self.keep_days, "groupedOperations": True}
         # Loki pagination is bounded; count an exact result separately, never present
         # a sampled row count as the total.
-        duration = max(1, (end-start)//1000000000 + 1)
-        response = await self.loki.client.get(self.base_url + "/loki/api/v1/query", params={"query": f"sum(count_over_time(({selector})[{duration}s]))", "time": str(end)}, headers={"X-Scope-OrgID": self.tenant})
+        duration = (end-start)//1000000 + 1  # Event timestamps are milliseconds; include the exact start boundary.
+        response = await self.loki.client.get(self.base_url + "/loki/api/v1/query", params={"query": f"sum(count_over_time(({selector} | keep job)[{duration}ms]))", "time": str(end)}, headers={"X-Scope-OrgID": self.tenant})
         response.raise_for_status()
         counts = response.json()
         if counts.get("status") != "success":

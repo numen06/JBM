@@ -453,6 +453,7 @@ class GatewayProxy:
         now = utc_iso()
         identity = getattr(request.state, "identity", None) or {}
         operation = not read_operation(request.method, path)
+        user_id = identity.get("userId") if identity.get("userId") is not None else identity.get("user_id")
         row = {
             "loglevel": 1,
             "accessId": uuid.uuid4().hex,
@@ -468,7 +469,7 @@ class GatewayProxy:
             "headers": json.dumps(sanitize_headers(dict(request.headers)), ensure_ascii=False),
             "appId": identity.get("appId") or request.headers.get("X-App-Id") or request.headers.get("x-app-id"),
             "error": error,
-            "requestUserId": str(identity.get("userId") or identity.get("user_id") or "") or None,
+            "requestUserId": str(user_id) if user_id is not None else None,
             "requestRealName": identity.get("username") or identity.get("userName") or identity.get("realName") or identity.get("nickname"),
             "tenantId": str(identity.get("tenantId") or identity.get("companyId") or identity.get("tenant_id") or ""),
             "actorTenantId": identity.get("actorTenantId"),

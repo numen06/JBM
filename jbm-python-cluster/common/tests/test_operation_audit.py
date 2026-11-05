@@ -16,7 +16,8 @@ from jbm_cluster_py.common.security_audit import audit_digest
 
 
 @pytest.mark.asyncio
-async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwarding(tmp_path):
+@pytest.mark.parametrize("user_id", [0, 21])
+async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwarding(tmp_path, user_id):
     from jbm_cluster_py.common.admin_security import AdminAccessPolicy
 
     auditor = OperationAuditor(Config(tmp_path))
@@ -36,7 +37,7 @@ async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwa
     @app.middleware("http")
     async def identity(request, call_next):
         request.state.identity = {
-            "userId": 21,
+            "userId": user_id,
             "userName": "tenant-admin",
             "tenantId": "7",
             "roles": ["tenant_admin"],
@@ -63,7 +64,7 @@ async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwa
     assert calls == ["read"]
     events = [json.loads(p.read_text(encoding="utf8")) for p in auditor.directory.glob("*.json")]
     assert len(events) == 2 and all(
-        row["success"] is False and row["tenantId"] == "7" and row["ip"] == "192.0.2.1"
+        row["success"] is False and row["tenantId"] == "7" and row["ip"] == "192.0.2.1" and row["userId"] == user_id
         for row in events
     )
 
@@ -213,7 +214,8 @@ def test_device_ack_and_timeout_never_invent_final_success(state, mode, expected
 
 
 @pytest.mark.asyncio
-async def test_mutation_has_durable_start_and_actual_result_with_redacted_changes(tmp_path):
+@pytest.mark.parametrize("user_id", [0, 21])
+async def test_mutation_has_durable_start_and_actual_result_with_redacted_changes(tmp_path, user_id):
     auditor = OperationAuditor(Config(tmp_path))
     auditor.directory.mkdir(parents=True)
     auditor.kafka = SimpleNamespace(publish_json=AsyncMock())
@@ -223,7 +225,7 @@ async def test_mutation_has_durable_start_and_actual_result_with_redacted_change
     @app.middleware("http")
     async def authenticated(request, call_next):
         request.state.identity = {
-            "userId": 21,
+            "userId": user_id,
             "userName": "tenant-admin",
             "tenantId": 7,
             "roles": ["tenant_admin"],
@@ -256,6 +258,7 @@ async def test_mutation_has_durable_start_and_actual_result_with_redacted_change
     assert {e["phase"] for e in events} == {"START", "RESULT"}
     result = next(e for e in events if e["phase"] == "RESULT")
     assert result["operationStatus"] == "SUCCEEDED" and result["success"] is True
+    assert result["userId"] == user_id
     assert result["resourceIds"] == {"user_id": "22"} and result["businessRef"] == {"id": "22"}
     assert all(e["tenantId"] == "7" and e["tenantScopeVerified"] for e in events)
     assert len({e["operationId"] for e in events}) == len({e["requestId"] for e in events}) == 1
