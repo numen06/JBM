@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "status": "AUDIT_MENU_SCOPE_ACCEPTED_QUERY_IMPROVED",
+  "updatedAt": "2026-11-05T23:28:25.353577+08:00",
+  "acceptanceRecord": "deploy/releases/20261105-security-audit-menu-performance.json",
+  "evidenceRepository": "iot-platform-jbm py-2.0",
+  "evidenceDirectory": "docs/operations/evidence/20261105",
+  "delivery": {
+    "files": [
+      {
+        "name": "JBM日志审计菜单与查询性能验收-20261105-修订3.docx",
+        "sha256": "95ab2626fe7e415107997b0ffc6ce99127224d8b285a7acb58485d0415fbd0ce",
+        "bytes": 326132
+      },
+      {
+        "name": "JBM日志审计菜单与查询性能证据-20261105-修订3.zip",
+        "sha256": "7350f503e7dbd89882dba3f8d75799252b1ea027612361b59556ad60d58c8545",
+        "bytes": 1002239
+      }
+    ],
+    "evidenceFiles": 57,
+    "documentPages": 6,
+    "privateCredentialsPackaged": false,
+    "nucDirectory": "D:\\workspaces\\iot-platform-jbm\\output\\security-jxdx-admin-20261105\\menu-audit-performance-20261105",
+    "hashesMatch": true,
+    "previousZipSha256": "ca44a17e2c9b91b01ec6a4a4b3568a4d75e9d4e0eb28173985ec84856e62afd3"
+  },
+  "pendingTdCommit": "04c6675",
+  "tdFinallyAccepted": false,
+  "tdIncludedInIotAuditImage7": false,
+  "iotNextApiReleaseRequiresFullRecipeReview": true,
+  "oldKafkaQueueRestored": false,
+  "passwordsOrTenantRolesChanged": false,
+  "otherComputerVersionsDowngraded": false,
+  "scopeNote": "本专项功能与部署证据，不等同全系统正式二级等保认证；党校4.763秒慢样本与未逐条实测的动态路由如实保留。"
+}
