@@ -7,14 +7,14 @@ build:
   - linux/amd64
   - linux/arm64
   build_args:
-    RELEASE_VERSION: py-7.3-20261105.6
+    RELEASE_VERSION: py-7.3-20261105.7
     JBM_COMMIT: '{full_commit}'
     RELEASE_TARGET: jbm-admin-packages
 git:
   branch: py-7.3
 image:
   name: registry.cn-shanghai.aliyuncs.com/okc/jbm-admin-packages
-  tag: py-7.3-20261105.6
+  tag: py-7.3-20261105.7
   push: true
 push_mode: single
 release:
