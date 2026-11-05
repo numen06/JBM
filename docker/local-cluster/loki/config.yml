@@ -34,6 +34,8 @@ ingester:
   # Loki's infinite sentinel is exactly time.Duration(-1), i.e. -1ns.
   query_store_max_look_back_period: -1ns
 limits_config:
+  # Single-binary deployment: avoid one metric subquery per hour.
+  split_instant_metric_queries_by_interval: 12h
   max_query_length: 768h
   retention_period: 8760h
   deletion_mode: disabled
