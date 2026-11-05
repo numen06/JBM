@@ -14,6 +14,7 @@ from typing import Any, Mapping, Optional
 import httpx
 from fastapi import Request, WebSocket
 from fastapi.responses import JSONResponse, Response, StreamingResponse
+from starlette.background import BackgroundTasks
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.result import fail
 from jbm_cluster_py.common.api_access import read_operation
@@ -273,6 +274,27 @@ class GatewayProxy:
         access_logger.service_tokens = service_tokens
 
     async def proxy_http(self, request: Request, path: str) -> Response:
+        # Finish the business response before persistence/network work for the
+        # access audit. Starlette awaits these tasks during graceful shutdown.
+        request.state.jbm_deferred_audit = []
+        response = await self._proxy_http(request, path)
+        tasks = BackgroundTasks()
+        if response.background is not None:
+            tasks.add_task(response.background)
+        for row in request.state.jbm_deferred_audit:
+            tasks.add_task(self._persist_http_audit, row)
+        response.background = tasks
+        return response
+
+    async def _persist_http_audit(self, row):
+        try:
+            await self.access_logger.record(row)
+        except Exception:
+            # An audit transport failure must never turn an already executed
+            # operation into an apparent 502 and encourage a duplicate command.
+            logger.exception("Gateway audit persistence failed; request_id=%s", row.get("requestId"))
+
+    async def _proxy_http(self, request: Request, path: str) -> Response:
         request_path = "/" + path if path else "/"
         route = self.routes.match(request_path)
         if route is None:
@@ -457,7 +479,11 @@ class GatewayProxy:
             "clientId": identity.get("clientId"),
             "adminSourceAllowed": getattr(request.state, "admin_source_allowed", None),
         }
-        await self.access_logger.record(row)
+        deferred = getattr(request.state, "jbm_deferred_audit", None)
+        if deferred is not None:
+            deferred.append(row)
+        else:
+            await self.access_logger.record(row)
 
     async def proxy_websocket(self, websocket: WebSocket, path: str) -> None:
         import websockets

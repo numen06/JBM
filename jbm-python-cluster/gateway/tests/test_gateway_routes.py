@@ -1,4 +1,6 @@
 import asyncio
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import yaml
 from fastapi import FastAPI
@@ -15,6 +17,34 @@ from jbm_cluster_py.platform.gateway.service import (
     websocket_subprotocols,
 )
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
+
+
+def test_audit_persistence_runs_after_response_and_cannot_rewrite_business_success():
+    from starlette.requests import Request
+    from starlette.responses import JSONResponse
+    from jbm_cluster_py.platform.gateway.service import GatewayProxy
+    async def run():
+        service = object.__new__(GatewayProxy)
+        service.config = SimpleNamespace(service_name='gateway')
+        sent = []
+        async def persist(row):
+            assert any(m['type'] == 'http.response.body' and not m.get('more_body', False) for m in sent)
+            raise ConnectionError('audit storage unavailable')
+        service.access_logger = SimpleNamespace(record=AsyncMock(side_effect=persist))
+        async def upstream(request, path):
+            await service._log_http(request, '/center/current/user', None, 200, .001, None)
+            return JSONResponse({'success': True, 'result': 'operation completed'})
+        service._proxy_http = upstream
+        scope = {'type': 'http', 'method': 'GET', 'path': '/center/current/user', 'headers': [], 'client': ('198.51.100.1', 1234), 'server': ('localhost', 80), 'scheme': 'http', 'query_string': b''}
+        response = await service.proxy_http(Request(scope), 'center/current/user')
+        assert service.access_logger.record.await_count == 0
+        async def send(message): sent.append(message)
+        async def receive(): return {'type': 'http.disconnect'}
+        await response(scope, receive, send)
+        assert response.status_code == 200
+        assert b'operation completed' in sent[-1]['body']
+        assert service.access_logger.record.await_count == 1
+    asyncio.run(run())
 
 
 def test_strip_prefix_keeps_root_when_all_segments_removed() -> None:
