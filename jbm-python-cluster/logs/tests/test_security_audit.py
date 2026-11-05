@@ -11,6 +11,16 @@ from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.security_audit import audit_reader_scope, audit_query_scope
 from fastapi import HTTPException
 from starlette.datastructures import Headers
+from jbm_cluster_py.common.security_audit import login_succeeded
+
+
+def test_mysql_bit_and_tinyint_login_result_have_the_same_meaning():
+    for value in (b"\x01", memoryview(b"\x01"), 1, "1", True):
+        assert login_succeeded(value) is True
+    for value in (b"\x00", 0, "0", False):
+        assert login_succeeded(value) is False
+    assert login_succeeded(None) is None
+    assert login_succeeded("unknown") is None
 
 
 def test_tenant_admin_scope_is_server_bound_and_global_admin_is_unrestricted():

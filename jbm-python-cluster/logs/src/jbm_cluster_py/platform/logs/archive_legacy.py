@@ -18,6 +18,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from sqlalchemy import inspect, text
+from jbm_cluster_py.common.security_audit import login_succeeded
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
@@ -58,7 +59,7 @@ def event_for(table, pk, row):
     if table == "base_account_logs":
         event.update(category="login", userId=row.get("user_id"), account=row.get("account"), operation=row.get("login_type") or row.get("account_type"),
             loginType=row.get("login_type") or row.get("account_type"), ip=row.get("login_ip") or row.get("ip"),
-            success=int(row.get("status", row.get("login_status")) or 0)==1, userAgent=row.get("user_agent") or row.get("login_agent"),
+            success=login_succeeded(row.get("status", row.get("login_status"))), userAgent=row.get("user_agent") or row.get("login_agent"),
             loginLocation=row.get("login_location"), riskLevel=row.get("risk_level"), requestId=row.get("request_id"), clientId=row.get("client_id"), message=row.get("message"))
     else:
         from jbm_cluster_py.platform.logs.repository import LogsRepository

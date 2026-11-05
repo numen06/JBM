@@ -2,6 +2,7 @@
 import sqlalchemy as sa
 import json
 from alembic import op
+from jbm_cluster_py.common.security_audit import login_succeeded
 
 revision = "20261105_30"
 down_revision = "20261104_29"
@@ -24,32 +25,35 @@ def upgrade():
         op.create_table("base_login_security_state",
             sa.Column("user_id", sa.BigInteger(), primary_key=True),
             sa.Column("ip", sa.String(64)), sa.Column("login_time", sa.String(64)))
+    if not sa.inspect(op.get_bind()).has_table("base_login_security_alert"):
         op.create_table("base_login_security_alert",
             sa.Column("alert_id", sa.BigInteger(), primary_key=True),
             sa.Column("user_id", sa.BigInteger(), nullable=False, index=True),
             sa.Column("payload", sa.Text(), nullable=False))
-        conn = op.get_bind()
-        if sa.inspect(conn).has_table("base_account_logs"):
-            columns = {c["name"] for c in sa.inspect(conn).get_columns("base_account_logs")}
-            primary = next((k for k in ("id", "account_log_id", "log_id") if k in columns), None)
-            if primary:
-                rows = conn.execute(sa.text(f"SELECT * FROM base_account_logs ORDER BY login_time,{primary}")).mappings().all()
-                latest, alerts = {}, {}
-                for row in rows:
-                    uid = row.get("user_id")
-                    if uid is None:
-                        continue
-                    kind = row.get("login_type") or row.get("account_type")
-                    if int(row.get("status", row.get("login_status")) or 0) == 1 and kind in {"PASSWORD", "SMS", "FILE_KEY", "SSH_KEY", "PASSKEY", "WECHAT", "MINIAPP", "FACE", "THIRD_PARTY"}:
-                        latest[uid] = {"id": uid, "ip": row.get("login_ip") or row.get("ip") or "", "time": str(row.get("login_time") or "")}
-                    if row.get("risk_level") == "warning" and row.get("risk_ack_time") is None:
-                        items = alerts.setdefault(uid, [])
-                        items.append({"id": row[primary], "uid": uid, "payload": json.dumps({"id": str(row[primary]), "time": str(row.get("login_time") or ""), "clientId": row.get("client_id") or "", **json.loads(row.get("risk_detail") or "{}")}, ensure_ascii=False)})
-                for current in latest.values():
-                    conn.execute(sa.text("INSERT INTO base_login_security_state VALUES (:id,:ip,:time)"), current)
-                for pending in alerts.values():
-                    for current in pending:
-                        conn.execute(sa.text("INSERT INTO base_login_security_alert VALUES (:id,:uid,:payload)"), current)
+    conn = op.get_bind()
+    if sa.inspect(conn).has_table("base_account_logs"):
+        columns = {c["name"] for c in sa.inspect(conn).get_columns("base_account_logs")}
+        primary = next((k for k in ("id", "account_log_id", "log_id") if k in columns), None)
+        if primary:
+            rows = conn.execute(sa.text(f"SELECT * FROM base_account_logs ORDER BY login_time,{primary}")).mappings().all()
+            latest, alerts = {}, {}
+            for row in rows:
+                uid = row.get("user_id")
+                if uid is None:
+                    continue
+                kind = row.get("login_type") or row.get("account_type")
+                if login_succeeded(row.get("status", row.get("login_status"))) is True and kind in {"PASSWORD", "SMS", "FILE_KEY", "SSH_KEY", "PASSKEY", "WECHAT", "MINIAPP", "FACE", "THIRD_PARTY"}:
+                    latest[uid] = {"id": uid, "ip": row.get("login_ip") or row.get("ip") or "", "time": str(row.get("login_time") or "")}
+                if row.get("risk_level") == "warning" and row.get("risk_ack_time") is None:
+                    items = alerts.setdefault(uid, [])
+                    items.append({"id": row[primary], "uid": uid, "payload": json.dumps({"id": str(row[primary]), "time": str(row.get("login_time") or ""), "clientId": row.get("client_id") or "", **json.loads(row.get("risk_detail") or "{}")}, ensure_ascii=False)})
+            for current in latest.values():
+                suffix = "ON CONFLICT(user_id) DO UPDATE SET ip=excluded.ip,login_time=excluded.login_time WHERE excluded.login_time>base_login_security_state.login_time" if conn.dialect.name == "sqlite" else "ON DUPLICATE KEY UPDATE ip=IF(login_time<VALUES(login_time),VALUES(ip),ip),login_time=GREATEST(login_time,VALUES(login_time))"
+                conn.execute(sa.text("INSERT INTO base_login_security_state VALUES (:id,:ip,:time) " + suffix), current)
+            for pending in alerts.values():
+                for current in pending:
+                    insert = "INSERT OR IGNORE" if conn.dialect.name == "sqlite" else "INSERT IGNORE"
+                    conn.execute(sa.text(insert + " INTO base_login_security_alert VALUES (:id,:uid,:payload)"), current)
 
 
 def downgrade():

@@ -14,6 +14,18 @@ logger = logging.getLogger(__name__)
 AUDIT_TOPIC = "jbm.security.audit.v1"
 
 
+def login_succeeded(value):
+    # MySQL BIT is returned as bytes by asyncmy; TINYINT as int.
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        return int.from_bytes(value, "big") == 1
+    if value is None:
+        return None
+    try:
+        return int(value) == 1
+    except (TypeError, ValueError):
+        return None
+
+
 def audit_event(source, **facts):
     allowed = {"userId", "account", "tenantId", "appId", "clientId", "target", "operation", "ip", "success", "httpStatus", "requestId", "phase", "message"}
     event = {k: v if isinstance(v, (bool, int, float)) or v is None else str(v)[:1024] for k, v in facts.items() if k in allowed}
