@@ -8,14 +8,14 @@ build:
   - linux/arm64
   build_args:
     MYSQL_CLIENT_IMAGE: m.daocloud.io/docker.io/library/mysql:8.4
-    RELEASE_VERSION: py-7.3-20261105.10
+    RELEASE_VERSION: py-7.3-20261105.11
     JBM_COMMIT: '{full_commit}'
     RELEASE_TARGET: jbm-cluster-platform-logs
 git:
   branch: py-7.3
 image:
   name: registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs
-  tag: py-7.3-20261105.10
+  tag: py-7.3-20261105.11
   push: true
 push_mode: single
 release:

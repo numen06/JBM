@@ -225,9 +225,17 @@ def operation_result(status, raw):
 class OperationAuditor:
     def __init__(self, config, *, source_role=None):
         from jbm_cluster_py.integrations.kafka import KafkaClient
+        # Hosts can keep their own business configuration/discovery. This small,
+        # read-only deployment secret contains only the shared audit transports
+        # and policy-centre settings; it never replaces host business settings.
+        if os.getenv("JBM_OPERATION_AUDIT_CONFIG_FILE"):
+            from .config import AppConfig, deep_merge
+            override = json.loads(Path(os.environ["JBM_OPERATION_AUDIT_CONFIG_FILE"]).read_text(encoding="utf8"))
+            config = AppConfig(deep_merge(config.raw, override), config.profile, config.config_dir, config.app)
+        self.config = config
 
         self.enabled = config.get("jbm.security-audit.enabled", False) is True
-        self.service = config.service_name
+        self.service = os.getenv("JBM_AUDIT_SERVICE_NAME") or config.service_name
         self.admin_access = AdminAccessPolicy(config.get("jbm.admin-access", {}) or {})
         self.policy_store = AdminPolicyStore(config)
         self.publisher_key = source_role or self.service
