@@ -119,6 +119,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                     auth_service.admin_access.require(identity, source_ip(request.client.host if request.client else "", request.headers, auth_service.admin_access.proxies))
             except HTTPException as exc:
                 code = getattr(exc, "status_code", getattr(exc, "code", 401))
+                from jbm_cluster_py.common.operation_audit import record_denied_operation
+                await record_denied_operation(app, request, identity, code)
                 return attach_audit_actor(JSONResponse(status_code=code, content={"success": False, "code": code, "message": exc.detail, "result": None}), identity)
             except (AuthError, JwtError):
                 # Public login/bootstrap endpoints must still work with a stale

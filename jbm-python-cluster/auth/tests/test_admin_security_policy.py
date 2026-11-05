@@ -26,8 +26,12 @@ def test_admin_source_does_not_change_normal_user_permissions():
             policy.require(actor, "203.0.113.3")
     assert policy.require({"userId": 3, "roles": ["operations"]}, "203.0.113.3")
     assert AdminAccessPolicy().require({"username": "admin"}, "203.0.113.3") is False
+    default_lan = AdminAccessPolicy({"mode": "enforce"})
+    assert default_lan.require({"roles": ["super_admin"]}, "192.168.1.8")
+    with pytest.raises(HTTPException):
+        default_lan.require({"roles": ["super_admin"]}, "203.0.113.3")
     with pytest.raises(ValueError):
-        AdminAccessPolicy({"mode": "enforce"})
+        AdminAccessPolicy({"mode": "enforce", "allowed-networks": []})
 
 
 def test_auditor_can_read_only_audit_and_cannot_administer_tenants():

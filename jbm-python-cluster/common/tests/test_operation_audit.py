@@ -43,6 +43,7 @@ async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwa
         }
         return await call_next(request)
 
+    @app.get("/oauth2/userinfo")
     @app.get("/user")
     async def read():
         calls.append("read")
@@ -58,7 +59,8 @@ async def test_source_network_enforcement_covers_reads_and_ignores_spoofed_forwa
     ) as c:
         assert (await c.get("/user", headers={"X-Forwarded-For": "10.1.1.1"})).status_code == 403
         assert (await c.post("/user", json={})).status_code == 403
-    assert calls == []
+        assert (await c.get("/oauth2/userinfo")).status_code == 200
+    assert calls == ["read"]
     events = [json.loads(p.read_text(encoding="utf8")) for p in auditor.directory.glob("*.json")]
     assert len(events) == 2 and all(
         row["success"] is False and row["tenantId"] == "7" and row["ip"] == "192.0.2.1"

@@ -440,6 +440,7 @@ class OperationAuditor:
         event_key="",
         phase="RESULT",
         business_ref=None,
+        business_revision=None,
     ):
         """Trusted workers persist the original operation ID with their task.
 
@@ -463,6 +464,8 @@ class OperationAuditor:
             completionKind="TASK",
             message=safe_values(message),
         )
+        if business_revision is not None:
+            row["businessRevision"] = int(business_revision)
         self._write(row)
         return row
 
@@ -507,7 +510,7 @@ class OperationAuditMiddleware:
         ip = source_ip((scope.get("client") or ("", 0))[0], headers, self.auditor.proxies)
         state["source_ip"] = ip
         policy = getattr(self.auditor, "admin_access", None)
-        if policy is not None:
+        if policy is not None and scope["path"] != "/oauth2/userinfo":
             from fastapi import HTTPException, Request
             from starlette.responses import JSONResponse
 
@@ -770,3 +773,4 @@ async def record_denied_operation(app, request, identity, status=403):
         logger.critical(
             "Denied operation audit pending; request_id=%s", row["requestId"], exc_info=True
         )
+        auditor.pending_results.append(row)
