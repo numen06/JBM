@@ -1,0 +1,208 @@
+{
+  "scope": "党校 jxdx_admin 账号权限边界及未授权菜单清理专项",
+  "checkedAt": "2026-11-05T10:38:36.624821+08:00",
+  "environment": "https://jxdx.project.hz-aitech.com",
+  "account": {
+    "username": "jxdx_admin",
+    "userId": "2100",
+    "tenantId": "1",
+    "projectId": "9001001",
+    "roles": [
+      "tenant_admin"
+    ],
+    "admin": false
+  },
+  "status": "tested-boundaries-passed-and-obsolete-menu-grants-removed",
+  "authentication": {
+    "formalPasswordRsaPkceThenEncryptedFileKeyVerified": true,
+    "passwordChanged": false,
+    "newLocalEncryptedKeyRegistered": true,
+    "keyValidity": "six_months",
+    "keyDirectory": "Documents/JBM登录密钥",
+    "keyDataInRepository": false,
+    "existingSessionRevocationOfRemovedPermissionsVerified": true
+  },
+  "checks": {
+    "liveHttpAndSemanticIsolationChecks": 36,
+    "anonymousHeaderAndTokenForgeryChecks": 6,
+    "livePolicyDecisionChecks": 11,
+    "businessActionsInvokedByPolicyDecisionChecks": 0,
+    "realUiRoutes": 6,
+    "postCleanupExpandedWorkspaces": [
+      {
+        "workspace": "building",
+        "menuLinksChecked": 33,
+        "forbiddenMenusAbsent": true
+      },
+      {
+        "workspace": "iot",
+        "menuLinksChecked": 30,
+        "forbiddenMenusAbsent": true
+      },
+      {
+        "workspace": "jbm",
+        "menuLinksChecked": 11,
+        "forbiddenMenusAbsent": true
+      }
+    ],
+    "localRegressionTestsPassed": 111,
+    "localRegressionCommand": ".venv/Scripts/python.exe -m pytest common/tests/test_api_access.py center/tests/test_tenant_security_boundaries.py center/tests/test_tenant_access.py auth/tests/test_online_access.py -q；另执行 center/tests/test_request_access.py -q",
+    "localRegressionsInclude": [
+      "租户不能修改其他租户成员",
+      "禁止将用户改成 super/admin 或注入 authorities",
+      "禁止通过共享租户成员关系修改全局账号",
+      "禁止添加外租户既有账号以接管",
+      "平台角色委派上限",
+      "API 与动作授权不能突破平台边界",
+      "敏感操作近期认证",
+      "签名 nonce 与权限范围"
+    ],
+    "boundaryConclusion": "本次已测路径未发现该账号跨租户读取或取得平台管理能力；允许的业务数据仍限党校范围。",
+    "semantic200Responses": "部分集合接口忽略不支持的筛选参数而返回本租户集合，或对无权项目返回空集合；已检查响应所有者和内容，未把 HTTP 200 单独认定为越权或成功。"
+  },
+  "menuCleanup": {
+    "roleId": "4",
+    "roleCode": "tenant_admin",
+    "sharedBuiltInRole": true,
+    "sharedScopeExplanation": "此角色本身不允许平台级管理，清理仅移除已被服务端禁止的历史菜单授权；其他使用该角色的账号同步失去这些无效菜单授权，不变更其有效业务授权。",
+    "removed": [
+      {
+        "code": "MENU_apps",
+        "meaning": "平台应用管理",
+        "authorityIds": [
+          "108"
+        ]
+      },
+      {
+        "code": "MENU_api_docs",
+        "meaning": "平台 API 文档与调试",
+        "authorityIds": [
+          "142"
+        ]
+      },
+      {
+        "code": "MENU_iot_diagnostics",
+        "meaning": "平台诊断",
+        "authorityIds": [
+          "1786373147361000106",
+          "1805188141581010407"
+        ]
+      }
+    ],
+    "beforeGrantLinks": 78,
+    "afterGrantLinks": 74,
+    "removedGrantLinks": 4,
+    "mutation": "数据库维护事务限定 role_id=4 与已确认的 4 个 authority_id；锁定当前值并与持久备份比较后仅删除匹配行。保留其余链接的 ID、时间及所有未知字段。",
+    "retainedLinksAndDirectUserGrantsUnchanged": true,
+    "roleMembershipAndPasswordUnchanged": true,
+    "keptCapabilities": [
+      "租户成员管理",
+      "项目授权",
+      "党校用量与费用报表",
+      "月报数据校正",
+      "多联机与其他已授权业务"
+    ],
+    "durableBackup": "/root/security-jxdx-admin-20261105/role4-before.private.json",
+    "backupSha256": "075d01383bb457102cb45b07b5d7c7c23cdbf89a0681832cea5d757167cbced3",
+    "removalReceipt": "/root/security-jxdx-admin-20261105/removal-receipt.json",
+    "rollback": "只在再次核对角色、账号及现有授权无并发变化后恢复备份内的 4 条原链接；不覆盖整个角色或权限表。"
+  },
+  "runtimeVerification": {
+    "testedMainlineCommit": "4999f1ea689ab2a893e6462246852c95ca5ffb02",
+    "centralPolicyAndOwnershipSourcesMatchMainline": true,
+    "center": {
+      "role": "center",
+      "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261104.7@sha256:c6f52c5cd72df81970bd8dda35ff5d457abf1481242e07a2c97a475265919a64",
+      "sources": [
+        {
+          "module": "jbm_cluster_py.common.api_access",
+          "sha256": "4cf18b1db02cb316f53ba0967e7c8207b28e0ce220f540ca858ff9e42ba49834",
+          "matchesMainline": true
+        },
+        {
+          "module": "jbm_cluster_py.common.auth",
+          "sha256": "1b70a0fa82926a2267e93801004bb014888a7666421b4e5a0683e64ceee762bc",
+          "matchesMainline": true
+        },
+        {
+          "module": "jbm_cluster_py.platform.center.modules.governance.application.compatibility_service",
+          "sha256": "7ecd7d6f8d984147b3939222a4e5e0914cf50776069fcddbc6f88df12c3c2097",
+          "matchesMainline": true
+        },
+        {
+          "module": "jbm_cluster_py.platform.center.modules.governance.application.access",
+          "sha256": "51a3dd8d6a9c694502a78de9289cdc5f9a39527d4d67e901ac72e9f33252ef69",
+          "matchesMainline": true
+        },
+        {
+          "module": "jbm_cluster_py.platform.center.modules.governance.application.request_access",
+          "sha256": "a275bd81d7d2d1ebf70126d5b293ada0e868b103bb7d28524c94e65e0914632c",
+          "matchesMainline": true
+        }
+      ]
+    },
+    "otherSourceCopyObservation": "Auth 与建筑镜像中各有 api_access.py 副本版本差异；已检查本次请求实际调用的中央 Center 鉴权、归属检查及 Auth 身份服务，相关源码匹配。本次没有据此声称所有服务源码同版本。",
+    "imagesRedeployed": false
+  },
+  "operations": {
+    "deletedPermissionLinks": 4,
+    "newEncryptedLoginKeys": 1,
+    "businessDataWrites": 0,
+    "fieldCommands": 0,
+    "passwordChanges": 0,
+    "roleEscalations": 0
+  },
+  "limitations": [
+    "这是权限与菜单专项核验，不能作为二级等保整体验收或测评结论。",
+    "生产写权限通过现有 /center/security/authorize 判定接口验证，不实际调用业务写操作；对象级写入与提权保护在隔离本地测试中验证。",
+    "本次近期日志过滤未找到带 actor=2100 的 api_access_denied 样本，不能据此断言所有审计缺失或已齐全；接口拒绝审计的落库、关联和保存期尚未完整验收。"
+  ],
+  "evidenceRoot": "D:/workspaces/iot-platform-jbm/output/security-jxdx-admin-20261105",
+  "evidence": {
+    "login-receipt.json": {
+      "sha256": "decf2fbc7b21532ced73faa695d910cedc48297ed90433e868aa3bd0704c7ffb"
+    },
+    "assignment-before.private.json": {
+      "sha256": "e07683ec320176817c42690312356cfee8e1d2ee33976636b4b5ce855dd03d87"
+    },
+    "http-boundaries.json": {
+      "sha256": "1292fe94531d27071814be4eb41e63264a468209fa6bbac0b05ea59944e2e203"
+    },
+    "credential-guards.json": {
+      "sha256": "f54938d3ca80994ce6d166d97e83dc69629107485b74145e99351ae1ea287a18"
+    },
+    "write-decisions.json": {
+      "sha256": "f781da07ece4ea918806027c3b6404f385b0c0486d504609ab77605b15887888"
+    },
+    "ui-acceptance.json": {
+      "sha256": "bef2f4304a1c38196179d6bc56e5aff42bd04e18f1016286bc69f5e623ebc056"
+    },
+    "menu-grants-before.private.json": {
+      "sha256": "64a7633dfab0effacf43be9f1469aaee444f978ca2c3518c8eb43038a3af6812"
+    },
+    "role-menu-backup-receipt.private.log": {
+      "sha256": "ccc98b38c9281da4a39a74766156246b3dd1e6dd3ebdf94f820d85ab39183188"
+    },
+    "role-menu-removal-receipt.private.log": {
+      "sha256": "fcaf76c4fef05b245f982dffb9783f4f723f379839bea26e67d747e4b8accb5a"
+    },
+    "menu-cleanup-verified.json": {
+      "sha256": "9d7d391f841d274fcd5dbdcef0611f3f4bc003426d26c0103c129e47689cbfa1"
+    },
+    "menus-clean-ui.json": {
+      "sha256": "35bc8ad9fd823963bc756d9c713c06ef1008ec6e97f1f17c5af92c293c1e425f"
+    },
+    "menus-clean-building.png": {
+      "sha256": "4fbbf66f3e43d068bef8da1e03a9867fac840a2c1fa2034b81ad655b9802579e"
+    },
+    "menus-clean-iot.png": {
+      "sha256": "bd0bc211fc8e557c5f1a7db355a8ea5f86a2c5c02dba565fd9a760c473447630"
+    },
+    "menus-clean-jbm.png": {
+      "sha256": "60d293118adc9146b753540be57b21303e0923c36035275155f1f058a7646104"
+    },
+    "../td-migration-20261104/party-runtime_audit.private.log": {
+      "sha256": "8dce649be3c16e2a1d4641102295c293f2dc28009efdde05144815e5292c64df"
+    }
+  }
+}
