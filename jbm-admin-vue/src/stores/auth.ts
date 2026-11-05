@@ -149,6 +149,7 @@ export const useAuthStore = defineStore('auth', () => {
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(isSuperAdminUser(user.value))
       menuStore.setPlatformAccount(isPlatformAdministrator(user.value))
+      menuStore.setGlobalAuditReader(isPlatformAdministrator(user.value) || !!user.value.roles?.some(role => role.roleCode === 'security_auditor'))
       menuStore.setAuthorityCodes(
         user.value.authorities?.map((item) => item.authority || item.authorityId || '') ?? [],
       )
@@ -160,6 +161,7 @@ export const useAuthStore = defineStore('auth', () => {
       const menuStore = useMenuStore()
       menuStore.setSuperAdmin(false)
       menuStore.setPlatformAccount(false)
+      menuStore.setGlobalAuditReader(false)
       menuStore.setAuthorityCodes([])
       return null
     }

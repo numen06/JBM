@@ -125,7 +125,8 @@ export const logsModule = defineJbmModule({
     { path: 'log/gateway', name: 'log-management', component: () => import('@/views/log/LogManagement.vue'), meta: { title: '访问日志', menuCode: 'gateway_logs' } },
     { path: 'log/login', name: 'login-logs', component: () => import('@/views/log/LogManagement.vue'), props: { category: 'login' }, meta: { title: '登录日志', menuCode: 'login_logs' } },
     { path: 'log/filter-rules', name: 'log-filter-rules', component: () => import('@/views/log/LogFilterRules.vue'), meta: { title: '采集设置', menuCode: 'log_filter_rules' } },
-    { path: 'log/account', name: 'account-logs', component: () => import('@/views/log/AccountLogs.vue'), meta: { title: '审计日志', menuCode: 'account_logs' } },
+    { path: 'log/audit', name: 'audit-logs', component: () => import('@/views/log/CurrentAuditLogs.vue'), meta: { title: '审计日志', menuCode: 'account_logs' } },
+    { path: 'log/account', name: 'account-logs', component: () => import('@/views/log/AccountLogs.vue'), meta: { title: '全局审计', menuCode: 'account_logs' } },
   ],
 })
 

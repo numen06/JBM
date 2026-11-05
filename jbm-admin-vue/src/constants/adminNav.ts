@@ -296,8 +296,15 @@ export const STATIC_NAV_GROUPS: NavGroupDef[] = [
         menuCodes: ['account_logs', 'gateway_logs', 'access_logs', 'log_filter_rules', 'cluster_access'],
       },
       {
-        name: 'account-logs',
+        name: 'audit-logs',
         title: '审计日志',
+        icon: ScrollText,
+        to: '/log/audit',
+        menuCodes: ['account_logs', 'business_logs', 'audit_logs'],
+      },
+      {
+        name: 'account-logs',
+        title: '全局审计',
         icon: ScrollText,
         to: '/log/account',
         menuCodes: ['account_logs', 'business_logs', 'audit_logs'],

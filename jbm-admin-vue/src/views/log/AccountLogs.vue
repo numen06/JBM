@@ -2,19 +2,17 @@
 import { ref } from 'vue'
 import Button from '@/components/ui/Button.vue'
 import SecurityAuditPanel from './SecurityAuditPanel.vue'
-import BusinessLogs from './BusinessLogs.vue'
 import { useAuthStore } from '@/stores/auth'
-import { isPlatformAdministrator } from '@/lib/adminAccess'
-const tab = ref('security')
+const tab = ref('operation')
 const auth = useAuthStore()
 </script>
 <template>
   <div class="space-y-4">
     <div class="flex flex-wrap gap-2" aria-label="审计日志分类">
-      <Button :variant="tab === 'security' ? 'default' : 'outline'" @click="tab = 'security'">安全审计</Button>
-      <Button v-if="isPlatformAdministrator(auth.user)" :variant="tab === 'business' ? 'default' : 'outline'" @click="tab = 'business'">业务过程</Button>
+      <Button :variant="tab === 'operation' ? 'default' : 'outline'" @click="tab = 'operation'">业务操作</Button>
+      <Button :variant="tab === 'login' ? 'default' : 'outline'" @click="tab = 'login'">登录记录</Button>
+      <Button :variant="tab === 'access' ? 'default' : 'outline'" @click="tab = 'access'">接口访问</Button>
     </div>
-    <SecurityAuditPanel v-if="tab === 'security'" />
-    <BusinessLogs v-else />
+    <SecurityAuditPanel :key="`${tab}:${auth.activeTenantId}`" :category="tab" :title="tab === 'operation' ? '业务操作' : tab === 'login' ? '登录记录' : '接口访问'" />
   </div>
 </template>

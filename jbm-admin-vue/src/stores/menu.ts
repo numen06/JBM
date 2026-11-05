@@ -22,6 +22,7 @@ export const useMenuStore = defineStore('menu', () => {
   const authorityMenuCodes = ref<string[]>([])
   const superAdmin = ref(false)
   const platformAccount = ref(false)
+  const globalAuditReader = ref(false)
   const loaded = ref(false)
   const loadError = ref('')
   const extensionModules = ref<JbmFrontendModule[]>([])
@@ -68,7 +69,10 @@ export const useMenuStore = defineStore('menu', () => {
         return items.length ? [{ ...group, items }] : []
       }),
     )
-    return mergeNavGroups([...builtIn, ...extensions])
+    return mergeNavGroups([...builtIn, ...extensions]).flatMap(group => {
+      const items = group.items.filter(item => item.to !== '/log/account' || globalAuditReader.value)
+      return items.length ? [{ ...group, items }] : []
+    })
   })
 
   function isRouteAllowed(path: string): boolean {
@@ -113,6 +117,7 @@ export const useMenuStore = defineStore('menu', () => {
     authorityMenuCodes.value = []
     superAdmin.value = false
     platformAccount.value = false
+    globalAuditReader.value = false
     loaded.value = false
     loadError.value = ''
   }
@@ -128,6 +133,7 @@ export const useMenuStore = defineStore('menu', () => {
   function setPlatformAccount(value: boolean) {
     platformAccount.value = value
   }
+  function setGlobalAuditReader(value: boolean) { globalAuditReader.value = value }
 
   function registerModules(modules: JbmFrontendModule[]) {
     extensionModules.value = [...modules]
@@ -147,6 +153,7 @@ export const useMenuStore = defineStore('menu', () => {
     setAuthorityCodes,
     setSuperAdmin,
     setPlatformAccount,
+    setGlobalAuditReader,
     registerModules,
     clear,
   }
