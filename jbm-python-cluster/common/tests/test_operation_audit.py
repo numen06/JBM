@@ -182,6 +182,15 @@ class Config:
         }.get(key, default)
 
 
+def test_background_publisher_startup_failure_prevents_silent_worker_start(tmp_path):
+    auditor = OperationAuditor(Config(tmp_path))
+    auditor.prepare = Mock()
+    auditor.start = AsyncMock(side_effect=RuntimeError("configuration unavailable"))
+    with pytest.raises(RuntimeError, match="worker not started"):
+        auditor.start_background()
+    assert not auditor.background_thread.is_alive()
+
+
 @pytest.mark.asyncio
 async def test_mutation_has_durable_start_and_actual_result_with_redacted_changes(tmp_path):
     auditor = OperationAuditor(Config(tmp_path))

@@ -143,6 +143,8 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         openapi_url=str(openapi.get("openapi-url") or "/openapi.json"),
         lifespan=lifespan,
     )
+    from jbm_cluster_py.common.operation_audit import install_operation_audit
+    install_operation_audit(app, app_config)
     auth.bind_app(app, profile=app_config.profile)
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Any):
@@ -152,6 +154,10 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         try:
             request.state.identity = await auth.authenticate_request(request, app_config.service_name)
         except HTTPException as exc:
+            if exc.status_code == 403:
+                from jbm_cluster_py.common.auth import denied_audit_actor
+                from jbm_cluster_py.common.operation_audit import record_denied_operation
+                await record_denied_operation(app, request, await denied_audit_actor(auth, request), 403)
             return JSONResponse(status_code=exc.status_code, content={"success": False, "code": exc.status_code, "message": exc.detail, "result": None})
         except PermissionError as exc:
             return JSONResponse(

@@ -330,7 +330,7 @@ class SecurityAuditStore:
             publisher_count=len(publishers)
             publisher_verified=bool(publishers)
             for publisher in publishers:
-                if int(time.time()*1000)-publisher.get('heartbeat',0)>30000 or publisher.get('diskError'):
+                if int(time.time()*1000)-publisher.get('heartbeat',0)>30000 or publisher.get('diskError') or publisher.get('scanError'):
                     publisher_verified=False
                 selected=publisher if tenant is None else publisher.get('byTenant',{}).get(str(tenant),{})
                 pending+=int(selected.get('pending',0))

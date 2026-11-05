@@ -260,6 +260,7 @@ class OperationAuditor:
         self.sent = {}
         self.last_spool_error = False
         self.scan_sources = []
+        self.scan_error = False
 
     def prepare(self):
         if not self.kafka.enabled:
@@ -379,6 +380,7 @@ class OperationAuditor:
         if self.receipts.client is None:
             await self.receipts.start()
         row = await asyncio.to_thread(self._pending_health)
+        row["scanError"] = self.scan_error
         await self.receipts.client.hset(
             OPERATION_HEALTH_KEY, self.publisher_key, json.dumps(row, separators=(",", ":"))
         )
@@ -406,10 +408,16 @@ class OperationAuditor:
     async def _flush_loop(self):
         while True:
             try:
-                for scanner in self.scan_sources:
-                    await asyncio.to_thread(scanner)
                 await self.report_health()
                 await self.flush()
+                self.scan_error = False
+                for scanner in self.scan_sources:
+                    try:
+                        await asyncio.to_thread(scanner)
+                    except Exception:
+                        self.scan_error = True
+                        logger.exception("Business audit source scan postponed; source retained")
+                await self.report_health()
             except asyncio.CancelledError:
                 raise
             except Exception:
@@ -483,9 +491,17 @@ class OperationAuditor:
             return
         self.prepare()
         self.background_stop = threading.Event()
+        ready = threading.Event()
+        errors = []
 
         async def run():
-            await self.start()
+            try:
+                await self.start()
+            except Exception as exc:
+                errors.append(exc)
+                ready.set()
+                return
+            ready.set()
             try:
                 while not self.background_stop.is_set():
                     await asyncio.sleep(0.2)
@@ -496,6 +512,12 @@ class OperationAuditor:
             target=lambda: asyncio.run(run()), name="business-audit-delivery", daemon=True
         )
         self.background_thread.start()
+        if not ready.wait(30):
+            self.background_stop.set()
+            raise RuntimeError("Business audit publisher startup timed out; worker not started")
+        if errors:
+            self.background_thread.join(timeout=2)
+            raise RuntimeError("Business audit publisher startup failed; worker not started") from errors[0]
 
     def stop_background(self):
         if getattr(self, "background_stop", None):
