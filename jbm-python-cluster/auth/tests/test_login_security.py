@@ -19,6 +19,15 @@ client = key_client
 key = file_key_fixture
 
 
+def set_transport_peer(client, host):
+    """Set the actual ASGI peer on both old and new Starlette test clients."""
+    original = client._transport.app
+    async def peer(scope, receive, send):
+        if scope['type']=='http':scope={**scope,'client':(host,50000)}
+        await original(scope,receive,send)
+    client._transport.app=peer
+
+
 def password_login(client, password="admin123", ip="114.114.114.114"):
     # These tests exercise password/key lockout, so supply a valid challenge.
     client.portal.call(client.app.state.auth_service.cache.set_json, "captcha:system:test5", {"code": "TEST5"}, 60)
@@ -196,7 +205,7 @@ def test_default_half_year_and_explicit_permanent(client, key):
 
 
 def test_location_change_is_durable_visible_only_to_owner_and_acknowledged(client, monkeypatch):
-    client._transport.client = ("127.0.0.1", 50000)
+    set_transport_peer(client,"127.0.0.1")
     locations = {
         "114.114.114.114": {
             "country": "中国",
@@ -248,7 +257,7 @@ def test_location_change_is_durable_visible_only_to_owner_and_acknowledged(clien
 
 
 def test_untrusted_forwarded_headers_do_not_forge_location(client):
-    client._transport.client = ("198.51.100.10", 50000)
+    set_transport_peer(client,"198.51.100.10")
     assert password_login(client, ip="223.5.5.5").status_code == 200
     assert rows(client)[-1]["ip"] == "198.51.100.10"
 

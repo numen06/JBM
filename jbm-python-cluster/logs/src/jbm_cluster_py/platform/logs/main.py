@@ -82,6 +82,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     install_exception_handlers(app)
     # Temporary downloads/access already require the log-bound expiring signature.
     install_api_protection(app, app_config, public_paths=("/health", "/actuator/health", "/businessLog/download/", "/businessLog/access/"))
+    security_audit.publisher_health = app.state.operation_audit.publisher_health
+    security_audit.archive_ack = app.state.operation_audit.acknowledge
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_logs_router(repository, service, access_ingest))
 

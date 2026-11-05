@@ -16,12 +16,25 @@ import { useCrudForm } from '@/composables/useCrudForm'
 import { useFeedback } from '@/composables/useFeedback'
 import { listIpLimits, createIpLimit, updateIpLimit, deleteIpLimit } from '@/api/gateway'
 import type { GatewayIpLimit } from '@/api/types'
-import { get, unwrap } from '@/api/request'
+import { get, put, unwrap } from '@/api/request'
 
 const keyword = ref('')
 const policyTypeFilter = ref('')
 const feedback = useFeedback()
-const adminPolicy = ref<{ mode: string; allowedNetworks: string[]; currentSource: string; passwordMaxAgeDays: number } | null>(null)
+interface AdminPolicy { mode: string; allowedNetworks: string[]; currentSource: string; passwordMaxAgeDays: number; revision: string; canEdit: boolean; defaultNetworks: string[] }
+const adminPolicy = ref<AdminPolicy | null>(null)
+const policyEditing = ref(false), policySaving = ref(false), policyMode = ref('monitor'), policyNetworks = ref(''), policyError = ref('')
+function editPolicy() { if (!adminPolicy.value) return; policyMode.value = adminPolicy.value.mode; policyNetworks.value = adminPolicy.value.allowedNetworks.join('\n'); policyError.value = ''; policyEditing.value = true }
+function addCurrentSource() { const ip = adminPolicy.value?.currentSource; if (ip) policyNetworks.value = [...new Set([...policyNetworks.value.split(/[\s,;，；]+/).filter(Boolean), ip + (ip.includes(':') ? '/128' : '/32')])].join('\n') }
+async function savePolicy() {
+  if (!adminPolicy.value) return
+  policySaving.value = true; policyError.value = ''
+  try {
+    adminPolicy.value = unwrap(await put<AdminPolicy>('/oauth2/security/admin-policy', { mode: policyMode.value, allowedNetworks: policyNetworks.value.split(/[\s,;，；]+/).filter(Boolean), revision: adminPolicy.value.revision }))
+    policyEditing.value = false
+  } catch (error) { policyError.value = error instanceof Error ? error.message : '保存失败，请刷新核对' }
+  finally { policySaving.value = false }
+}
 const adminPolicyError = ref('')
 onMounted(async () => {
   try { adminPolicy.value = unwrap(await get<NonNullable<typeof adminPolicy.value>>('/oauth2/security/admin-policy')) }
@@ -121,10 +134,18 @@ async function handleDelete(row: GatewayIpLimit) {
       <p v-if="adminPolicyError" class="text-sm text-destructive">{{ adminPolicyError }}</p>
       <template v-if="adminPolicy">
         <p class="text-sm text-muted-foreground">当前来源 <span class="font-mono">{{ adminPolicy.currentSource }}</span>；允许范围 {{ adminPolicy.allowedNetworks.join('、') || '尚未配置' }}。</p>
-        <p class="text-sm text-muted-foreground">由统一安全配置管理，作用于登录和已登录的管理请求。启用前须核对办公及运维网段，避免锁定现有管理员。</p>
+        <p class="text-sm text-muted-foreground">默认提供常用局域网范围，可在此增改 IP／网段。限制同时作用于登录和管理请求；升级保留现有启停设置。</p>
         <p v-if="adminPolicy.passwordMaxAgeDays" class="text-sm text-muted-foreground">密码定期更换周期 {{ adminPolicy.passwordMaxAgeDays }} 天，已有密码保持不变并从首次验证起计时。</p>
+        <Button v-if="adminPolicy.canEdit" size="sm" variant="outline" @click="editPolicy">设置接入范围</Button>
       </template>
     </section>
+    <CrudDialog v-model:open="policyEditing" title="管理员接入限制" :saving="policySaving" @save="savePolicy">
+      <p v-if="policyError" role="alert" class="text-sm text-destructive">{{ policyError }}</p>
+      <FormField label="限制模式"><Select v-model="policyMode"><option value="monitor">观察模式（记录但不拦截）</option><option value="enforce">启用限制（仅允许以下范围）</option></Select></FormField>
+      <FormField label="允许的 IP／网段" required><textarea v-model="policyNetworks" rows="8" class="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm" placeholder="每行一个 IP 或 CIDR 网段" /></FormField>
+      <div class="flex flex-wrap gap-2"><Button size="sm" variant="outline" @click="policyNetworks = adminPolicy?.defaultNetworks.join('\n') || ''">使用局域网默认范围</Button><Button size="sm" variant="outline" @click="addCurrentSource">加入当前地址</Button></div>
+      <p class="text-sm text-muted-foreground">启用时会检查当前管理地址是否获准，防止将自己锁定。保存后由配置中心同步到各服务。</p>
+    </CrudDialog>
     <DataTableShell :loading="loading" :error="error" :empty="!items.length">
       <Table>
         <thead>

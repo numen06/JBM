@@ -49,6 +49,9 @@ async def run_backup_runtime(app, root, database_config):
             logger.exception("Database backup worker initialization failed")
             return  # Health reports 503; the stack restart policy handles startup failure.
         app.state.database_backups = backups
+        backups.operation_auditor = getattr(app.state, "operation_audit", None)
+        if backups.operation_auditor is not None:
+            backups.operation_auditor.scan_sources.extend([backups.flush_legacy_audit,backups.flush_audit_results])
         app.state.database_backup_status = "ready"
         logger.info("Database backup worker acquired ownership")
         try:

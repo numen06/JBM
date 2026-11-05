@@ -116,6 +116,15 @@ class DatabaseBackups:
             db.close()
 
     def audit(self, actor, action, target):
+        auditor=getattr(self,'operation_auditor',None)
+        if auditor is not None and auditor.enabled:
+            from jbm_cluster_py.common.operation_audit import current_operation
+            from jbm_cluster_py.common.security_audit import audit_event
+            if current_operation.get():return  # The verified HTTP operation owns this audit.
+            row=audit_event('operation',account=str(actor),operation=action,target=target,phase='RESULT',success=True)
+            row.update(category='operation',operationId=uuid.uuid4().hex,operationStatus='SUCCEEDED',platformActor=True,tenantScopeVerified=False,serviceId=auditor.service)
+            auditor._write(row)
+            return
         with self.connect() as db:
             db.execute("INSERT INTO audit(at,actor,action,target) VALUES(?,?,?,?)",
                        (utcnow().isoformat(), str(actor), action, target))
@@ -323,16 +332,25 @@ class DatabaseBackups:
         return {"items": [json.loads(row[0]) for row in rows], "total": total}
 
     def enqueue(self, kind, source_id, actor, options=None):
+        from jbm_cluster_py.common.operation_audit import current_operation
         source = self.source(source_id)
         task = {"id": uuid.uuid4().hex, "kind": kind, "sourceId": source_id, "sourceName": source["name"],
                 "database": source["database"], "sourceIdentity": self.identity(source), "actor": str(actor),
                 "status": "queued", "createdAt": utcnow().isoformat(), "error": "", **(options or {})}
+        if current_operation.get():
+            task["auditContext"] = dict(current_operation.get())
+        elif getattr(self,'operation_auditor',None) is not None and self.operation_auditor.enabled:
+            from jbm_cluster_py.common.security_audit import audit_event
+            context=audit_event('operation',account=str(actor),operation=kind,target=source_id,phase='START',success=None)
+            context.update(operationId=uuid.uuid4().hex,category='operation',operationStatus='STARTED',platformActor=True,tenantScopeVerified=False,serviceId=self.operation_auditor.service)
+            self.operation_auditor._write(context)
+            task['auditContext']=context
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             if db.execute("SELECT 1 FROM tasks WHERE source_id=? AND status IN ('queued','running')", (source_id,)).fetchone():
                 raise ValueError("该数据库已有执行中的任务")
             self.write_task(db, task)
-        self.audit(actor, kind, task["id"])
+        if not task.get('auditContext'):self.audit(actor, kind, task["id"])
         return task
 
     def backup(self, task, source):
@@ -547,6 +565,45 @@ class DatabaseBackups:
             self.write_task(db, task)
         if task["kind"] == "backup" and task["status"] == "success":
             self.cleanup(task["sourceId"])
+
+    def flush_audit_results(self):
+        auditor = getattr(self, "operation_auditor", None)
+        if auditor is None or not auditor.enabled:
+            return
+        with self.connect() as db:
+            rows = db.execute("SELECT document FROM tasks WHERE status IN ('success','failed')").fetchall()
+        for row in rows:
+            task = json.loads(row[0])
+            if not task.get("auditContext") or task.get("auditFinalRecorded"):
+                continue
+            auditor.complete_sync(task["auditContext"], "SUCCEEDED" if task["status"] == "success" else "FAILED",
+                                  task["id"], int(datetime.fromisoformat(task["finishedAt"]).timestamp()*1000),
+                                  task.get("error", ""))
+            with self.connect() as db:
+                db.execute('BEGIN IMMEDIATE')
+                current=db.execute('SELECT document FROM tasks WHERE id=?',(task['id'],)).fetchone()
+                if current is not None and json.loads(current[0])==task:
+                    self.write_task(db,{**task,'auditFinalRecorded':True})
+
+    def flush_legacy_audit(self):
+        auditor=getattr(self,'operation_auditor',None)
+        if auditor is None or not auditor.enabled:return
+        with self.connect() as db:rows=[dict(r) for r in db.execute('SELECT * FROM audit ORDER BY id LIMIT 100')]
+        for raw in rows:
+            stamp=datetime.fromisoformat(raw['at'])
+            if stamp.tzinfo is None:stamp=stamp.replace(tzinfo=timezone.utc)
+            event_id=uuid.uuid5(uuid.NAMESPACE_URL,'jbm-job-audit:'+str(raw['id'])+':'+str(raw['at'])).hex
+            event={'eventId':event_id,'operationId':event_id,'timestamp':int(stamp.timestamp()*1000),'source':'legacy-job',
+                   'category':'legacy-record','phase':'LEGACY','operationStatus':'UNKNOWN','success':None,
+                   'operation':raw['action'],'target':raw['target'],'userId':raw['actor'] if str(raw['actor'] or '').isdigit() else None,
+                   'account':None,'platformActor':True,'tenantScopeVerified':False,'serviceId':auditor.service,
+                   'message':'旧记录未保存最终执行结果，按原始信息归档','legacy':raw}
+            auditor._write(event)
+            if auditor.archive_confirmed_sync(event):
+                with self.connect() as db:
+                    db.execute('BEGIN IMMEDIATE')
+                    current=db.execute('SELECT * FROM audit WHERE id=?',(raw['id'],)).fetchone()
+                    if current is not None and dict(current)==raw:db.execute('DELETE FROM audit WHERE id=?',(raw['id'],))
 
     async def worker(self):
         # ponytail: one worker per deployment; use a shared queue before scaling replicas.

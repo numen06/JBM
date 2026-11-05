@@ -18,6 +18,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/common/src:/app/integrations/src:/app/auth/src:/app/doc/src:/app/push/src:/app/job/src:/app/gateway/src:/app/center/src:/app/logs/src:/app/bigscreen/src
 
 WORKDIR /app
+LABEL io.feige.audit.spool=/app/data/security-audit-spool
 
 RUN useradd --create-home --shell /usr/sbin/nologin appuser \
     && mkdir -p /app/nacos-data/snapshot /app/nacos-data/failover /app/data \

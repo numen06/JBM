@@ -6,12 +6,19 @@ import json
 import logging
 import time
 import uuid
+import hashlib
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine
 from jbm_cluster_py.integrations.database import configured_database_url, require_tables
 
 logger = logging.getLogger(__name__)
 AUDIT_TOPIC = "jbm.security.audit.v1"
+OPERATION_HEALTH_KEY = "jbm:audit:operation:publishers"
+OPERATION_ACK_PREFIX = "jbm:audit:operation:archived:"
+
+
+def audit_digest(event):
+    return hashlib.sha256(json.dumps(event,ensure_ascii=True,sort_keys=True,separators=(",",":")).encode()).hexdigest()
 
 
 def login_succeeded(value):

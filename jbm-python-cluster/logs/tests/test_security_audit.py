@@ -1,4 +1,5 @@
 import json
+import time
 from unittest.mock import AsyncMock
 import httpx
 
@@ -12,6 +13,20 @@ from jbm_cluster_py.platform.logs.security_audit import audit_reader_scope, audi
 from fastapi import HTTPException
 from starlette.datastructures import Headers
 from jbm_cluster_py.common.security_audit import login_succeeded
+
+
+@pytest.mark.asyncio
+async def test_publisher_backlog_health_is_tenant_scoped_and_never_false_green(tmp_path):
+    sink=loki_sink();store=SecurityAuditStore({'enabled':True,'integrity-key':'x'*32,'backup-directory':str(tmp_path)},loki=sink)
+    store._range=AsyncMock(return_value=[])
+    now=int(time.time()*1000)
+    store.publisher_health=AsyncMock(return_value=[{'heartbeat':now,'pending':2,'oldest':now-60000,'byTenant':{'2':{'pending':2,'oldest':now-60000}}}])
+    own=await store.health('1');global_=await store.health()
+    assert own['healthy'] and own['pendingEvents']==0 and own['publisherCount'] is None
+    assert not global_['healthy'] and global_['pendingEvents']==2
+    store.publisher_health.return_value=[{'heartbeat':now-60000,'pending':0,'byTenant':{}}]
+    assert not (await store.health('1'))['healthy']
+    await sink.stop()
 
 
 def test_mysql_bit_and_tinyint_login_result_have_the_same_meaning():

@@ -104,6 +104,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     install_exception_handlers(app)
+    from jbm_cluster_py.common.operation_audit import install_operation_audit
+    install_operation_audit(app,app_config)
     @app.middleware("http")
     async def management_source(request: Request, call_next):
         header = request.headers.get("authorization", "")
@@ -122,6 +124,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                 # Public login/bootstrap endpoints must still work with a stale
                 # browser token. Protected handlers keep their own validation.
                 identity = {}
+        request.state.identity = identity
         response = await call_next(request)
         return attach_audit_actor(response, identity) if identity else response
     install_api_protection(app, app_config, protected_prefixes=("/docs", "/redoc", "/openapi.json", "/v3/api-docs", "/v2/api-docs"))

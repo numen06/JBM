@@ -201,6 +201,8 @@ def install_api_protection(
     )
     auth.bind_app(app, profile=config.profile)
     admin_policy = AdminAccessPolicy(config.get("jbm.admin-access", {}) or {})
+    from .operation_audit import install_operation_audit
+    install_operation_audit(app, config)
 
     previous_lifespan = app.router.lifespan_context
 
@@ -242,7 +244,12 @@ def install_api_protection(
                     "result": None,
                 },
             )
-            return attach_audit_actor(response, await denied_audit_actor(auth, request)) if exc.status_code == 403 else response
+            if exc.status_code == 403:
+                identity = await denied_audit_actor(auth,request)
+                from .operation_audit import record_denied_operation
+                await record_denied_operation(app,request,identity,exc.status_code)
+                return attach_audit_actor(response,identity)
+            return response
         response = await call_next(request)
         return attach_audit_actor(response, request.state.identity, getattr(request.state, "audit_tenant_id", UNSET_AUDIT_TENANT))
 

@@ -58,6 +58,8 @@ class SecurityAuditStore:
         self.lock = asyncio.Lock()
         self.outbox_engine = outbox_engine
         self.last_error = None
+        self.publisher_health = None
+        self.archive_ack = None
 
     async def start(self):
         if not self.enabled:
@@ -165,6 +167,7 @@ class SecurityAuditStore:
                 if self.outbox_engine is not None:
                     async with self.outbox_engine.begin() as conn:
                         await conn.execute(text("DELETE FROM security_audit_outbox WHERE event_id=:id AND payload=:payload"), {"id": event["eventId"], "payload": json.dumps(event, ensure_ascii=False, separators=(",", ":"))})
+                if self.archive_ack is not None:await self.archive_ack(event)
                 self.last_error = None
             except Exception:
                 self.last_error = "安全日志归档或完整性校验失败，消息保留重试"
@@ -189,9 +192,14 @@ class SecurityAuditStore:
         if page * size > 4900:
             raise ValueError("结果较多，请缩小时间或账号范围后查询")
         selector = '{job="jbm-security-audit"} | json'
-        for name in ("userId", "account", "tenantId", "operation", "category", "originalId", "httpStatus", "ip", "method", "serviceId"):
+        for name in ("userId", "account", "tenantId", "operation", "category", "originalId", "httpStatus", "ip", "method", "serviceId", "operationId", "requestId", "businessTaskId"):
             if body.get(name):
                 selector += " | " + name + " = " + json.dumps(str(body[name]))
+        if body.get('businessTaskIds'):
+            ids=body['businessTaskIds']
+            if not isinstance(ids,list) or len(ids)>100 or any(not isinstance(v,str) or len(v)>256 for v in ids):
+                raise ValueError('关联业务编号格式无效')
+            selector+=' | businessTaskId =~ '+json.dumps('^('+'|'.join(re.escape(v) for v in ids)+')$')
         if body.get("path"):
             selector += " | target =~ " + json.dumps(".*" + re.escape(str(body["path"])) + ".*")
         for name in ("account", "ip"):
@@ -315,7 +323,20 @@ class SecurityAuditStore:
                 row = (await conn.execute(text("SELECT COUNT(*), MIN(CAST(JSON_EXTRACT(payload,'$.timestamp') AS SIGNED)) FROM security_audit_outbox" + where), params)).one()
                 pending, oldest = int(row[0]), row[1]
         lag = max(0, int(time.time()*1000)-int(oldest)) if oldest is not None else 0
+        publisher_verified = True
+        publisher_count = 0
+        if self.publisher_health is not None:
+            publishers = await self.publisher_health()
+            publisher_count=len(publishers)
+            publisher_verified=bool(publishers)
+            for publisher in publishers:
+                if int(time.time()*1000)-publisher.get('heartbeat',0)>30000 or publisher.get('diskError'):
+                    publisher_verified=False
+                selected=publisher if tenant is None else publisher.get('byTenant',{}).get(str(tenant),{})
+                pending+=int(selected.get('pending',0))
+                if selected.get('oldest') is not None:lag=max(lag,int(time.time()*1000)-int(selected['oldest']))
         return {"enabled": self.enabled, "storage": "Loki", "keepDays": self.keep_days, "appendOnly": True,
                 "tenantScoped": tenant is not None, "tenantId": tenant,
                 "backupEnabled": True, "pendingEvents": pending, "oldestPendingMs": lag,
-                "healthy": not self.last_error and lag < 30000, "error": self.last_error}
+                "publishersVerified":publisher_verified,"publisherCount":publisher_count if tenant is None else None,
+                "healthy": not self.last_error and lag < 30000 and publisher_verified, "error": self.last_error}

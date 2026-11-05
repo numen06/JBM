@@ -16,7 +16,7 @@ REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,128}$")
 def install_exception_handlers(app: FastAPI) -> None:
     @app.middleware("http")
     async def request_context(request: Request, call_next):
-        supplied_request_id = request.headers.get("X-Request-ID", "")
+        supplied_request_id = getattr(request.state,"request_id",None) or request.headers.get("X-Request-ID", "")
         request_id = (
             supplied_request_id
             if REQUEST_ID_PATTERN.fullmatch(supplied_request_id)

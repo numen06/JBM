@@ -83,6 +83,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     auth.bind_app(app, profile=app_config.profile)
+    from jbm_cluster_py.common.operation_audit import install_operation_audit
+    install_operation_audit(app, app_config)
     @app.middleware("http")
     async def authenticate(request: Request, call_next: Any):
         if auth.is_public(request.url.path):
@@ -94,7 +96,12 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
             admin_policy.require(request.state.identity, request.state.source_ip)
         except HTTPException as exc:
             response = JSONResponse(status_code=exc.status_code, content=fail(None, exc.detail, exc.status_code))
-            return attach_audit_actor(response, await denied_audit_actor(auth, request)) if exc.status_code == 403 else response
+            if exc.status_code == 403:
+                identity = await denied_audit_actor(auth,request)
+                from jbm_cluster_py.common.operation_audit import record_denied_operation
+                await record_denied_operation(app,request,identity,exc.status_code)
+                return attach_audit_actor(response,identity)
+            return response
         except PermissionError as exc:
             return JSONResponse(status_code=401, content=fail(None, str(exc), 401))
         except ConnectionError:

@@ -428,6 +428,7 @@ class GatewayProxy:
         headers["X-Internal-Service"] = self.config.service_name
         headers["X-Internal-Instance"] = "%s:%s" % (self.config.service_name, self.config.port)
         headers["X-Original-Path"] = original_path
+        headers["X-Request-ID"] = getattr(request.state,"audit_request_id",None) or getattr(request.state,"request_id",None) or uuid.uuid4().hex
         if request.client:
             # Forward only the source verified at our proxy trust boundary.
             headers["X-Forwarded-For"] = client_ip(request)
