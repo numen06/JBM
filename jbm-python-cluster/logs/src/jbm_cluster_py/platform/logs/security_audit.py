@@ -225,7 +225,7 @@ class SecurityAuditStore:
         """Bulk historical import; verify the same facts with bounded LogQL reads."""
         if not self.enabled or not 1 <= len(events) <= 100:
             raise ValueError("日志批次必须为1～100条并启用日志归档")
-        groups = {}
+        groups, backups = {}, []
         for event in events:
             payload, signature = self.envelope(event)
             path = self.backup_path(event)
@@ -235,10 +235,13 @@ class SecurityAuditStore:
                     raise ValueError("审计备份与事件冲突")
                 signature = previous["signature"]
                 self.verify(payload, signature)
-            await asyncio.to_thread(self.backup_event, event, payload, signature)
+            backups.append((event, payload, signature))
             # Bound each verification request below Loki's normal 30d1h limit.
             key = (str(event["source"]), event["timestamp"] // (30*86400000))
             groups.setdefault(key, []).append({**event, "integritySignature": signature})
+        # One bounded batch shares filesystem commits; every file is still
+        # fsynced and read back before any original SQL row may be removed.
+        await asyncio.gather(*(asyncio.to_thread(self.backup_event, *args) for args in backups))
         for (source, _), lines in groups.items():
             expected = {line["eventId"]: line for line in lines}
             selector = '{job="jbm-security-audit",source=' + json.dumps(source) + '} | json | eventId =~ ' + json.dumps("|".join(expected))

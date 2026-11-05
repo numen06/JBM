@@ -73,6 +73,26 @@ def event_for(table, pk, row):
     return event, raw
 
 
+def backup_source(store, table, event, raw):
+    source_backup = store.backup / "legacy-source" / table / (event["eventId"] + ".json")
+    source_backup.parent.mkdir(parents=True, exist_ok=True)
+    if source_backup.exists():
+        if source_backup.read_text(encoding="utf8") != raw:
+            raise ValueError("原日志已变化，保留SQL并停止迁移")
+    else:
+        with source_backup.open("x", encoding="utf8") as stream:
+            stream.write(raw);stream.flush();os.fsync(stream.fileno())
+        os.chmod(source_backup, 0o400)
+        if os.name != "nt":
+            directory = os.open(source_backup.parent, os.O_RDONLY)
+            try:
+                os.fsync(directory)
+            finally:
+                os.close(directory)
+    if hashlib.sha256(source_backup.read_bytes()).hexdigest() != event["legacySha256"]:
+        raise ValueError("原日志备份校验失败")
+
+
 async def migrate(config, *, delete=False, limit=None):
     repository = LogsRepository(config.database)
     settings = dict(config.get("jbm.logs", {}) or {})
@@ -105,24 +125,8 @@ async def migrate(config, *, delete=False, limit=None):
                         break
                     row = dict(row)
                     event, raw = event_for(table, pk, row)
-                    source_backup = store.backup / "legacy-source" / table / (event["eventId"] + ".json")
-                    source_backup.parent.mkdir(parents=True, exist_ok=True)
-                    if source_backup.exists():
-                        if source_backup.read_text(encoding="utf8") != raw:
-                            raise ValueError("原日志已变化，保留SQL并停止迁移")
-                    else:
-                        with source_backup.open("x", encoding="utf8") as stream:
-                            stream.write(raw);stream.flush();os.fsync(stream.fileno())
-                        os.chmod(source_backup, 0o400)
-                        if os.name != "nt":
-                            directory = os.open(source_backup.parent, os.O_RDONLY)
-                            try:
-                                os.fsync(directory)
-                            finally:
-                                os.close(directory)
-                    if hashlib.sha256(source_backup.read_bytes()).hexdigest() != event["legacySha256"]:
-                        raise ValueError("原日志备份校验失败")
                     batch.append((row, event, raw))
+                await asyncio.gather(*(asyncio.to_thread(backup_source, store, table, event, raw) for _, event, raw in batch))
                 await store.handle_many([event for _, event, _ in batch])
                 async with repository.engine.begin() as conn:
                     for row, event, raw in batch:

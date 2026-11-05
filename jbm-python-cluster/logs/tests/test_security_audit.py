@@ -128,3 +128,31 @@ async def test_tampering_and_archive_failure_do_not_erase_outbox(tmp_path):
 def test_no_short_retention_or_default_integrity_secret():
     with pytest.raises(ValueError):
         SecurityAuditStore({"keep-days": 30}, loki=loki_sink())
+
+
+@pytest.mark.asyncio
+async def test_bulk_backup_verifies_every_fact_and_preserves_it_on_redelivery(tmp_path):
+    sink = loki_sink()
+    store = SecurityAuditStore({"enabled": True, "integrity-key": "x" * 32, "backup-directory": str(tmp_path)}, loki=sink)
+    saved, pushes = [], []
+    async def transport(request):
+        body = json.loads(request.content)
+        pushes.append(body)
+        assert len(list(tmp_path.rglob('*.json'))) == 100
+        for stream in body['streams']:
+            saved.extend(stream['values'])
+        return httpx.Response(204)
+    await sink.client.aclose()
+    sink.client = httpx.AsyncClient(transport=httpx.MockTransport(transport))
+    store._range = AsyncMock(side_effect=lambda *args: list(saved))
+    events = [audit_event('legacy-login', userId=i, operation='PASSWORD', success=True) for i in range(100)]
+    await store.handle_many(events)
+    await store.handle_many(events)
+    assert len(pushes) == 1 and len(saved) == 100
+    for event in events:
+        envelope = json.loads(store.backup_path(event).read_text())
+        store.verify(envelope['payload'], envelope['signature'])
+    with pytest.raises(ValueError, match='冲突'):
+        await store.handle_many([{**events[0], 'success': False}])
+    assert len(pushes) == 1
+    await sink.stop()
