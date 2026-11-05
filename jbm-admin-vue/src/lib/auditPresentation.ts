@@ -17,6 +17,7 @@ const resources: Record<string, string> = {
   roles: '角色', role: '角色', reports: '报表', 'energy-types': '能源类型',
   'energy-prices': '能源价格', drawings: '图纸', schedules: '计划', tasks: '任务',
   baseProject: '项目', baseStructure: '建筑结构', baseEnergy: '能源档案',
+  'energy-assistant': '能源助手', selection: '模型选择', 'tenant-features': '功能目录',
 }
 const fields: Record<string, string> = {
   name: '名称', title: '标题', code: '编码', projectName: '项目名称', abbreviation: '项目名称', structureName: '结构名称',
@@ -36,7 +37,10 @@ function body(event: Event) {
 function text(value: unknown) {
   return typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' ? String(value).slice(0, 100) : ''
 }
-export function auditModule(event: Event) { return services[event.serviceId || ''] || event.serviceId || '业务系统' }
+export function auditModule(event: Event) {
+  const service = (event.serviceId || '').replace(/-jbm7$/, '')
+  return services[service] || service || '业务系统'
+}
 export function auditObject(event: Event) {
   const resource = (event.target || '').split('/').map(part => resources[part]).reverse().find(Boolean) || ''
   const values = body(event)
@@ -53,10 +57,15 @@ export function auditAction(event: Event) {
   if (values.type === 'gateway.check') return '检查网关'
   const path = event.target || ''
   const resource = path.split('/').map(part => resources[part]).reverse().find(Boolean)
+  if (path.endsWith('/tenant-features/catalog') && event.operation === 'POST') return '新增功能定义'
   if (resource && path.includes('/api/v1/building/master-data/')) {
     const action = ({ POST: '新增', PUT: '修改', PATCH: '修改', DELETE: '删除' } as Record<string, string>)[event.operation || '']
     if (action) return action + resource
   }
   if (resource && event.operationName?.endsWith('业务资料')) return event.operationName.replace(/业务资料$/, resource)
+  if (path.startsWith('/api/v1/')) {
+    const action = ({ POST: '提交', PUT: '修改', PATCH: '修改', DELETE: '删除', GET: '读取' } as Record<string, string>)[event.operation || '']
+    if (action) return action + (resource || '业务资料')
+  }
   return event.operationName || ({ POST: '提交', PUT: '修改', PATCH: '修改', DELETE: '删除', GET: '读取' } as Record<string,string>)[event.operation || ''] || event.operation || '业务操作'
 }
