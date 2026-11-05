@@ -38,7 +38,8 @@ def test_legacy_missing_login_time_is_not_invented_from_creation_time():
 
 
 @pytest.mark.asyncio
-async def test_null_event_time_cursor_migrates_all_pages_using_real_creation_time(tmp_path, monkeypatch):
+@pytest.mark.parametrize('concurrent_change', [False, True])
+async def test_null_event_time_cursor_migrates_all_pages_using_real_creation_time(tmp_path, monkeypatch, concurrent_change):
     from types import SimpleNamespace
     from sqlalchemy.ext.asyncio import create_async_engine
     from jbm_cluster_py.platform.logs import archive_legacy
@@ -55,9 +56,21 @@ async def test_null_event_time_cursor_migrates_all_pages_using_real_creation_tim
         backup = tmp_path / 'backup'
         def __init__(self, *args, **kwargs): pass
         async def start(self): pass
-        async def handle_many(self, events): facts.extend(events)
+        async def handle_many(self, events):
+            facts.extend(events)
+            if concurrent_change:
+                async with engine.begin() as conn:
+                    await conn.execute(text("UPDATE base_account_logs SET login_type='CHANGED' WHERE id=99"))
     monkeypatch.setattr(archive_legacy, 'SecurityAuditStore', Archive)
-    result = await archive_legacy.migrate(SimpleNamespace(database={'url': url}, get=lambda *args: {}), delete=True)
+    config = SimpleNamespace(database={'url': url}, get=lambda *args: {})
+    if concurrent_change:
+        with pytest.raises(ValueError, match='并发变化'):
+            await archive_legacy.migrate(config, delete=True)
+        async with engine.connect() as conn:
+            assert (await conn.execute(text('SELECT COUNT(*) FROM base_account_logs'))).scalar() == 102
+        await engine.dispose()
+        return
+    result = await archive_legacy.migrate(config, delete=True)
     assert result[0]['verified'] == result[0]['deleted'] == 102
     assert result[0]['remainingSqlRows'] == 0
     assert len(facts) == 102 and all(row['category'] == 'legacy-record' for row in facts)

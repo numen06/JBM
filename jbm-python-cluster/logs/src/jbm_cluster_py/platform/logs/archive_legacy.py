@@ -17,7 +17,7 @@ import re
 from datetime import UTC, datetime
 from pathlib import Path
 
-from sqlalchemy import inspect, text
+from sqlalchemy import bindparam, inspect, text
 from jbm_cluster_py.common.security_audit import login_succeeded
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.platform.logs.loki import LokiSink
@@ -139,19 +139,26 @@ async def migrate(config, *, delete=False, limit=None):
                     batch.append((row, event, raw))
                 await asyncio.gather(*(asyncio.to_thread(backup_source, store, table, event, raw) for _, event, raw in batch))
                 await store.handle_many([event for _, event, _ in batch])
-                async with repository.engine.begin() as conn:
-                    for row, event, raw in batch:
-                        if delete:
-                            lock = "" if repository._sqlite else " FOR UPDATE"
-                            current = (await conn.execute(text(f"SELECT * FROM {table} WHERE {pk}=:id" + lock), {"id": row[pk]})).mappings().first()
-                            if current is not None:
-                                if canonical(dict(current)) != raw:
-                                    raise ValueError("原日志并发变化，禁止删除")
-                                await conn.execute(text(f"DELETE FROM {table} WHERE {pk}=:id"), {"id": row[pk]})
-                                removed += 1
-                        last = row[pk]
-                        last_time = row.get(time_column) or row.get("create_time")
-                        count += 1
+                if delete:
+                    # Compare all originals under the same row locks before a
+                    # bulk delete; this replaces 200 round trips per 100 facts.
+                    expected = {row[pk]: raw for row, _, raw in batch}
+                    async with repository.engine.begin() as conn:
+                        lock = "" if repository._sqlite else " FOR UPDATE"
+                        query = text(f"SELECT * FROM {table} WHERE {pk} IN :ids ORDER BY {pk}" + lock).bindparams(bindparam("ids", expanding=True))
+                        current = (await conn.execute(query, {"ids": list(expected)})).mappings().all()
+                        for row in current:
+                            if canonical(dict(row)) != expected[row[pk]]:
+                                raise ValueError("原日志并发变化，禁止删除")
+                        if current:
+                            query = text(f"DELETE FROM {table} WHERE {pk} IN :ids").bindparams(bindparam("ids", expanding=True))
+                            deleted = await conn.execute(query, {"ids": [row[pk] for row in current]})
+                            if deleted.rowcount != len(current):
+                                raise ValueError("原日志清理行数不符，回滚本批")
+                            removed += deleted.rowcount
+                last = batch[-1][0][pk]
+                last_time = batch[-1][0].get(time_column) or batch[-1][0].get("create_time")
+                count += len(batch)
                 print(json.dumps({"table": table, "verified": count, "deleted": removed}), flush=True)
             async with repository.engine.connect() as conn:
                 remaining = (await conn.execute(text(f"SELECT COUNT(*) FROM {table}"))).scalar()
