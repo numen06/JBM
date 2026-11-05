@@ -1,4 +1,4 @@
 # Merge into the existing limits_config; preserve authentication, storage and retention.
 # Verified with Loki 3.7.x single-binary filesystem deployments.
 limits_config:
-  split_instant_metric_queries_by_interval: 12h
+  split_instant_metric_queries_by_interval: 0s
