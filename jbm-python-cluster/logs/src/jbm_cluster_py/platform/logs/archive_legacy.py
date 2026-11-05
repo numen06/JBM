@@ -50,6 +50,11 @@ def event_for(table, pk, row):
     digest = hashlib.sha256(raw.encode()).hexdigest()
     safe = redact(json.loads(raw))
     stamp = row.get("login_time") if table == "base_account_logs" else row.get("request_time")
+    clock = "login_time" if table == "base_account_logs" else "request_time"
+    clock_source = clock if stamp is not None else "create_time"
+    stamp = stamp if stamp is not None else row.get("create_time")
+    if stamp is None:
+        raise ValueError("原日志缺少事件时间及创建时间，保留SQL并停止迁移")
     parsed = datetime.fromisoformat(str(stamp).replace("Z", "+00:00"))
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=UTC)
@@ -70,6 +75,10 @@ def event_for(table, pk, row):
             operation=row.get("operation_type") or ("READ" if read_operation(str(row.get("method") or "GET"), str(row.get("path") or "/")) else row.get("method")), method=row.get("method"), serviceId=row.get("service_id"),
             target=row.get("path"), ip=row.get("ip"), success=int(status)<400 if status is not None else None,
             httpStatus=row.get("http_status"), gateway=gateway)
+    if clock_source != clock:
+        # A creation timestamp is evidence of a stored record, not proof of a
+        # login at that time. Keep it outside login-event queries/statistics.
+        event.update(timestampSource=clock_source, category="legacy-record", operation="LEGACY_RECORD", message="原记录缺少事件时间，按原创建时间归档；原字段保留")
     return event, raw
 
 
@@ -106,6 +115,7 @@ async def migrate(config, *, delete=False, limit=None):
         for table in ("base_account_logs", "gateway_logs"):
             async with repository.engine.connect() as conn:
                 meta = await conn.run_sync(lambda c: inspect(c).get_pk_constraint(table))
+                columns = await conn.run_sync(lambda c: {v["name"] for v in inspect(c).get_columns(table)})
             keys = meta.get("constrained_columns") or []
             if len(keys) != 1 or not re.fullmatch(r"[a-z_]+", keys[0]):
                 raise ValueError("日志主键不符合迁移约束")
@@ -113,10 +123,11 @@ async def migrate(config, *, delete=False, limit=None):
             last = None
             last_time = None
             time_column = "login_time" if table == "base_account_logs" else "request_time"
+            clock_expression = f"COALESCE({time_column},create_time)" if "create_time" in columns else time_column
             count = removed = 0
             while limit is None or count < limit:
                 async with repository.engine.connect() as conn:
-                    rows = (await conn.execute(text(f"SELECT * FROM {table}" + (f" WHERE {time_column}>:time OR ({time_column}=:time AND {pk}>:last)" if last is not None else "") + f" ORDER BY {time_column},{pk} LIMIT 100"), {"last": last, "time": last_time} if last is not None else {})).mappings().all()
+                    rows = (await conn.execute(text(f"SELECT * FROM {table}" + (f" WHERE {clock_expression}>:time OR ({clock_expression}=:time AND {pk}>:last)" if last is not None else "") + f" ORDER BY {clock_expression},{pk} LIMIT 100"), {"last": last, "time": last_time} if last is not None else {})).mappings().all()
                 if not rows:
                     break
                 batch = []
@@ -139,7 +150,7 @@ async def migrate(config, *, delete=False, limit=None):
                                 await conn.execute(text(f"DELETE FROM {table} WHERE {pk}=:id"), {"id": row[pk]})
                                 removed += 1
                         last = row[pk]
-                        last_time = row[time_column]
+                        last_time = row.get(time_column) or row.get("create_time")
                         count += 1
                 print(json.dumps({"table": table, "verified": count, "deleted": removed}), flush=True)
             async with repository.engine.connect() as conn:

@@ -23,6 +23,47 @@ def test_mysql_bit_and_tinyint_login_result_have_the_same_meaning():
     assert login_succeeded("unknown") is None
 
 
+def test_legacy_missing_login_time_is_not_invented_from_creation_time():
+    from jbm_cluster_py.platform.logs.archive_legacy import event_for
+    row = {"id": 1, "user_id": 2, "login_time": None, "create_time": "2025-01-22 13:35:27", "status": b"\x01", "login_type": "PASSWORD"}
+    event, raw = event_for("base_account_logs", "id", row)
+    assert event['category'] == 'legacy-record'
+    assert event['operation'] == 'LEGACY_RECORD'
+    assert event['timestampSource'] == 'create_time'
+    assert event['legacy']['login_time'] is None
+    event, _ = event_for("base_account_logs", "id", {**row, 'login_time': '2025-01-22 13:35:26'})
+    assert event['category'] == 'login' and 'timestampSource' not in event
+    with pytest.raises(ValueError, match='保留SQL'):
+        event_for("base_account_logs", "id", {**row, 'create_time': None})
+
+
+@pytest.mark.asyncio
+async def test_null_event_time_cursor_migrates_all_pages_using_real_creation_time(tmp_path, monkeypatch):
+    from types import SimpleNamespace
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from jbm_cluster_py.platform.logs import archive_legacy
+    url = 'sqlite+aiosqlite:///' + (tmp_path / 'history.db').as_posix()
+    engine = create_async_engine(url)
+    async with engine.begin() as conn:
+        await conn.execute(text('CREATE TABLE base_account_logs(id INTEGER PRIMARY KEY,user_id INTEGER,login_time TEXT,create_time TEXT,status INTEGER,login_type TEXT)'))
+        await conn.execute(text("INSERT INTO base_account_logs VALUES (:id,1,NULL,'2025-01-22 13:35:27',1,'PASSWORD')"), [{'id': i} for i in range(1, 103)])
+        await conn.execute(text('CREATE TABLE gateway_logs(id TEXT PRIMARY KEY,request_time TEXT)'))
+    await engine.dispose()
+    facts = []
+    class Archive:
+        enabled = True
+        backup = tmp_path / 'backup'
+        def __init__(self, *args, **kwargs): pass
+        async def start(self): pass
+        async def handle_many(self, events): facts.extend(events)
+    monkeypatch.setattr(archive_legacy, 'SecurityAuditStore', Archive)
+    result = await archive_legacy.migrate(SimpleNamespace(database={'url': url}, get=lambda *args: {}), delete=True)
+    assert result[0]['verified'] == result[0]['deleted'] == 102
+    assert result[0]['remainingSqlRows'] == 0
+    assert len(facts) == 102 and all(row['category'] == 'legacy-record' for row in facts)
+    assert len(list((tmp_path / 'backup').rglob('*.json'))) == 102
+
+
 def test_tenant_admin_scope_is_server_bound_and_global_admin_is_unrestricted():
     tenant = {"userId": 2100, "tenantId": 1, "roles": ["tenant_admin"]}
     assert audit_reader_scope(tenant, Headers()) == "1"
