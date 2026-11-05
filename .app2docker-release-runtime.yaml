@@ -7,14 +7,14 @@ build:
   - linux/amd64
   - linux/arm64
   build_args:
-    RELEASE_VERSION: py-7.3-20261105.20
+    RELEASE_VERSION: py-7.3-20261105.21
     JBM_COMMIT: '{full_commit}'
     RELEASE_TARGET: jbm-python-cluster
 git:
   branch: py-7.3
 image:
   name: registry.cn-shanghai.aliyuncs.com/okc/jbm-python-cluster
-  tag: py-7.3-20261105.20
+  tag: py-7.3-20261105.21
   push: true
 push_mode: single
 release:
