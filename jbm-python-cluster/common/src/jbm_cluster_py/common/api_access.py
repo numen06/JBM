@@ -107,6 +107,10 @@ def normalized_path(path: str) -> str:
 
 
 def read_operation(method: str, path: str) -> bool:
+    if method.upper() in {"PUT", "PATCH", "DELETE"} or (
+        method.upper() == "POST" and path.rstrip("/") == "/tenant-features/catalog"
+    ):
+        return False
     action = path.rstrip("/").rsplit("/", 1)[-1].lower()
     if any(
         part.lower().startswith(("delete", "remove", "save", "clear", "reset"))

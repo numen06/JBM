@@ -137,6 +137,17 @@ def test_json_text_secrets_are_redacted_without_hiding_business_month_keys():
     }
 
 
+def test_write_routes_are_not_hidden_by_read_sounding_resource_names():
+    from jbm_cluster_py.common.api_access import read_operation
+    from jbm_cluster_py.common.operation_audit import important_operation
+    for method, path in [("PUT", "/api/v1/energy-assistant/selection"), ("POST", "/tenant-features/catalog"),
+                         ("PATCH", "/query"), ("DELETE", "/catalog")]:
+        assert not read_operation(method, path)
+        assert important_operation(method, path)
+    assert read_operation("GET", "/tenant-features/catalog")
+    assert read_operation("POST", "/devices/query")
+
+
 def test_job_legacy_audit_is_only_deleted_after_verified_archive_receipt(tmp_path):
     from jbm_cluster_py.platform.job.database_backups import DatabaseBackups
 
