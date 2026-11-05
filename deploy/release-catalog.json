@@ -349,7 +349,9 @@
       "services": [
         "jbm7_jbm-admin"
       ],
-      "buildArgs": {},
+      "buildArgs": {
+        "JBM_ADMIN_BASE_PATH": "/jbm/"
+      },
       "servicePolicies": {
         "jbm7_jbm-admin": {
           "stack": "jbm7",
