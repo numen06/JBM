@@ -1,0 +1,747 @@
+{
+  "verifiedAt": "2026-11-05T16:27:17.393970+08:00",
+  "jbm": {
+    "branch": "py-7.3",
+    "version": "py-7.3-20261105.9",
+    "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603"
+  },
+  "buildingWeb": {
+    "branch": "py-2.0",
+    "version": "py-2.0-20261105.11",
+    "sourceCommit": "cd4774c99932b8002ed288b67dc8a401453bcefb"
+  },
+  "sourceRestrictionMode": "monitor",
+  "allowedNetworksNotConfigured": true,
+  "partyDeploymentIncident": {
+    "initialParallelComposePromotionBlocked": true,
+    "loginTemporarilyAffected": true,
+    "recoveredThenSerializedPromotionCompleted": true,
+    "final11ContractChecksPassed": true
+  },
+  "scope": "Login audit tenant isolation and durable pure logs; not full MLPS certification",
+  "status": "deployed-and-verified",
+  "environments": {
+    "local": {
+      "runtime": {
+        "site": "local",
+        "passed": true,
+        "components": [
+          {
+            "role": "web",
+            "service": "jbm73-python-jbm-admin-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261105.9@sha256:d7998cb4894a171ef29d6c35496d623e0f02e0e4085ef0f591c6be9bded0bc0b",
+            "imageId": "sha256:d7998cb4894a171ef29d6c35496d623e0f02e0e4085ef0f591c6be9bded0bc0b",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "running"
+          },
+          {
+            "role": "center",
+            "service": "jbm73-python-jbm-cluster-platform-center-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "job",
+            "service": "jbm73-python-jbm-cluster-platform-job-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261105.9@sha256:640ec316012688d9808d78a91dd7f564a6ad9cbf6220e30b3d9cd4b6a4d813b8",
+            "imageId": "sha256:640ec316012688d9808d78a91dd7f564a6ad9cbf6220e30b3d9cd4b6a4d813b8",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "auth",
+            "service": "jbm73-python-jbm-cluster-platform-auth-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "bigscreen",
+            "service": "jbm73-python-jbm-cluster-platform-bigscreen-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "logs",
+            "service": "jbm73-python-jbm-cluster-platform-logs-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "gateway",
+            "service": "jbm73-python-jbm-cluster-platform-gateway-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "push",
+            "service": "jbm73-python-jbm-cluster-platform-push-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "doc",
+            "service": "jbm73-python-jbm-cluster-platform-doc-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "building-web",
+            "service": "smart-building-python-web-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261105.11@sha256:2930195ae4d4827ebfffed20e76ce3917c43209789d35cea831608cc4d83e0d3",
+            "imageId": "sha256:2930195ae4d4827ebfffed20e76ce3917c43209789d35cea831608cc4d83e0d3",
+            "version": "py-2.0-20261105.11",
+            "sourceCommit": "cd4774c99932b8002ed288b67dc8a401453bcefb",
+            "health": "running"
+          }
+        ],
+        "jbmUiHostedByBuilding": false
+      },
+      "contract": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/feedback/context",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/feedback?size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/logs/securityAudit/status",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      },
+      "archive": {
+        "site": "local",
+        "passed": true,
+        "historyTablesEmpty": true,
+        "archivedCounts": {
+          "base_account_logs": 2542,
+          "gateway_logs": 49026
+        },
+        "totalArchived": 51568,
+        "rawBackupFilesVerified": {
+          "base_account_logs": 2542,
+          "gateway_logs": 49026
+        },
+        "queryViaLogService": true,
+        "pendingOutboxAtCheck": 0
+      }
+    },
+    "party": {
+      "runtime": {
+        "site": "party",
+        "passed": true,
+        "components": [
+          {
+            "role": "bigscreen",
+            "service": "jbm73-standard-test-jbm-cluster-platform-bigscreen-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "job",
+            "service": "jbm73-standard-test-jbm-cluster-platform-job-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261105.9@sha256:640ec316012688d9808d78a91dd7f564a6ad9cbf6220e30b3d9cd4b6a4d813b8",
+            "imageId": "sha256:640ec316012688d9808d78a91dd7f564a6ad9cbf6220e30b3d9cd4b6a4d813b8",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "push",
+            "service": "jbm73-standard-test-jbm-cluster-platform-push-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "doc",
+            "service": "jbm73-standard-test-jbm-cluster-platform-doc-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "gateway",
+            "service": "jbm73-standard-test-jbm-cluster-platform-gateway-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "center",
+            "service": "jbm73-standard-test-jbm-cluster-platform-center-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "logs",
+            "service": "jbm73-standard-test-jbm-cluster-platform-logs-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "auth",
+            "service": "jbm73-standard-test-jbm-cluster-platform-auth-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "building-web",
+            "service": "jxdx-platform-building-web-1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261105.11@sha256:2930195ae4d4827ebfffed20e76ce3917c43209789d35cea831608cc4d83e0d3",
+            "imageId": "sha256:2930195ae4d4827ebfffed20e76ce3917c43209789d35cea831608cc4d83e0d3",
+            "version": "py-2.0-20261105.11",
+            "sourceCommit": "cd4774c99932b8002ed288b67dc8a401453bcefb",
+            "health": "healthy"
+          }
+        ],
+        "jbmUiHostedByBuilding": true
+      },
+      "contract": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/feedback/context",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/feedback?size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/logs/securityAudit/status",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      },
+      "archive": {
+        "site": "party",
+        "passed": true,
+        "historyTablesEmpty": true,
+        "archivedCounts": {
+          "base_account_logs": 1065,
+          "gateway_logs": 28080
+        },
+        "totalArchived": 29145,
+        "rawBackupFilesVerified": {
+          "base_account_logs": 1065,
+          "gateway_logs": 28080
+        },
+        "queryViaLogService": true,
+        "pendingOutboxAtCheck": 9
+      }
+    },
+    "cloud": {
+      "runtime": {
+        "site": "cloud",
+        "passed": true,
+        "components": [
+          {
+            "role": "web",
+            "service": "jbm7_jbm-admin.1.uiw824z67o2a4yf6a6v120tlw",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-admin:py-7.3-20261105.9@sha256:d7998cb4894a171ef29d6c35496d623e0f02e0e4085ef0f591c6be9bded0bc0b",
+            "imageId": "sha256:6545df719bfe76e23eb90fc83dc0e843aa862a4950b7ec5e57dc8fb98ede4aa9",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "running"
+          },
+          {
+            "role": "center",
+            "service": "jbm7_jbm-cluster-platform-center.1.i7du4teouwnpvhlu8eluj5oud",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-center:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "doc",
+            "service": "jbm7_jbm-cluster-platform-doc.1.d7fvoo7lzm8i052z8lnpnsvsu",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-doc:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "job",
+            "service": "jbm7_jbm-cluster-platform-job.1.prsw8g1e9h4jcwuyox338tfs5",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-job:py-7.3-20261105.9@sha256:640ec316012688d9808d78a91dd7f564a6ad9cbf6220e30b3d9cd4b6a4d813b8",
+            "imageId": "sha256:8bd04fef1a5530751da1dfae89fc835c509ff038490c215484d265d42470d928",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "gateway",
+            "service": "jbm7_jbm-cluster-platform-gateway.1.jhher4uvjge5zg2spqyfu5h42",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-gateway:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "auth",
+            "service": "jbm7_jbm-cluster-platform-auth.1.4vnflwg77kkb1j68qn3k17h7h",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-auth:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "bigscreen",
+            "service": "jbm7_jbm-cluster-platform-bigscreen.1.s4igpqgqwzuvfffa3ig9i42fq",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-bigscreen:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "push",
+            "service": "jbm7_jbm-cluster-platform-push.1.auy1koz5d2lw91itgx6bvuxi0",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-push:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "logs",
+            "service": "jbm7_jbm-cluster-platform-logs.1.ke9t7mp37cc3wn4k7itvng4vd",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/jbm-cluster-platform-logs:py-7.3-20261105.9@sha256:0a8ee000b3eaa223dbd366d05c3375b8725d4a5c17508975842956ad74d78fa5",
+            "imageId": "sha256:717d8bb1c1efd6ac46f0b6fdf894335ebf93812c176679de35bf47730fc9c888",
+            "version": "py-7.3-20261105.9",
+            "sourceCommit": "80c850285be918b8630febd7b60e5ba7752d3603",
+            "health": "healthy"
+          },
+          {
+            "role": "building-web",
+            "service": "smart_building_smart-building-web.1.rxkw2cwf2u261bpvhego4x6j1",
+            "image": "registry.cn-shanghai.aliyuncs.com/okc/smart-building-web:py-2.0-20261105.11@sha256:2930195ae4d4827ebfffed20e76ce3917c43209789d35cea831608cc4d83e0d3",
+            "imageId": "sha256:48660416dd7d0e60c9500f9373267fab899860ce7ca64de627227c8f18517307",
+            "version": "py-2.0-20261105.11",
+            "sourceCommit": "cd4774c99932b8002ed288b67dc8a401453bcefb",
+            "health": "healthy"
+          }
+        ]
+      },
+      "contract": {
+        "name": "JBM administration menus",
+        "passed": true,
+        "checks": [
+          {
+            "path": "/center/feedback/context",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/feedback?size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/extend-field/forms",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/api-docs/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/center/developer/pending",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/gateway/gray-routes",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/logs/securityAudit/status",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/sources",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=backup&page=1&size=1",
+            "status": 200,
+            "passed": true
+          },
+          {
+            "path": "/job/sysJob/database-backups/tasks?kind=restore&page=1&size=1",
+            "status": 200,
+            "passed": true
+          }
+        ],
+        "businessWrites": 0
+      },
+      "archive": {
+        "site": "cloud",
+        "passed": true,
+        "historyTablesEmpty": true,
+        "archivedCounts": {
+          "base_account_logs": 8873,
+          "gateway_logs": 309328
+        },
+        "totalArchived": 318201,
+        "rawBackupFilesVerified": {
+          "base_account_logs": 8873,
+          "gateway_logs": 309328
+        },
+        "queryViaLogService": true,
+        "pendingOutboxAtCheck": 0
+      }
+    }
+  },
+  "tenantAcceptance": {
+    "passed": true,
+    "account": "jxdx_admin",
+    "role": "tenant_admin",
+    "origin": "https://jxdx.project.hz-aitech.com",
+    "userId": 2100,
+    "tenantId": "1",
+    "checks": [
+      {
+        "path": "/center/current/user",
+        "status": 200,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 200,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 200,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/query",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/83dbab0d0c284046b0a8b05f2773a6c7",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/loginLogs/pageList",
+        "status": 403,
+        "passed": true
+      },
+      {
+        "path": "/logs/securityAudit/status",
+        "status": 200,
+        "passed": true
+      }
+    ],
+    "verifiedTenantRecords": 20,
+    "loginRecords": 18,
+    "passwordsChanged": false,
+    "roleAssignmentsChanged": false,
+    "timestamp": 1793867089.8424785
+  },
+  "originalMembers": {
+    "originalPasswordsUnchanged": true,
+    "originalProfilesUnchanged": true,
+    "originalRoleLinksRestored": true,
+    "users": [
+      1793682674696944,
+      1793682673791536,
+      1793682672855370
+    ],
+    "verified": true
+  },
+  "evidence": {
+    "document": "JBM登录审计与租户权限验证记录.docx",
+    "archive": "JBM登录审计验收证据包.zip",
+    "archiveSha256": "99600672b348aad53436f960803daa0ebfa72b21e9197a6ac64a1040e3f8f759",
+    "manifest": {
+      "algorithm": "SHA256",
+      "files": [
+        {
+          "name": "JBM登录审计与租户权限验证记录.docx",
+          "bytes": 363014,
+          "sha256": "fb9e85b226f17b858c5958f48dba80281a07184d81c7329be767cd7f5fcd4e31"
+        },
+        {
+          "name": "cloud-archive-receipt.json",
+          "bytes": 348,
+          "sha256": "170803304c57382e1d3e921974685ed1e770b118e8b88cb93a2089bfaf42213f"
+        },
+        {
+          "name": "cloud-jbm-contract.json",
+          "bytes": 1305,
+          "sha256": "9453008757ac3863f30e8d816d23e26b68984b7ad91f0d5b1e7e6c2d2c7a8533"
+        },
+        {
+          "name": "cloud-runtime-final.json",
+          "bytes": 5233,
+          "sha256": "df1aab901e98b546be6033da2a3b3e11183c5aa31faac47e4e5e5618b6aad3ec"
+        },
+        {
+          "name": "local-archive-receipt.json",
+          "bytes": 345,
+          "sha256": "932260a0162b4282dbe97930e20d3632c1013cd83df81c4f311bca994a1365ba"
+        },
+        {
+          "name": "local-jbm-contract.json",
+          "bytes": 1305,
+          "sha256": "9453008757ac3863f30e8d816d23e26b68984b7ad91f0d5b1e7e6c2d2c7a8533"
+        },
+        {
+          "name": "local-runtime-final.json",
+          "bytes": 5072,
+          "sha256": "e26549699d75cd87e1cae7b3822729da687357d38aa7a52395504c2bce038cc3"
+        },
+        {
+          "name": "local-tenant-audit.json",
+          "bytes": 1200,
+          "sha256": "b6e2f0ac8173fb21f3cb3d3bfe249edcd10fb0a8ed1f847f348e19ef275606ad"
+        },
+        {
+          "name": "party-archive-receipt.json",
+          "bytes": 345,
+          "sha256": "9702fbc6c54b3ecb8d5f8424dd710e4d111c8f3008dc83a26eaea416338287df"
+        },
+        {
+          "name": "party-global-audit-superadmin.png",
+          "bytes": 91041,
+          "sha256": "a0b3fd2158dbfea80681454c28db78c0cc4989584f3dc2fe388ddb06766f06ea"
+        },
+        {
+          "name": "party-global-audit-ui.json",
+          "bytes": 117,
+          "sha256": "0d85d78085a60d26c2a3240a252003e1fbdb8795c69675ebbc9f62056b8dae54"
+        },
+        {
+          "name": "party-jbm-contract.json",
+          "bytes": 1305,
+          "sha256": "9453008757ac3863f30e8d816d23e26b68984b7ad91f0d5b1e7e6c2d2c7a8533"
+        },
+        {
+          "name": "party-members-final.json",
+          "bytes": 227,
+          "sha256": "40ca4273fb8514bc238f471120a7356ecd7a460a98701da4609c6dd5c5206c92"
+        },
+        {
+          "name": "party-runtime-final.json",
+          "bytes": 4662,
+          "sha256": "4f97582f8d5577b52728039f201338e1a89ee1d53835f4ab48b797783afa6f77"
+        },
+        {
+          "name": "party-tenant-audit-desktop.png",
+          "bytes": 103845,
+          "sha256": "a5313450ba7e0a819346c7085cda6e4e1300e54e08ed955d05f17060e76c0cf5"
+        },
+        {
+          "name": "party-tenant-audit-mobile.png",
+          "bytes": 42976,
+          "sha256": "d4420f5e9e4689c3ea41626d38957885bcc218ad2974284b638bd8d5b653d83d"
+        },
+        {
+          "name": "party-tenant-audit-ui.json",
+          "bytes": 230,
+          "sha256": "b8784ff8629363f8220a148167687754a514978049ea7ddf367d7c86fd7164f6"
+        },
+        {
+          "name": "party-tenant-audit.json",
+          "bytes": 1396,
+          "sha256": "1b3e66d9c9f87d0fe3e026d8124ac71acb59c93d50fb9cbb975087be54ffec1e"
+        },
+        {
+          "name": "party-tenant-login-audit.png",
+          "bytes": 104046,
+          "sha256": "38dba043740e8eb2437d49da05223b5c8c5043e1db439f7f9c3a1d05aab18fe4"
+        },
+        {
+          "name": "regression-final.json",
+          "bytes": 235,
+          "sha256": "26768a45ab4eccf8eb4918514bcd80f35da7375dc061f12ae6d824808c40ea75"
+        },
+        {
+          "name": "release-final.json",
+          "bytes": 755,
+          "sha256": "898ebec3966dc0b545ee779366393411b58c3c2e20c60008aaba37a3c9170513"
+        },
+        {
+          "name": "screens/cloud-admin-pages-final.json",
+          "bytes": 1145,
+          "sha256": "ac2a152e6a5f31ebdb12cdd5ed9e3a6da364019db6e958ebbbc3a52c377c41a7"
+        },
+        {
+          "name": "screens/party-admin-pages-final.json",
+          "bytes": 1145,
+          "sha256": "67c77a20fe0307e02b0ad36063527746afcca4754d6c66e0d6b3bb939018d829"
+        }
+      ]
+    }
+  }
+}
