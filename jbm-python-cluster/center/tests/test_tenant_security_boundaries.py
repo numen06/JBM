@@ -157,3 +157,24 @@ async def test_join_existing_member_cannot_strip_protected_platform_role():
     assert error.value.status_code == 403
     store.ensure_link.assert_not_awaited()
     store.replace_scoped_links.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_large_application_ids_keep_role_catalog_and_assignment_in_the_same_scope():
+    app_id = 1805188141576134658
+    tenant = {**TENANT, "appId": app_id}
+    member = {"userId": 4000, "userName": "member", "userType": "normal", "companyId": 2000}
+    own = {"roleId": 6000, "roleCode": "viewer", "appId": str(app_id), "status": 1}
+    foreign = {"roleId": 6001, "roleCode": "foreign", "appId": str(app_id + 1), "status": 1}
+    api, store = service(member)
+    store.get.side_effect = lambda resource, key: (own if str(key) == '6000' else foreign) if resource == 'role' else member
+    store.list.return_value = ([own, foreign], 2)
+    result = await api.handle('GET', '/role/all', {}, {"appId": str(app_id + 1)}, {}, tenant)
+    assert result['result'] == [own]
+    await api.handle('PUT', '/user/{userId}/roles', {"userId": 4000}, {}, {"roleIds": [6000]}, tenant)
+    assert store.replace_scoped_links.await_args.args == ('base_role_user', 'user_id', 4000, 'role_id', [6000], 'app_id', app_id, 'tenant_id', 2000)
+    store.replace_scoped_links.reset_mock()
+    with pytest.raises(HTTPException) as error:
+        await api.handle('PUT', '/user/{userId}/roles', {"userId": 4000}, {}, {"roleIds": [6001]}, tenant)
+    assert error.value.status_code == 403
+    store.replace_scoped_links.assert_not_awaited()

@@ -411,39 +411,9 @@ class CompatibilityService:
         if path == "/user/{userId}/roles" and method == "PUT":
             require_tenant_admin(identity)
             await self._require_editable_user(identity, params["userId"])
-            role_ids = _values(body, "roleIds")
-            app_id = _app_id(identity)
-            roles = [row for value in role_ids if (row := await self.store.get("role", value))]
-            if any(str(row.get("roleId")) == "1" or row.get("roleCode") == "super_admin" for row in roles):
-                require_super_admin(identity)
-            if len(roles) != len(set(map(str, role_ids))):
-                raise ValueError("包含不存在的角色")
-            app_role_ids = [
-                row["roleId"] for row in roles if row.get("appId") is None or str(row.get("appId")) == str(app_id)
-            ]
-            if not is_platform(identity):
-                forbidden = [
-                    row for row in roles
-                    if str(row.get("roleId")) == "1" or row.get("roleCode") in {"super_admin", "platform_operator", "iot_operator"}
-                    or row.get("appId") not in (None, app_id)
-                ]
-                if forbidden:
-                    require_platform(identity)
-            await self.store.replace_scoped_links(
-                "base_role_user",
-                "user_id",
-                params["userId"],
-                "role_id",
-                app_role_ids,
-                "app_id",
-                app_id,
-                "tenant_id",
-                (
-                    int((await self.store.get("user", params["userId"]))["companyId"])
-                    if is_platform(identity)
-                    else tenant_id(identity)
-                ),
-            )
+            user = await self.store.get("user", params["userId"])
+            target_tenant_id = int(user["companyId"]) if is_platform(identity) else tenant_id(identity)
+            await self._replace_user_roles(identity, user, body, target_tenant_id)
             return ok()
         if path == "/user/{userId}/roles" and method == "GET":
             await self._require_user(identity, params["userId"])
@@ -590,7 +560,7 @@ class CompatibilityService:
             )
             visible = [
                 row for row in rows
-                if row.get("appId") in (None, app_id)
+                if (row.get("appId") is None or str(row["appId"]) == str(app_id))
                 and (is_platform(identity) or (
                     str(row.get("roleId")) != "1"
                     and row.get("roleCode") not in {"super_admin", "platform_operator", "iot_operator"}
