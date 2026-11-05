@@ -1,6 +1,7 @@
 type Event = {
   serviceId?: string; target?: string; operation?: string; operationName?: string;
   resourceIds?: unknown; submittedChanges?: unknown; businessRef?: Record<string, unknown>;
+  operationSummary?: { submittedChanges?: unknown; resourceIds?: unknown };
 }
 const services: Record<string, string> = {
   'smart-building-app': '建筑平台', 'smart-building-batch': '建筑批处理', 'smart-building-data-batch': '建筑批处理',
@@ -29,7 +30,7 @@ function object(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
 }
 function body(event: Event) {
-  const root = object(event.submittedChanges)
+  const root = object(event.submittedChanges || event.operationSummary?.submittedChanges)
   return { ...root, ...object(root.data), ...object(root.form) }
 }
 function text(value: unknown) {
@@ -40,7 +41,7 @@ export function auditObject(event: Event) {
   const resource = (event.target || '').split('/').map(part => resources[part]).reverse().find(Boolean) || ''
   const values = body(event)
   const name = ['projectName', 'abbreviation', 'structureTypeName', 'structure_type_name', 'structureName', 'structure_name', 'deviceName', 'device_name', 'gatewayName', 'productName', 'name', 'title', 'code'].map(key => text(values[key])).find(Boolean)
-  const ids = Object.entries(object(event.resourceIds)).filter(([key]) => !hidden.test(key) && key !== 'resource').map(([, value]) => text(value)).filter(Boolean)
+  const ids = Object.entries(object(event.resourceIds || event.operationSummary?.resourceIds)).filter(([key]) => !hidden.test(key) && key !== 'resource').map(([, value]) => text(value)).filter(Boolean)
   return [resource, name || ids.join(' / ')].filter(Boolean).join(' · ') || event.target || '身份认证'
 }
 export function auditChanges(event: Event) {
@@ -50,5 +51,12 @@ export function auditChanges(event: Event) {
 export function auditAction(event: Event) {
   const values = body(event)
   if (values.type === 'gateway.check') return '检查网关'
+  const path = event.target || ''
+  const resource = path.split('/').map(part => resources[part]).reverse().find(Boolean)
+  if (resource && path.includes('/api/v1/building/master-data/')) {
+    const action = ({ POST: '新增', PUT: '修改', PATCH: '修改', DELETE: '删除' } as Record<string, string>)[event.operation || '']
+    if (action) return action + resource
+  }
+  if (resource && event.operationName?.endsWith('业务资料')) return event.operationName.replace(/业务资料$/, resource)
   return event.operationName || ({ POST: '提交', PUT: '修改', PATCH: '修改', DELETE: '删除', GET: '读取' } as Record<string,string>)[event.operation || ''] || event.operation || '业务操作'
 }

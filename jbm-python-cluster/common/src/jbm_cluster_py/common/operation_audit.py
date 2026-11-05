@@ -41,6 +41,8 @@ SENSITIVE = re.compile(
 
 
 def important_operation(method, path):
+    if path.rstrip("/") in {"/securityAudit/query", "/loginLogs/pageList"}:
+        return True  # Audit administration reads must themselves leave a durable trail.
     return not read_operation(method, path) or path.rstrip("/").rsplit("/", 1)[-1].lower() in {
         "export",
         "download",
@@ -50,6 +52,8 @@ def important_operation(method, path):
 
 
 def operation_name(method, path):
+    if path.rstrip("/") in {"/securityAudit/query", "/loginLogs/pageList"}:
+        return "查询审计日志"
     names = {
         "user": "用户",
         "baseOrg": "组织",

@@ -250,6 +250,13 @@ async def test_mutation_has_durable_start_and_actual_result_with_redacted_change
     assert len({e["operationId"] for e in events}) == len({e["requestId"] for e in events}) == 1
     assert "must-not-leak" not in json.dumps(events)
     assert response.headers["x-audit-operation-id"] == result["operationId"]
+    @app.post("/securityAudit/query")
+    async def query():
+        return {"success": True, "result": {"records": []}}
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        assert (await client.post("/securityAudit/query", json={"category": "operation"})).status_code == 200
+    queries = [json.loads(p.read_text(encoding="utf8")) for p in auditor.directory.glob("*.json")]
+    assert len([e for e in queries if e["operationName"] == "查询审计日志"]) == 2
 
 
 @pytest.mark.parametrize(

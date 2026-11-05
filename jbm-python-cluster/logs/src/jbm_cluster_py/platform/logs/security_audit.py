@@ -174,6 +174,9 @@ class SecurityAuditStore:
                 raise
 
     async def query(self, body):
+        grouped = body.get("groupOperations") is True
+        if grouped and body.get("category") != "operation":
+            raise ValueError("仅业务操作支持按操作汇总")
         def timestamp(raw, default):
             if not raw:
                 return default
@@ -207,17 +210,61 @@ class SecurityAuditStore:
                 selector += " | " + name + " =~ " + json.dumps(".*" + re.escape(str(body[name + "Contains"])) + ".*")
         if body.get("operationOnly"):
             selector += ' | userId != "" | operation != "READ"'
-        if body.get("success") is not None:
+        if not grouped and body.get("success") is not None:
             selector += " | success = " + json.dumps(str(bool(body["success"])).lower())
         if body.get("tenantScopeVerified") is True:
             selector += ' | tenantScopeVerified = "true"'
-        rows = await self._range(selector, start, end, page * size + 1)
+        # Group the complete bounded interval before pagination. Never group a
+        # sampled page and present its count as the total number of operations.
+        rows = await self._range(selector, start, end, 4901 if grouped else page * size + 1)
+        if grouped and len(rows) > 4900:
+            raise ValueError("操作事件较多，请缩小时间、人员或业务模块范围后查询")
         result = []
-        for _, line, *_ in rows[(page-1)*size:page*size]:
+        for _, line, *_ in (rows if grouped else rows[(page-1)*size:page*size]):
             event = json.loads(line)
             signature = event.pop("integritySignature")
             self.verify(json.dumps(event, ensure_ascii=True, sort_keys=True, separators=(",", ":")), signature)
             result.append({**event, "integrityVerified": True})
+        if grouped:
+            groups = {}
+            for event in result:
+                key = (event.get("tenantId"), event.get("userId"), event.get("operationId") or event["eventId"])
+                group = groups.setdefault(key, {})
+                group[event["eventId"]] = event
+            summaries = []
+            for group in groups.values():
+                events = sorted(group.values(), key=lambda e: (e["timestamp"], e.get("businessRevision", 0),
+                    {"START": 0, "ACCEPTED": 1, "COMMIT": 2, "RESULT": 3}.get(e.get("phase"), 0), e["eventId"]))
+                latest = events[-1]
+                expected_ids = {str(task) for e in events for task in (e.get("businessRef") or {}).get("taskIds", [])}
+                expected = max([len(expected_ids)] + [e.get("expectedTasks", 0) for e in events])
+                status, success = latest.get("operationStatus"), latest.get("success")
+                if expected:
+                    completed = {}
+                    for e in events:
+                        task = str((e.get("businessRef") or {}).get("taskId") or "")
+                        if e.get("phase") == "RESULT" and task and (not expected_ids or task in expected_ids):
+                            completed[task] = e
+                    if len(completed) < expected:
+                        status, success = "ACCEPTED", None
+                    elif any(e.get("operationStatus") == "FAILED" for e in completed.values()):
+                        status, success = "FAILED", False
+                    elif all(e.get("success") is True for e in completed.values()):
+                        status, success = "SUCCEEDED", True
+                    else:
+                        status, success = "UNKNOWN", None
+                # Keep the signed representative fact intact; derived metadata
+                # is explicitly separate from its verified fields.
+                summaries.append({**latest, "operationSummary": {
+                    "startedAt": events[0]["timestamp"], "eventCount": len(events), "status": status, "success": success,
+                    "submittedChanges": next((e["submittedChanges"] for e in events if e.get("submittedChanges")), None),
+                    "resourceIds": next((e["resourceIds"] for e in reversed(events) if e.get("resourceIds")), None),
+                }})
+            if body.get("success") is not None:
+                summaries = [e for e in summaries if e["operationSummary"]["success"] is bool(body["success"])]
+            summaries.sort(key=lambda e: (e["timestamp"], e["eventId"]), reverse=True)
+            return {"records": summaries[(page-1)*size:page*size], "total": len(summaries),
+                    "keepDays": self.keep_days, "groupedOperations": True}
         # Loki pagination is bounded; count an exact result separately, never present
         # a sampled row count as the total.
         duration = max(1, (end-start)//1000000000 + 1)

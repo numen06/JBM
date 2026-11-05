@@ -19,7 +19,7 @@ const globalScope = computed(() => props.scope !== 'current' && (isPlatformAdmin
 const queryBody = (body: Record<string, unknown>) => auditQueryBody(body, props.scope, auth.activeTenantId)
 const archiveState = ref('正在检查归档状态…')
 const archiveError = ref(false)
-interface AuditEvent { eventId: string; timestamp: number; account?: string; userId?: string; clientId?: string; tenantId?: string; operation?: string; operationName?: string; serviceId?: string; target?: string; ip?: string; requestId?: string; operationId?: string; phase?: string; operationStatus?: string; message?: string; submittedChanges?: unknown; businessRef?: Record<string, unknown>; expectedTasks?: number; businessRevision?: number; completionKind?: string; resourceIds?: unknown; success?: boolean; integrityVerified?: boolean }
+interface AuditEvent { eventId: string; timestamp: number; account?: string; userId?: string; clientId?: string; tenantId?: string; operation?: string; operationName?: string; serviceId?: string; target?: string; ip?: string; requestId?: string; operationId?: string; phase?: string; operationStatus?: string; message?: string; submittedChanges?: unknown; businessRef?: Record<string, unknown>; expectedTasks?: number; businessRevision?: number; completionKind?: string; resourceIds?: unknown; success?: boolean; integrityVerified?: boolean; operationSummary?: { startedAt: number; eventCount: number; status?: string; success?: boolean | null; submittedChanges?: unknown; resourceIds?: unknown } }
 const detailOpen = ref(false), detailLoading = ref(false), detailError = ref('')
 const detailRows = ref<AuditEvent[]>([]), selected = ref<AuditEvent | null>(null)
 const detailIncomplete = ref(false)
@@ -41,13 +41,14 @@ const detailSummary = computed(() => {
   const start = detailRows.value.find(row => row.phase === 'START')
   return start && Date.now() - start.timestamp > 30000 ? '尚未收到完成记录，请核查实际业务状态，避免重复操作。' : '操作记录已保存，完成结果将在此继续显示。'
 })
-function outcome(row: AuditEvent) { return ({ STARTED: '已开始', ACCEPTED: '已受理', COMMITTED: '业务已提交', SUCCEEDED: '成功', FAILED: '失败', WRITTEN: '设备已应答', UNKNOWN: '结果待核查' } as Record<string, string>)[row.operationStatus || ''] || (row.success === true ? '成功' : row.success === false ? '失败' : '结果未知') }
+function outcome(row: AuditEvent) { return ({ STARTED: '已开始', ACCEPTED: '处理中', COMMITTED: '业务已提交', SUCCEEDED: '成功', FAILED: '失败', WRITTEN: '设备已应答', UNKNOWN: '结果待核查' } as Record<string, string>)[row.operationSummary?.status || row.operationStatus || ''] || (row.success === true ? '成功' : row.success === false ? '失败' : '结果未知') }
 function format(value: unknown) { return JSON.stringify(value, null, 2) }
 async function details(row: AuditEvent) {
   selected.value = row; detailOpen.value = true; detailLoading.value = true; detailError.value = ''; detailIncomplete.value = false
   try {
     if (!row.operationId) { detailRows.value = [row]; return }
-    const range = { beginTime: new Date(row.timestamp - 86400000).toISOString(), endTime: new Date(Math.min(Date.now() + 1000, row.timestamp + 29 * 86400000)).toISOString(), size: 100 }
+    const begin = Math.max(row.timestamp - 29 * 86400000, (row.operationSummary?.startedAt || row.timestamp) - 86400000)
+    const range = { beginTime: new Date(begin).toISOString(), endTime: new Date(Math.min(Date.now() + 1000, begin + 31 * 86400000)).toISOString(), size: 100 }
     const result = unwrap(await post<{ records: AuditEvent[]; total: number }>('/logs/securityAudit/query', queryBody({ operationId: row.operationId, ...range })))
     detailIncomplete.value = result.total > result.records.length
     const taskIds = [...new Set(result.records.flatMap(item => Array.isArray(item.businessRef?.taskIds) ? item.businessRef.taskIds.map(String) : []))].slice(0, 100)
@@ -58,13 +59,13 @@ async function details(row: AuditEvent) {
   } catch (error) { detailError.value = error instanceof Error ? error.message : '读取操作详情失败' }
   finally { detailLoading.value = false }
 }
-const filters = ref({ account: '', tenantId: '', category: props.category || 'operation', operation: '', success: '', beginTime: '', endTime: '' })
+const filters = ref({ account: '', tenantId: '', category: props.category || 'operation', operation: '', serviceId: '', path: '', ipContains: '', success: '', beginTime: '', endTime: '' })
 const list = usePagedList<AuditEvent>(async (page, size) => {
   const { tenantId, success, operation, ...values } = filters.value
-  const result = unwrap(await post<{ records: AuditEvent[]; total: number }>('/logs/securityAudit/query', queryBody({ ...Object.fromEntries(Object.entries(values).filter(([, value]) => value)), ...(globalScope.value && tenantId ? { tenantId } : {}), ...(operation ? { [values.category === 'access' ? 'method' : 'operation']: operation } : {}), ...(success ? { success: success === 'true' } : {}), page, size })))
+  const result = unwrap(await post<{ records: AuditEvent[]; total: number }>('/logs/securityAudit/query', queryBody({ ...Object.fromEntries(Object.entries(values).filter(([, value]) => value)), ...(values.category === 'operation' ? { groupOperations: true } : {}), ...(globalScope.value && tenantId ? { tenantId } : {}), ...(operation ? { [values.category === 'access' ? 'method' : 'operation']: operation } : {}), ...(success ? { success: success === 'true' } : {}), page, size })))
   return { contents: result.records, total: result.total }
 })
-function reset() { filters.value = { account: '', tenantId: '', category: props.category || 'operation', operation: '', success: '', beginTime: '', endTime: '' }; list.load(1) }
+function reset() { filters.value = { account: '', tenantId: '', category: props.category || 'operation', operation: '', serviceId: '', path: '', ipContains: '', success: '', beginTime: '', endTime: '' }; list.load(1) }
 async function checkArchive() {
   try { const state = unwrap(await get<{ healthy: boolean }>('/logs/securityAudit/status')); archiveError.value = !state.healthy; archiveState.value = state.healthy ? '日志归档正常 · 记录只读' : '日志归档异常，请联系管理员' }
   catch (error) { archiveError.value = true; archiveState.value = error instanceof Error ? error.message : '暂时无法核实归档状态' }
@@ -83,6 +84,9 @@ function date(value: number) { return new Date(value).toLocaleString('zh-CN', { 
       <Input v-model="filters.account" aria-label="操作人员" placeholder="操作人员账号" @keyup.enter="list.load(1)" />
       <Input v-if="globalScope" v-model="filters.tenantId" placeholder="范围编号（留空查询全部）" @keyup.enter="list.load(1)" />
       <label v-if="!props.category" class="space-y-1 text-xs text-muted-foreground">日志类别<select v-model="filters.category" aria-label="日志类别" class="h-9 w-full rounded-md border bg-background px-3 text-sm"><option value="">全部</option><option value="operation">业务操作</option><option value="login">登录记录</option><option value="access">接口访问</option><option value="legacy-record">旧记录</option></select></label>
+      <label class="space-y-1 text-xs text-muted-foreground">业务模块<select v-model="filters.serviceId" aria-label="业务模块" class="h-9 w-full rounded-md border bg-background px-3 text-sm"><option value="">全部模块</option><option value="smart-building-app">建筑平台</option><option value="iot-platform">物联网</option><option value="jbm-cluster-platform-center">系统管理</option><option value="jbm-cluster-platform-logs">日志管理</option></select></label>
+      <Input v-model="filters.path" aria-label="对象路径" placeholder="对象编号或请求路径" @keyup.enter="list.load(1)" />
+      <Input v-model="filters.ipContains" aria-label="来源 IP" placeholder="来源 IP" @keyup.enter="list.load(1)" />
       <label class="space-y-1 text-xs text-muted-foreground">操作结果<select v-model="filters.success" aria-label="操作结果" class="h-9 w-full rounded-md border bg-background px-3 text-sm"><option value="">全部结果</option><option value="true">成功</option><option value="false">失败</option></select></label>
       <label class="space-y-1 text-xs text-muted-foreground">开始时间<Input v-model="filters.beginTime" type="datetime-local" /></label>
       <label class="space-y-1 text-xs text-muted-foreground">结束时间<Input v-model="filters.endTime" type="datetime-local" /></label>
