@@ -18,6 +18,7 @@ import {
   type GatewayLogFilterRulePayload,
 } from '@/api/logs'
 import type { GatewayLogFilterRule } from '@/api/types'
+import { get, unwrap } from '@/api/request'
 
 const filterRules = ref<GatewayLogFilterRule[]>([])
 const loading = ref(false)
@@ -27,6 +28,8 @@ const editingRule = ref<GatewayLogFilterRule | null>(null)
 const ruleForm = ref<GatewayLogFilterRulePayload>(defaultRuleForm())
 const testPath = ref('/logs/GatewayLogs/findLogs')
 const testResult = ref('')
+const retentionDays = ref<number | null>(null)
+const retentionLoading = ref(false)
 
 const ruleTitle = computed(() => (editingRule.value ? '编辑自定义规则' : '新增自定义规则'))
 const enabledValue = computed({
@@ -58,6 +61,25 @@ async function loadRules() {
   } finally {
     loading.value = false
   }
+}
+
+async function loadRetention() {
+  retentionLoading.value = true
+  retentionDays.value = null
+  try {
+    const status = unwrap(await get<{ keepDays?: number }>('/logs/securityAudit/status'))
+    if (typeof status?.keepDays === 'number' && Number.isSafeInteger(status.keepDays) && status.keepDays > 0) {
+      retentionDays.value = status.keepDays
+    }
+  } catch {
+    // Log collection rules remain available even if archive status cannot be read.
+  } finally {
+    retentionLoading.value = false
+  }
+}
+
+function loadSettings() {
+  return Promise.all([loadRules(), loadRetention()])
 }
 
 function editRule(rule: GatewayLogFilterRule) {
@@ -147,19 +169,28 @@ async function runTest() {
   }
 }
 
-onMounted(loadRules)
+onMounted(loadSettings)
 </script>
 
 <template>
   <div class="space-y-4">
-    <PageHeader title="采集设置" description="访问日志入库前的网关采集规则">
+    <PageHeader title="采集设置" description="查看日志留存策略与访问日志采集规则">
       <template #actions>
-        <Button variant="outline" :disabled="loading" @click="loadRules">
+        <Button variant="outline" :disabled="loading || retentionLoading" @click="loadSettings">
           <RefreshCw class="h-4 w-4" />
           刷新
         </Button>
       </template>
     </PageHeader>
+
+    <section class="rounded-md border px-4 py-3" aria-labelledby="audit-retention-heading">
+      <h2 id="audit-retention-heading" class="font-medium">审计日志留存</h2>
+      <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-live="polite">
+        <span class="text-muted-foreground">登录日志、操作日志、访问日志</span>
+        <span v-if="retentionDays !== null" class="font-semibold">配置留存 {{ retentionDays }} 天</span>
+        <span v-else class="text-muted-foreground">{{ retentionLoading ? '正在读取留存配置…' : '暂无法读取留存配置' }}</span>
+      </div>
+    </section>
 
     <div class="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">
       命中启用规则的访问不会捕获响应体，不发送 RabbitMQ，也不会写入日志存储。系统内置规则默认排除日志查询、访问统计、健康检查和接口文档访问。
