@@ -18,7 +18,16 @@ import {
   type GatewayLogFilterRulePayload,
 } from '@/api/logs'
 import type { GatewayLogFilterRule } from '@/api/types'
-import { get, unwrap } from '@/api/request'
+import { get, put, unwrap } from '@/api/request'
+
+const auditLogTypes = { login: '登录日志', operation: '操作日志', access: '访问日志' }
+type RetentionDays = Record<keyof typeof auditLogTypes, number>
+type RetentionStatus = {
+  days: RetentionDays
+  minimumDays: number
+  maximumDays: number
+  editable: boolean
+}
 
 const filterRules = ref<GatewayLogFilterRule[]>([])
 const loading = ref(false)
@@ -28,8 +37,12 @@ const editingRule = ref<GatewayLogFilterRule | null>(null)
 const ruleForm = ref<GatewayLogFilterRulePayload>(defaultRuleForm())
 const testPath = ref('/logs/GatewayLogs/findLogs')
 const testResult = ref('')
-const retentionDays = ref<number | null>(null)
+const retention = ref<RetentionStatus | null>(null)
+const draftRetention = ref<RetentionDays>({ login: 0, operation: 0, access: 0 })
 const retentionLoading = ref(false)
+const retentionSaving = ref(false)
+const retentionError = ref('')
+const retentionSaved = ref(false)
 
 const ruleTitle = computed(() => (editingRule.value ? '编辑自定义规则' : '新增自定义规则'))
 const enabledValue = computed({
@@ -65,21 +78,49 @@ async function loadRules() {
 
 async function loadRetention() {
   retentionLoading.value = true
-  retentionDays.value = null
   try {
-    const status = unwrap(await get<{ keepDays?: number }>('/logs/securityAudit/status'))
-    if (typeof status?.keepDays === 'number' && Number.isSafeInteger(status.keepDays) && status.keepDays > 0) {
-      retentionDays.value = status.keepDays
-    }
-  } catch {
-    // Log collection rules remain available even if archive status cannot be read.
+    const status = unwrap(await get<RetentionStatus>('/logs/securityAudit/retention'))
+    retention.value = status
+    draftRetention.value = { ...status.days }
+  } catch (e) {
+    retention.value = null
+    retentionError.value = e instanceof Error ? e.message : '暂无法读取日志留存设置'
   } finally {
     retentionLoading.value = false
   }
 }
 
 function loadSettings() {
+  retentionError.value = ''
+  retentionSaved.value = false
   return Promise.all([loadRules(), loadRetention()])
+}
+
+async function saveRetention() {
+  const current = retention.value
+  if (!current?.editable || retentionSaving.value || retentionLoading.value) return
+  const days = { ...draftRetention.value }
+  if (Object.values(days).some(day => !Number.isSafeInteger(day) || day < current.minimumDays || day > current.maximumDays)) {
+    retentionError.value = `请输入 ${current.minimumDays} 至 ${current.maximumDays} 天的整数`
+    return
+  }
+  const categories = Object.keys(auditLogTypes) as (keyof RetentionDays)[]
+  if (categories.some(key => days[key] < current.days[key]) &&
+      !window.confirm('缩短留存周期后，超过新期限的日志会按策略清理。确认保存？')) return
+  retentionSaving.value = true
+  retentionError.value = ''
+  retentionSaved.value = false
+  try {
+    unwrap(await put<RetentionStatus>('/logs/securityAudit/retention', { days, expectedDays: current.days }))
+    await loadRetention()
+    retentionSaved.value = !!retention.value && categories.every(key => retention.value?.days[key] === days[key])
+    if (!retentionSaved.value && !retentionError.value) retentionError.value = '生效策略已变化，请核对当前值'
+  } catch (e) {
+    await loadRetention()
+    retentionError.value = e instanceof Error ? e.message : '无法确认日志留存设置已生效'
+  } finally {
+    retentionSaving.value = false
+  }
 }
 
 function editRule(rule: GatewayLogFilterRule) {
@@ -176,20 +217,40 @@ onMounted(loadSettings)
   <div class="space-y-4">
     <PageHeader title="采集设置" description="查看日志留存策略与访问日志采集规则">
       <template #actions>
-        <Button variant="outline" :disabled="loading || retentionLoading" @click="loadSettings">
+        <Button variant="outline" :disabled="loading || retentionLoading || retentionSaving" @click="loadSettings">
           <RefreshCw class="h-4 w-4" />
           刷新
         </Button>
       </template>
     </PageHeader>
 
-    <section class="rounded-md border px-4 py-3" aria-labelledby="audit-retention-heading">
-      <h2 id="audit-retention-heading" class="font-medium">审计日志留存</h2>
-      <div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" aria-live="polite">
-        <span class="text-muted-foreground">登录日志、操作日志、访问日志</span>
-        <span v-if="retentionDays !== null" class="font-semibold">配置留存 {{ retentionDays }} 天</span>
-        <span v-else class="text-muted-foreground">{{ retentionLoading ? '正在读取留存配置…' : '暂无法读取留存配置' }}</span>
-      </div>
+    <section class="space-y-3 rounded-md border px-4 py-3" aria-labelledby="audit-retention-heading">
+      <h2 id="audit-retention-heading" class="font-medium">日志留存设置</h2>
+      <form v-if="retention" class="space-y-3" @submit.prevent="saveRetention">
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div v-for="(label, key) in auditLogTypes" :key="key" class="space-y-1">
+            <label :for="'retention-' + key" class="text-sm font-medium">{{ label }}</label>
+            <div class="text-sm text-muted-foreground">当前生效 {{ retention.days[key] }} 天</div>
+            <Input
+              v-if="retention.editable"
+              :id="'retention-' + key"
+              v-model.number="draftRetention[key]"
+              type="number"
+              @update:model-value="retentionSaved = false"
+              :min="retention.minimumDays"
+              :max="retention.maximumDays"
+              :disabled="retentionSaving || retentionLoading"
+              required
+            />
+          </div>
+        </div>
+        <Button v-if="retention.editable" type="submit" :disabled="retentionSaving || retentionLoading">
+          {{ retentionSaving ? '等待日志库确认生效…' : '保存留存设置' }}
+        </Button>
+      </form>
+      <p v-else-if="retentionLoading" class="text-sm text-muted-foreground">正在读取生效策略…</p>
+      <p v-if="retentionError" role="alert" class="text-sm text-destructive">{{ retentionError }}</p>
+      <p v-if="retentionSaved" role="status" class="text-sm">留存设置已生效</p>
     </section>
 
     <div class="rounded-md border bg-muted/30 px-3 py-2 text-sm text-muted-foreground">

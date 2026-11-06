@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import os
 from typing import Any
 
 import uvicorn
 from fastapi import FastAPI
 from jbm_cluster_py.common.auth import install_api_protection
+from jbm_cluster_py.common.api_access import is_super_admin
 from jbm_cluster_py.common.banner import print_jbm_banner
 from jbm_cluster_py.common.config import AppConfig
 from jbm_cluster_py.common.errors import install_exception_handlers
@@ -16,6 +18,7 @@ from jbm_cluster_py.integrations.nacos import NacosRegistrar
 from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
+from jbm_cluster_py.platform.logs.retention import AuditRetention
 from jbm_cluster_py.platform.logs.router import build_logs_router
 from jbm_cluster_py.platform.logs.service import BusinessLogService, GatewayLogIngestService
 from jbm_cluster_py.platform.logs.security_audit import SecurityAuditStore, audit_reader_scope, audit_query_scope
@@ -38,6 +41,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     loki = LokiSink(logs_config.get("loki", {}) or {})
     access_ingest = GatewayLogIngestService(repository, loki)
     security_audit = SecurityAuditStore({**dict(app_config.get("jbm.security-audit", {}) or {}), **dict(logs_config.get("security-audit", {}) or {})}, loki=loki, outbox_engine=repository.engine)
+    retention = AuditRetention(os.getenv("JBM_AUDIT_LOKI_ADMIN_URL", ""), security_audit.tenant, security_audit.keep_days)
     access_ingest.security_audit = security_audit
 
     @asynccontextmanager
@@ -111,6 +115,20 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         if not status["healthy"]:
             raise HTTPException(503, "日志归档存在延迟或校验异常，请检查日志服务")
         return ok(status)
+
+    @app.get("/securityAudit/retention", tags=["安全审计"])
+    async def read_retention(request: Request):
+        reader(request)
+        status = await retention.status()
+        return ok({**status, "editable": status["editable"] and is_super_admin(request.state.identity)})
+
+    @app.put("/securityAudit/retention", tags=["安全审计"])
+    async def save_retention(request: Request, body: dict = Body(...)):
+        reader(request)
+        if not is_super_admin(request.state.identity):
+            raise HTTPException(403, "仅超级管理员可设置日志留存")
+        return ok(await retention.save(body.get("days"), body.get("expectedDays")))
+
     return app
 
 

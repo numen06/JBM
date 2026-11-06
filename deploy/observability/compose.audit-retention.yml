@@ -1,0 +1,12 @@
+# Apply after compose.local.yml with a persistent, pre-provisioned directory.
+services:
+  loki-backend:
+    volumes:
+      - ${JBM_AUDIT_LOKI_CONFIG:?Set the Loki configuration file with runtime_config enabled}:/etc/loki/jbm-config.yml:ro
+      - ${JBM_AUDIT_RETENTION_DIR:?Set the persistent retention policy directory}:/run/jbm-audit-retention:ro
+  jbm-cluster-platform-logs:
+    environment:
+      JBM_AUDIT_LOKI_ADMIN_URL: http://loki-backend:3100
+    volumes:
+      - ${JBM_AUDIT_RETENTION_DIR:?Set the persistent retention policy directory}:/run/jbm-audit-retention
+    networks: [jbm73-python, loki-internal]
