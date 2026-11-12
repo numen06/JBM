@@ -61,15 +61,18 @@ def test_admin_issues_real_file_key_without_target_login_and_revoke_is_immediate
     assert client.get('/oauth2/userinfo', headers=headers).status_code == 401
     assert login(client, proof(client, key), kind='FILE_KEY').status_code == 401
 
-    async def audit():
-        async with client.app.state.auth_service.repository.engine.connect() as conn:
-            rows = (await conn.execute(text("SELECT login_type,risk_detail FROM base_account_logs WHERE login_type LIKE 'ADMIN_KEY_%' ORDER BY rowid"))).all()
-            assert [r[0] for r in rows] == ['ADMIN_KEY_ISSUE', 'ADMIN_KEY_REVOKE']
-            for _, raw in rows:
-                detail = json.loads(raw)
-                assert detail['targetUserId'] == '7' and detail['keyId'] == issued['id']
-                assert 'PRIVATE' not in raw and 'PUBLIC KEY' not in raw
-    asyncio.run(audit())
+    audit = [row for row in client.app.state.repository.security_audit.events
+             if str(row.get("operation", "")).startswith("ADMIN_KEY_")]
+    assert [(row["operation"], row["phase"]) for row in audit] == [
+        ("ADMIN_KEY_ISSUE", "START"), ("ADMIN_KEY_ISSUE", "RESULT"),
+        ("ADMIN_KEY_REVOKE", "START"), ("ADMIN_KEY_REVOKE", "RESULT"),
+    ]
+    for row in audit:
+        detail = row["submittedChanges"]
+        assert detail["targetUserId"] == "7" and detail["keyId"] == issued["id"]
+        assert "PRIVATE" not in json.dumps(row) and "PUBLIC KEY" not in json.dumps(row)
+    assert audit[0]["operationId"] == audit[1]["operationId"]
+    assert audit[2]["operationId"] == audit[3]["operationId"]
 
 
 def test_admin_challenge_cannot_change_user_or_be_replayed_and_rejects_private_keys(client, key):
@@ -87,12 +90,14 @@ def test_admin_challenge_cannot_change_user_or_be_replayed_and_rejects_private_k
 
 def test_admin_credential_and_audit_are_atomic(client, key, monkeypatch):
     seed_targets(client)
-    from jbm_cluster_py.platform.auth import admin_keys
+    audit = client.app.state.repository.security_audit
+
     async def unavailable(*args, **kwargs):
-        raise RuntimeError('audit unavailable')
-    monkeypatch.setattr(admin_keys, '_insert_available', unavailable)
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr(audit, "record", unavailable)
     data = options(client, key)
-    with pytest.raises(RuntimeError, match='audit unavailable'):
-        client.post('/oauth2/keys/admin/users/7/register', json={
-            'challengeId': data['challengeId'], 'signature': signed(key, data['message'])})
+    result = client.post('/oauth2/keys/admin/users/7/register', json={
+        'challengeId': data['challengeId'], 'signature': signed(key, data['message'])})
+    assert result.status_code == 503
     assert client.get('/oauth2/keys/admin/users/7').json()['result'] == []

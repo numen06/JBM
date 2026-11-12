@@ -85,7 +85,6 @@ class CompatibilityService:
         self.governance = governance
         self.openapi = openapi
         self.password_policy = dict(password_policy or {})
-        self.logs_service_enabled = False
 
     async def audit_tenant_scope(self, identity, path, params, body):
         if not is_platform(identity):
@@ -1014,7 +1013,7 @@ class CompatibilityService:
         self, method: str, path: str, resource: str, alias: str, body: Mapping[str, Any]
     ) -> dict[str, Any]:
         operation = path.rsplit("/", 1)[-1]
-        if resource == "accountLogs" and self.logs_service_enabled:
+        if resource == "accountLogs":
             from fastapi import HTTPException
             from jbm_cluster_py.common.auth import request_authorization, request_source_ip
             if operation != "pageList":
@@ -1032,28 +1031,9 @@ class CompatibilityService:
             return result
         entity = body.get(alias) if isinstance(body.get(alias), Mapping) else body.get("masterData")
         entity = dict(entity) if isinstance(entity, Mapping) else {}
-        if resource == "accountLogs":
-            entity = {
-                {"loginIp": "ip", "accountType": "loginType", "loginStatus": "status"}.get(key, key): value
-                for key, value in entity.items()
-            }
         page, size = _page(body.get("pageForm") or {})
         if operation in {"list", "pageList", "root", "tree"}:
             rows, total = await self.store.list(resource, entity, page, size, operation in {"root", "tree"})
-            if resource == "accountLogs":
-                rows = [
-                    {
-                        **row,
-                        "loginType": row.get("loginType") or row.get("accountType"),
-                        "accountType": row.get("loginType") or row.get("accountType"),
-                        "loginIp": row.get("ip") or row.get("loginIp"),
-                        "loginStatus": int(row.get("status", row.get("loginStatus")) or 0) == 1,
-                        "userAgent": row.get("userAgent") or row.get("loginAgent"),
-                        "loginAgent": row.get("userAgent") or row.get("loginAgent"),
-                        "browser": row.get("userAgent") or row.get("loginAgent"),
-                    }
-                    for row in rows
-                ]
             if operation == "tree":
                 rows = _tree(rows)
             return ok(page_result(rows, total, page, size) if operation == "pageList" else rows)

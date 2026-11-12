@@ -5,14 +5,14 @@ import json
 
 from fastapi.testclient import TestClient
 from jbm_cluster_py.platform.auth.main import create_app
-from sqlalchemy import text
-from test_auth_compat import auth_config, seed_database
+from test_auth_compat import auth_config, capture_audit, seed_database
 
 
 def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'audit.db'}"
     asyncio.run(seed_database(url))
     with TestClient(create_app(auth_config(url))) as client:
+        audit = capture_audit(client)
         form = {
             "grant_type": "password",
             "client_id": "JBM",
@@ -71,19 +71,8 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
         assert bad.json()["captcha_required"] is True
         assert client.post("/oauth2/token", data=form).json()["captcha_required"] is True
 
-        async def read():
-            async with client.app.state.repository.engine.connect() as connection:
-                return [
-                    dict(row)
-                    for row in (
-                        await connection.execute(
-                            text("SELECT * FROM base_account_logs ORDER BY account_log_id")
-                        )
-                    ).mappings()
-                ]
-
-        logs = client.portal.call(read)
-        types = {row["login_type"] for row in logs}
+        logs = list(audit.events)
+        types = {row["loginType"] for row in logs}
         assert {
             "LOGIN:PASSWORD",
             "REFRESH",
@@ -93,10 +82,10 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
             "LOGOUT",
         } <= types
         for row in logs:
-            assert row["client_id"] == "JBM"
-            assert row["request_id"]
+            assert row["clientId"] == "JBM"
+            assert row["requestId"]
             assert row["ip"]
-        assert len([row for row in logs if row["login_type"] == "LOGOUT"]) == 1
+        assert len([row for row in logs if row["loginType"] == "LOGOUT"]) == 1
         encoded = json.dumps(logs, default=str)
         for value in (
             "admin123",
@@ -107,9 +96,9 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
             second["access_token"],
         ):
             assert value not in encoded
-        completed = [row for row in logs if row["login_type"].startswith("LOGIN:")]
+        completed = [row for row in logs if row["loginType"].startswith("LOGIN:")]
         assert len(completed) == 2
-        assert all(row["user_id"] == 2057849052900044802 for row in completed)
+        assert all(row["userId"] == 2057849052900044802 for row in completed)
 
         third = client.post('/oauth2/token', data=form).json()
         # The previous failed attempt now requires the existing test CAPTCHA.
@@ -118,13 +107,14 @@ def test_login_refresh_failure_replacement_and_logout_are_durable_and_redacted(t
         assert client.post('/oauth2/revoke', data={
             'client_id': 'JBM', 'token': third['refresh_token'], 'token_type_hint': 'refresh_token',
         }).status_code == 200
-        assert any(row['login_type'] == 'REVOKE' for row in client.portal.call(read))
+        assert any(row['loginType'] == 'REVOKE' for row in audit.events)
 
 
 def test_early_login_client_failure_is_not_silently_omitted(tmp_path):
     url = f"sqlite+aiosqlite:///{tmp_path / 'invalid.db'}"
     asyncio.run(seed_database(url))
     with TestClient(create_app(auth_config(url))) as client:
+        audit = capture_audit(client)
         response = client.post(
             "/oauth2/doLogin",
             data={
@@ -137,18 +127,9 @@ def test_early_login_client_failure_is_not_silently_omitted(tmp_path):
         )
         assert response.status_code == 401
 
-        async def read():
-            async with client.app.state.repository.engine.connect() as connection:
-                return [
-                    dict(row)
-                    for row in (
-                        await connection.execute(text("SELECT * FROM base_account_logs"))
-                    ).mappings()
-                ]
-
-        rows = client.portal.call(read)
+        rows = list(audit.events)
         assert len(rows) == 1
-        assert rows[0]["login_type"] == "LOGIN_FAILED"
+        assert rows[0]["loginType"] == "LOGIN_FAILED"
         assert rows[0]["account"] == "someone"
-        assert rows[0]["status"] == 0
+        assert rows[0]["success"] is False
         assert "NEVER-LOG-THIS" not in json.dumps(rows, default=str)

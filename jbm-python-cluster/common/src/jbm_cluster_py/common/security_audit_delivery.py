@@ -41,6 +41,9 @@ class SecurityAuditPublisher(OperationAuditor):
                 raise
 
     async def flush(self):
+        while self.pending_results:
+            await self.record(self.pending_results[0])
+            self.pending_results.pop(0)
         if self.receipts.client is None:
             await self.receipts.start()
         submitted = self.directory / "submitted"

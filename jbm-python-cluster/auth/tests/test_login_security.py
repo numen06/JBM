@@ -68,18 +68,10 @@ def key_tokens(client, key):
 
 
 def rows(client):
-    async def read():
-        async with client.app.state.repository.engine.connect() as conn:
-            return [
-                dict(row)
-                for row in (
-                    await conn.execute(
-                        text("SELECT * FROM base_account_logs ORDER BY account_log_id")
-                    )
-                ).mappings()
-            ]
-
-    return client.portal.call(read)
+    return [{**row, "login_type": row["loginType"], "user_id": row.get("userId"),
+             "credential_id": row.get("credentialId"), "request_id": row.get("requestId"),
+             "status": int(row["success"])}
+            for row in client.app.state.repository.security_audit.events if row["category"] == "login"]
 
 
 def test_bad_key_and_password_share_account_lock_and_have_attributed_logs(client, key):
@@ -287,15 +279,15 @@ def test_alert_ids_cannot_acknowledge_another_account(client):
         )
 
     client.portal.call(seed_other_alert)
-    other = rows(client)[-1]
+    other, = client.portal.call(repository.login_alerts, 999)
     assert client.get("/oauth2/security/login-alerts").json()["result"] == []
     assert (
         client.post(
-            "/oauth2/security/login-alerts/acknowledge", json={"ids": [other["account_log_id"]]}
+            "/oauth2/security/login-alerts/acknowledge", json={"ids": [other["id"]]}
         ).status_code
         == 200
     )
-    assert rows(client)[-1]["risk_ack_time"] is None
+    assert client.portal.call(repository.login_alerts, 999) == [other]
 
 
 def test_offline_ipv4_ipv6_regions_without_external_requests():

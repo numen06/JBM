@@ -1,17 +1,21 @@
 """Super-administrator issuance of account-bound public-key credentials."""
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from contextlib import asynccontextmanager
 import hashlib
 import json
+import logging
 import time
 
+from jbm_cluster_py.common.security_audit import audit_event
 from sqlalchemy import delete, insert, select
 from sqlalchemy.exc import IntegrityError
 
 from .key_login import credentials, credential_expiration, file_key_id, file_public_key, six_months_after, verify_file_signature
-from .repository import _insert_available
 from .service import AuthError, _account_version
+
+
+logger = logging.getLogger(__name__)
 
 
 class AdminKeys:
@@ -24,11 +28,6 @@ class AdminKeys:
         actor = await self.auth.userinfo(token)
         if actor.get('admin') is not True or actor.get('userId') is None or actor.get('mustChangePassword'):
             raise AuthError('仅超级管理员可签发或撤销用户登录密钥', 403)
-        if not await self.auth.repository.has_table('base_account_logs'):
-            raise AuthError('密钥操作审计存储不可用', 503)
-        columns, _ = await self.auth.repository._login_columns()
-        if not {'risk_detail', 'credential_id'} <= columns or not {'login_type', 'account_type'}.intersection(columns):
-            raise AuthError('请先完成登录安全审计数据库迁移', 503)
         return actor
 
     async def target(self, user_id):
@@ -94,13 +93,13 @@ class AdminKeys:
         lock = 'credential-name:' + str(user_id) + ':' + hashlib.sha256(state['name'].casefold().encode()).hexdigest()
         try:
             async with self.keys.cache.lock(lock):
-                async with self.keys.engine.begin() as conn:
-                    names = (await conn.execute(select(credentials.c.name).where(credentials.c.user_id == int(user_id)))).scalars().all()
-                    if len(names) >= 20 or any(str(n).strip().casefold() == state['name'].casefold() for n in names):
-                        raise AuthError('密钥已达到上限或名称已存在，请检查后再签发', 409)
-                    await conn.execute(insert(credentials).values(id=key_id, user_id=int(user_id), kind='FILE_KEY',
-                        name=state['name'], data=json.dumps(data), sign_count=0, created_at=state['createdAt']))
-                    await self.audit(conn, actor, user, key_id, 'ADMIN_KEY_ISSUE', state['name'], state['reason'], context)
+                async with self.audit(actor, user, key_id, 'ADMIN_KEY_ISSUE', state['name'], state['reason'], context):
+                    async with self.keys.engine.begin() as conn:
+                        names = (await conn.execute(select(credentials.c.name).where(credentials.c.user_id == int(user_id)))).scalars().all()
+                        if len(names) >= 20 or any(str(n).strip().casefold() == state['name'].casefold() for n in names):
+                            raise AuthError('密钥已达到上限或名称已存在，请检查后再签发', 409)
+                        await conn.execute(insert(credentials).values(id=key_id, user_id=int(user_id), kind='FILE_KEY',
+                            name=state['name'], data=json.dumps(data), sign_count=0, created_at=state['createdAt']))
         except IntegrityError as exc:
             raise AuthError('该公钥已绑定账号', 409) from exc
         return encrypted_file or {'id': key_id, 'userId': str(user_id), 'account': account['account'], 'name': state['name'], 'expiresAt': state['expiresAt']}
@@ -118,26 +117,48 @@ class AdminKeys:
         actor = await self.actor(token)
         user = await self.target(user_id)
         async with self.keys.cache.lock('credential:' + key_id):
-            async with self.keys.engine.begin() as conn:
-                row = (await conn.execute(select(credentials).where(credentials.c.id == key_id,
-                    credentials.c.user_id == int(user_id)).with_for_update())).mappings().first()
-                if row is None:
-                    raise AuthError('此用户没有该密钥', 404)
-                await conn.execute(delete(credentials).where(credentials.c.id == key_id, credentials.c.user_id == int(user_id)))
-                await self.audit(conn, actor, user, key_id, 'ADMIN_KEY_REVOKE', row['name'], '管理员撤销', context)
+            async with self.keys.engine.connect() as conn:
+                row = (await conn.execute(select(credentials).where(
+                    credentials.c.id == key_id, credentials.c.user_id == int(user_id),
+                ))).mappings().first()
+            if row is None:
+                raise AuthError('此用户没有该密钥', 404)
+            async with self.audit(actor, user, key_id, 'ADMIN_KEY_REVOKE', row['name'], '管理员撤销', context):
+                async with self.keys.engine.begin() as conn:
+                    deleted = await conn.execute(delete(credentials).where(
+                        credentials.c.id == key_id, credentials.c.user_id == int(user_id),
+                    ))
+                    if not deleted.rowcount:
+                        raise AuthError('此用户没有该密钥', 404)
         return {'id': key_id, 'userId': str(user_id), 'revoked': True}
 
-    async def audit(self, conn, actor, target, key_id, action, name, reason, context):
-        now = datetime.now(UTC).replace(tzinfo=None)
-        detail = {'action': action, 'actorUserId': str(actor['userId']), 'targetUserId': str(target['user_id']),
-                  'targetTenantId': str(target.get('company_id') or ''), 'targetAccount': target.get('user_name'),
-                  'keyId': key_id, 'keyName': name, 'reason': reason}
-        await _insert_available(conn, 'base_account_logs', {
-            'user_id': int(actor['userId']), 'account': str(actor['username']), 'login_type': action, 'account_type': action,
-            'login_time': now, 'create_time': now, 'update_time': now, 'status': 1, 'login_status': 1,
-            'message': ('签发' if action == 'ADMIN_KEY_ISSUE' else '撤销') + '用户 ' + str(target.get('user_name')) + ' 的登录密钥',
-            'ip': str(context.get('login_ip') or '')[:64], 'login_ip': str(context.get('login_ip') or '')[:64],
-            'user_agent': str(context.get('user_agent') or '')[:512], 'login_agent': str(context.get('user_agent') or '')[:512],
-            'credential_id': key_id, 'request_id': context.get('request_id'), 'client_id': actor.get('clientId'),
-            'risk_level': 'info', 'risk_detail': json.dumps(detail, ensure_ascii=False),
-        })
+    @asynccontextmanager
+    async def audit(self, actor, target, key_id, action, name, reason, context):
+        sink = self.auth.repository.security_audit
+        if sink is None or not sink.enabled:
+            raise AuthError('密钥操作审计存储不可用', 503)
+        start = audit_event(
+            "auth", userId=actor["userId"], account=actor["username"], operation=action,
+            target=str(target["user_id"]), clientId=actor.get("clientId"),
+            ip=context.get("login_ip"), requestId=context.get("request_id"), phase="START",
+        )
+        start.update(category="operation", operationId=start["eventId"], operationName=action,
+                     platformActor=True, tenantScopeVerified=False, operationStatus="STARTED",
+                     submittedChanges={"targetUserId": str(target["user_id"]), "targetTenantId": str(target.get("company_id") or ""),
+                                       "targetAccount": target.get("user_name"), "keyId": key_id, "keyName": name, "reason": reason})
+        try:
+            await sink.record(start)
+        except Exception as exc:
+            raise AuthError('密钥操作审计存储不可用', 503) from exc
+        success = False
+        try:
+            yield
+            success = True
+        finally:
+            result = audit_event("auth", phase="RESULT", success=success)
+            result = {**start, **result, "operationStatus": "SUCCEEDED" if success else "FAILED"}
+            try:
+                await sink.record(result)
+            except Exception:
+                logger.exception("Credential audit result pending: operation_id=%s", start["operationId"])
+                sink.pending_results.append(result)

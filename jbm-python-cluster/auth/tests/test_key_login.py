@@ -18,7 +18,7 @@ from jbm_cluster_py.platform.auth.key_login import encode
 from jbm_cluster_py.platform.auth.main import create_app
 from jbm_cluster_py.platform.auth.ssh_signature import verify_ssh_signature
 from sqlalchemy import text
-from test_auth_compat import auth_config, rsa_pair_base64, seed_database
+from test_auth_compat import auth_config, capture_audit, rsa_pair_base64, seed_database
 
 ORIGIN = "https://admin.test"
 VERIFIER = "p" * 64
@@ -36,6 +36,7 @@ def client(tmp_path):
         "origins": [ORIGIN],
     }
     with TestClient(create_app(config)) as client:
+        capture_audit(client)
         response = client.post(
             "/oauth2/token",
             data={

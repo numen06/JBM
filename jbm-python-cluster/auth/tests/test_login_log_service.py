@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
-from sqlalchemy import text
+from sqlalchemy import inspect
 from test_key_login import client
 
 
@@ -10,8 +10,6 @@ def test_log_service_mode_keeps_only_current_state_and_pending_alerts_in_mysql(c
     audit = SimpleNamespace(enabled=True, record=AsyncMock())
     repo.security_audit = audit
     async def run():
-        async with repo.engine.connect() as conn:
-            before = (await conn.execute(text("SELECT COUNT(*) FROM base_account_logs"))).scalar()
         await repo.record_login(user_id=123, account="test", login_type="PASSWORD", ip="198.51.100.3", user_agent="test", details={"risk_level": "warning", "risk_detail": '{"reason":"LOCATION_CHANGED"}'})
         assert await repo.recent_successful_logins(123)
         alerts = await repo.login_alerts(123)
@@ -23,7 +21,7 @@ def test_log_service_mode_keeps_only_current_state_and_pending_alerts_in_mysql(c
         await repo.acknowledge_login_alerts(123, ids)
         assert await repo.login_alerts(123) == []
         async with repo.engine.connect() as conn:
-            assert (await conn.execute(text("SELECT COUNT(*) FROM base_account_logs"))).scalar() == before
+            assert not await conn.run_sync(lambda db: inspect(db).has_table("base_account_logs"))
     client.portal.call(run)
     event = audit.record.call_args_list[0].args[0]
     assert event["category"] == "login" and event["userId"] == 123

@@ -30,35 +30,38 @@ def test_auth_repository_does_not_reuse_stale_connections(tmp_path: Path) -> Non
     asyncio.run(repository.stop())
 
 
-def test_login_audit_supports_legacy_columns(tmp_path: Path) -> None:
+class CapturedAudit:
+    enabled = True
+
+    def __init__(self):
+        self.events = []
+        self.pending_results = []
+
+    async def record(self, event):
+        self.events.append(event.copy())
+
+
+def capture_audit(client):
+    repository = client.app.state.repository
+    repository.security_audit = CapturedAudit()
+    return repository.security_audit
+
+
+def test_login_audit_uses_archive_without_sql_history(tmp_path: Path) -> None:
+    from sqlalchemy import inspect
+
     async def exercise() -> None:
         repository = AuthRepository({"url": f"sqlite+aiosqlite:///{tmp_path / 'audit.db'}"})
-        async with repository.engine.begin() as conn:
-            await conn.execute(
-                text(
-                    "CREATE TABLE base_account_logs (id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                    "user_id INTEGER, account TEXT, account_type TEXT, login_time TEXT, "
-                    "login_ip TEXT, login_agent TEXT, login_status INTEGER, message TEXT, "
-                    "create_time TEXT, update_time TEXT)"
-                )
-            )
-        await repository.record_login(
-            user_id=1,
-            account="admin",
-            login_type="PASSWORD",
-            ip="127.0.0.1",
-            user_agent="pytest",
+        repository.security_audit = CapturedAudit()
+        await repository.start()
+        await repository.record_login(user_id=1, account="admin", login_type="PASSWORD",
+                                      ip="127.0.0.1", user_agent="pytest")
+        event, = repository.security_audit.events
+        assert (event["loginType"], event["ip"], event["userAgent"], event["success"]) == (
+            "PASSWORD", "127.0.0.1", "pytest", True,
         )
         async with repository.engine.connect() as conn:
-            row = (
-                await conn.execute(
-                    text(
-                        "SELECT account_type,login_ip,login_agent,login_status "
-                        "FROM base_account_logs"
-                    )
-                )
-            ).one()
-        assert tuple(row) == ("PASSWORD", "127.0.0.1", "pytest", 1)
+            assert not await conn.run_sync(lambda db: inspect(db).has_table("base_account_logs"))
         await repository.stop()
 
     asyncio.run(exercise())
@@ -1389,6 +1392,7 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
     asyncio.run(seed_database(database_url))
 
     with TestClient(create_app(auth_config(database_url))) as client:
+        audit = capture_audit(client)
         for _ in range(5):
             client.portal.call(client.app.state.auth_service.cache.set_json, "captcha:system:test5", {"code": "TEST5"}, 60)
             failed = client.post(
@@ -1418,14 +1422,7 @@ def test_password_error_lockout_message(tmp_path: Path) -> None:
         assert locked["error"] == "invalid_grant"
         assert locked["error_description"] == "登录失败次数过多，帐户锁定10分钟"
 
-    async def audit_failures() -> int:
-        engine = create_async_engine(database_url)
-        async with engine.connect() as conn:
-            count = await conn.scalar(text("SELECT COUNT(*) FROM base_account_logs WHERE status = 0"))
-        await engine.dispose()
-        return int(count or 0)
-
-    assert asyncio.run(audit_failures()) == 6
+    assert sum(event["success"] is False for event in audit.events) == 6
 
 
 def test_register_captcha_and_qrcode_frontend_paths(tmp_path: Path) -> None:

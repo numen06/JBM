@@ -47,7 +47,6 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         OpenApiCatalog(store, discovery, client),
         app_config.get("jbm.security.password-policy", {}) or {},
     )
-    compatibility.logs_service_enabled = bool(app_config.get("jbm.security-audit.enabled", False))
     auth = CenterAuthClient(dict(app_config.get("jbm.center.security", {}) or {}), client)
     nonce_redis = RedisClient(app_config.redis)
     access = RequestAccessService(repository, nonce_redis, auth)
