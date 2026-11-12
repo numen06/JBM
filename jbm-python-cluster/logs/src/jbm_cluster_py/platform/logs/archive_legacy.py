@@ -114,6 +114,9 @@ async def migrate(config, *, delete=False, limit=None):
     try:
         for table in ("base_account_logs", "gateway_logs"):
             async with repository.engine.connect() as conn:
+                if not await conn.run_sync(lambda c: inspect(c).has_table(table)):
+                    results.append({"table": table, "alreadyRetired": True})
+                    continue
                 meta = await conn.run_sync(lambda c: inspect(c).get_pk_constraint(table))
                 columns = await conn.run_sync(lambda c: {v["name"] for v in inspect(c).get_columns(table)})
             keys = meta.get("constrained_columns") or []

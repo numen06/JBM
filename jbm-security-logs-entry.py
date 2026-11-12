@@ -39,7 +39,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         loki=loki,
     )
     access_ingest = GatewayLogIngestService(audit)
-    repository.business_archive = BusinessLineArchive(loki, loki.default_tenant)
+    repository.business_archive = BusinessLineArchive(loki, audit.tenant)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
