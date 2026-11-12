@@ -17,6 +17,7 @@ from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.logs.business_archive import BusinessLineArchive
 from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
+from jbm_cluster_py.platform.logs.security_audit import SecurityAuditStore
 from jbm_cluster_py.platform.logs.router import build_logs_router
 from jbm_cluster_py.platform.logs.service import BusinessLogService, GatewayLogIngestService
 
@@ -33,7 +34,11 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     )
     kafka = KafkaClient(app_config.kafka)
     loki = LokiSink(logs_config.get("loki", {}) or {})
-    access_ingest = GatewayLogIngestService(repository, loki)
+    audit = SecurityAuditStore(
+        {**dict(app_config.get("jbm.security-audit", {}) or {}), **dict(logs_config.get("security-audit", {}) or {})},
+        loki=loki,
+    )
+    access_ingest = GatewayLogIngestService(audit)
     repository.business_archive = BusinessLineArchive(loki, loki.default_tenant)
 
     @asynccontextmanager
@@ -43,6 +48,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         app.state.kafka, app.state.loki = kafka, loki
         await repository.start()
         await loki.start()
+        await audit.start()
         access_topic = str(
             app_config.kafka.get("access-logs-topic") or "jbm.logs.access.v1"
         )

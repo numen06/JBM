@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 
 from sqlalchemy import inspect
+from jbm_cluster_py.platform.logs.repository import now_iso
 
 import httpx
 import pytest
@@ -34,6 +35,25 @@ class BusinessArchive:
             key = summary["logId"], number
             assert key not in self.rows
             self.rows[key] = {"lineNumber": number, "eventKey": event_key, "row": row}
+
+
+class GatewayArchive:
+    enabled = True
+
+    def __init__(self, directory):
+        self.directory = directory
+        self.events = {}
+
+    def backup_path(self, event):
+        return self.directory / event["eventId"]
+
+    async def handle(self, event):
+        existing = self.events.setdefault(event["eventId"], event)
+        assert existing == event
+
+    async def gateway_page(self, body, operation_only=False):
+        values = list(self.events.values())
+        return {"contents": [row["gateway"] for row in values], "total": len(values)}
 
 
 @pytest.mark.asyncio
@@ -91,7 +111,8 @@ async def test_business_log_lifecycle_and_stages(tmp_path) -> None:
 async def test_gateway_access_log_is_integrated_and_filterable(tmp_path) -> None:
     repository = LogsRepository(database_config(tmp_path))
     await repository.start()
-    ingest = GatewayLogIngestService(repository, LokiSink({"enabled": False}))
+    archive = GatewayArchive(tmp_path)
+    ingest = GatewayLogIngestService(archive)
     app = FastAPI()
     app.include_router(
         build_logs_router(repository, BusinessLogService(repository, "test"), ingest)
@@ -104,6 +125,7 @@ async def test_gateway_access_log_is_integrated_and_filterable(tmp_path) -> None
                 "/GatewayLogs/ingest",
                 json={
                     "accessId": "a-1",
+                    "requestTime": now_iso(),
                     "path": "/center/current/user",
                     "method": "GET",
                     "httpStatus": 200,
@@ -113,14 +135,14 @@ async def test_gateway_access_log_is_integrated_and_filterable(tmp_path) -> None
             assert response.status_code == 200
             page = await client.post("/GatewayLogs/findLogs", json={})
             assert page.json()["result"]["total"] == 1
-        await ingest.handle(
-            {"accessId": "a-2", "path": "/logs/GatewayLogs/findLogs", "method": "POST"}
-        )
-
-        assert (await repository.gateway_log("a-1"))["httpStatus"] == 200
-        assert await repository.gateway_log("a-2") is None
-        rules = await repository.list_rules()
-        assert next(rule for rule in rules if rule["ruleId"] == "builtin-logs")["hitCount"] == 1
+            assert page.json()["result"]["contents"][0]["httpStatus"] == 200
+            assert (await client.post("/GatewayLogs/filterRules/test", json={
+                "path": "/logs/GatewayLogs/findLogs", "method": "POST"
+            })).json()["result"]["matched"]
+            archive.enabled = False
+            assert (await client.post("/GatewayLogs/findLogs", json={})).status_code == 503
+        async with repository.engine.connect() as conn:
+            assert not await conn.run_sync(lambda c: inspect(c).has_table("gateway_logs"))
     finally:
         await repository.stop()
 
@@ -157,6 +179,7 @@ async def test_gateway_access_log_flows_through_kafka_to_loki_sink(tmp_path) -> 
         try:
             row = {
                 "accessId": "kafka-a-1",
+                "requestTime": now_iso(),
                 "path": "/center/current/user",
                 "method": "GET",
                 "httpStatus": 200,
@@ -164,12 +187,13 @@ async def test_gateway_access_log_flows_through_kafka_to_loki_sink(tmp_path) -> 
             }
             await access_logger.record(row)
             assert kafka.messages == [("jbm.logs.access.v1", row, "kafka-a-1")]
-            assert await repository.gateway_log("kafka-a-1") is None
-
-            await GatewayLogIngestService(
-                repository, LokiSink({"enabled": False})
-            ).handle(kafka.messages[0][1])
-            assert (await repository.gateway_log("kafka-a-1"))["httpStatus"] == 200
+            archive = GatewayArchive(tmp_path)
+            ingest = GatewayLogIngestService(archive)
+            await ingest.handle(kafka.messages[0][1])
+            await ingest.handle(kafka.messages[0][1])
+            assert len(archive.events) == 1
+            event, = archive.events.values()
+            assert event["gateway"]["httpStatus"] == 200
         finally:
             await access_logger.stop()
             await repository.stop()

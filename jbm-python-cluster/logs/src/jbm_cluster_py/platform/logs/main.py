@@ -40,10 +40,9 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     )
     kafka = KafkaClient(app_config.kafka)
     loki = LokiSink(logs_config.get("loki", {}) or {})
-    access_ingest = GatewayLogIngestService(repository, loki)
     security_audit = SecurityAuditStore({**dict(app_config.get("jbm.security-audit", {}) or {}), **dict(logs_config.get("security-audit", {}) or {})}, loki=loki, outbox_engine=repository.engine)
     retention = AuditRetention(os.getenv("JBM_AUDIT_LOKI_ADMIN_URL", ""), security_audit.tenant, security_audit.keep_days)
-    access_ingest.security_audit = security_audit
+    access_ingest = GatewayLogIngestService(security_audit)
     repository.business_archive = BusinessLineArchive(loki, security_audit.tenant)
 
     @asynccontextmanager

@@ -54,7 +54,6 @@ class LogsRepository:
             await require_tables(
                 self.engine,
                 (
-                    "gateway_logs",
                     "gateway_log_filter_rule",
                     "business_log",
                     "business_log_stage",
@@ -62,15 +61,6 @@ class LogsRepository:
             )
             return
         ddl = (
-            """CREATE TABLE IF NOT EXISTS gateway_logs (
-                access_id VARCHAR(64) PRIMARY KEY, loglevel INTEGER, path VARCHAR(1024), api_path VARCHAR(1024),
-                request_user_id VARCHAR(64), request_real_name VARCHAR(255), api_name VARCHAR(255),
-                operation_type VARCHAR(64), app_id VARCHAR(64), key_id VARCHAR(64), app_key VARCHAR(128),
-                api_id VARCHAR(64), app_name VARCHAR(255), method VARCHAR(16), ip VARCHAR(64),
-                http_status INTEGER, request_time VARCHAR(64), response_time VARCHAR(64), response_body TEXT,
-                use_time BIGINT, params TEXT, headers TEXT, user_agent TEXT, region VARCHAR(255),
-                authentication TEXT, service_id VARCHAR(255), error TEXT
-            )""",
             """CREATE TABLE IF NOT EXISTS gateway_log_filter_rule (
                 rule_id VARCHAR(64) PRIMARY KEY, rule_name VARCHAR(255) NOT NULL, enabled INTEGER NOT NULL,
                 builtin INTEGER NOT NULL, path_pattern VARCHAR(1024), method VARCHAR(16), service_id VARCHAR(255),
@@ -139,122 +129,6 @@ class LogsRepository:
                 "remark": "忽略 OpenAPI 拉取",
             },
         ]
-
-    async def save_gateway_log(self, row: Mapping[str, Any]) -> dict[str, Any]:
-        data = dict(row)
-        data.setdefault("accessId", uuid.uuid4().hex)
-        data.setdefault("requestTime", now_iso())
-        columns = {
-            "access_id": data.get("accessId"),
-            "loglevel": data.get("loglevel", 1),
-            "path": data.get("path"),
-            "api_path": data.get("apiPath"),
-            "request_user_id": data.get("requestUserId"),
-            "request_real_name": data.get("requestRealName"),
-            "api_name": data.get("apiName"),
-            "operation_type": data.get("operationType"),
-            "app_id": data.get("appId"),
-            "key_id": data.get("keyId"),
-            "app_key": data.get("appKey"),
-            "api_id": data.get("apiId"),
-            "app_name": data.get("appName"),
-            "method": data.get("method") or data.get("requestMethod"),
-            "ip": data.get("ip") or data.get("requestIp"),
-            "http_status": data.get("httpStatus") or data.get("status"),
-            "request_time": data.get("requestTime"),
-            "response_time": data.get("responseTime"),
-            "response_body": data.get("responseBody"),
-            "use_time": data.get("useTime") or data.get("spendTime") or data.get("costTime"),
-            "params": _json(data.get("params"))
-            if not isinstance(data.get("params"), str)
-            else data.get("params"),
-            "headers": _json(data.get("headers"))
-            if not isinstance(data.get("headers"), str)
-            else data.get("headers"),
-            "user_agent": data.get("userAgent"),
-            "region": data.get("region"),
-            "authentication": _json(data.get("authentication"))
-            if not isinstance(data.get("authentication"), str)
-            else data.get("authentication"),
-            "service_id": data.get("serviceId"),
-            "error": data.get("error"),
-        }
-        async with self.engine.begin() as conn:
-            await conn.execute(text("DELETE FROM gateway_logs WHERE access_id=:access_id"), columns)
-            await conn.execute(
-                text(
-                    f"INSERT INTO gateway_logs ({', '.join(columns)}) VALUES ({', '.join(':' + c for c in columns)})"
-                ),
-                columns,
-            )
-        return self._gateway_from_db(columns)
-
-    async def gateway_log(self, access_id: str) -> dict[str, Any] | None:
-        async with self.engine.connect() as conn:
-            row = (
-                (
-                    await conn.execute(
-                        text("SELECT * FROM gateway_logs WHERE access_id=:id"), {"id": access_id}
-                    )
-                )
-                .mappings()
-                .first()
-            )
-        return self._gateway_from_db(dict(row)) if row else None
-
-    async def page_gateway_logs(
-        self, body: Mapping[str, Any], operation_only: bool = False
-    ) -> dict[str, Any]:
-        query = body.get("gatewayLogs") if isinstance(body.get("gatewayLogs"), Mapping) else body
-        page = PageForm(**(body.get("pageForm") or {}))
-        field_map = {
-            "accessId": ("access_id", "="),
-            "serviceId": ("service_id", "="),
-            "apiId": ("api_id", "="),
-            "path": ("path", "LIKE"),
-            "requestRealName": ("request_real_name", "LIKE"),
-            "apiName": ("api_name", "LIKE"),
-            "appName": ("app_name", "LIKE"),
-            "region": ("region", "LIKE"),
-            "method": ("method", "="),
-            "ip": ("ip", "LIKE"),
-            "operationType": ("operation_type", "="),
-            "appKey": ("app_key", "="),
-            "httpStatus": ("http_status", "="),
-            "status": ("http_status", "="),
-        }
-        where, params = self._filters(query, field_map)
-        if query.get("keyword"):
-            params["keyword"] = f"%{query['keyword']}%"
-            where.append("(path LIKE :keyword OR service_id LIKE :keyword OR error LIKE :keyword)")
-        if body.get("beginTime"):
-            params["begin"] = body["beginTime"]
-            where.append("request_time >= :begin")
-        if body.get("endTime"):
-            params["end"] = body["endTime"]
-            where.append("request_time <= :end")
-        if operation_only:
-            where.append("request_user_id IS NOT NULL")
-        return await self._page(
-            "gateway_logs", where, params, page, self._gateway_from_db, "request_time"
-        )
-
-    async def cluster_access(self) -> dict[str, Any]:
-        today = datetime.now(UTC).date().isoformat()
-        async with self.engine.connect() as conn:
-            total = (await conn.execute(text("SELECT COUNT(*) FROM gateway_logs"))).scalar()
-            today_count = (
-                await conn.execute(
-                    text("SELECT COUNT(*) FROM gateway_logs WHERE request_time LIKE :day"),
-                    {"day": today + "%"},
-                )
-            ).scalar()
-        return {
-            "time": now_iso(),
-            "total": int(total or 0),
-            "today": int(today_count or 0),
-            "maxQps": 0,
-        }
 
     async def list_rules(self) -> list[dict[str, Any]]:
         async with self.engine.connect() as conn:

@@ -3,48 +3,56 @@ from __future__ import annotations
 import hashlib
 import hmac
 import time
+import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-from jbm_cluster_py.platform.logs.loki import LokiSink
+from jbm_cluster_py.common.security_audit import audit_event
 from jbm_cluster_py.platform.logs.repository import LogsRepository
 
 
 class GatewayLogIngestService:
-    def __init__(self, repository: LogsRepository, loki: LokiSink, security_audit=None) -> None:
-        self.repository = repository
-        self.loki = loki
+    def __init__(self, security_audit) -> None:
         self.security_audit = security_audit
 
     async def handle(self, payload: Mapping[str, Any]) -> None:
-        if self.security_audit is not None and self.security_audit.enabled:
-            from jbm_cluster_py.common.security_audit import audit_event
-            from sqlalchemy import text
-            async with self.repository.engine.connect() as conn:
-                existing = (await conn.execute(text("SELECT * FROM gateway_logs WHERE access_id=:id"), {"id": payload.get("accessId")})).mappings().first()
-            if existing is not None:
-                # An old Kafka delivery may be replayed after its SQL commit.
-                # Use the same identity and exact projection as the migration.
-                from .archive_legacy import event_for
-                event, _ = event_for("gateway_logs", "access_id", dict(existing))
-                await self.security_audit.handle(event)
-                return
-            event = audit_event("gateway-legacy-transport", userId=payload.get("requestUserId"), account=payload.get("requestRealName"),
-                tenantId=payload.get("tenantId"), operation=payload.get("operationType") or payload.get("method"), target=payload.get("path"),
-                ip=payload.get("ip"), success=int(payload.get("httpStatus") or 0) < 400, httpStatus=payload.get("httpStatus"), requestId=payload.get("requestId"))
-            event.update(eventId=hashlib.sha256(("gateway_logs:"+str(payload.get("accessId"))).encode()).hexdigest()[:32], category="access", originalId=payload.get("accessId"), method=payload.get("method"), serviceId=payload.get("serviceId"), gateway=dict(payload))
-            if payload.get("requestTime"):
-                parsed = datetime.fromisoformat(str(payload["requestTime"]).replace("Z", "+00:00"))
-                event["timestamp"] = int(parsed.replace(tzinfo=UTC).timestamp() * 1000) if parsed.tzinfo is None else int(parsed.timestamp() * 1000)
-            await self.security_audit.handle(event)
-            return
-        matched = await self.repository.matching_rules(payload)
-        if matched:
-            await self.repository.mark_rule_hits([str(rule["ruleId"]) for rule in matched])
-            return
-        saved = await self.repository.save_gateway_log(payload)
-        await self.loki.send_gateway(saved)
+        from .archive_legacy import redact
+
+        if not self.security_audit.enabled:
+            raise RuntimeError("网关日志归档未启用")
+        access_id = str(payload.get("accessId") or "").strip()
+        request_time = payload.get("requestTime")
+        if not access_id or not request_time:
+            raise ValueError("网关日志需要请求编号和原始请求时间")
+        parsed = datetime.fromisoformat(str(request_time).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=UTC)
+        status = payload.get("httpStatus")
+        event = audit_event(
+            "gateway-legacy-transport", userId=payload.get("requestUserId"),
+            account=payload.get("requestRealName"), tenantId=payload.get("tenantId"),
+            operation=payload.get("operationType") or payload.get("method"), target=payload.get("path"),
+            ip=payload.get("ip"), success=int(status) < 400 if status is not None else None,
+            httpStatus=status, requestId=payload.get("requestId"),
+        )
+        event.update(
+            eventId=hashlib.sha256(("gateway_logs:" + access_id).encode()).hexdigest()[:32],
+            timestamp=int(parsed.timestamp() * 1000), category="access", originalId=access_id,
+            method=payload.get("method"), serviceId=payload.get("serviceId"), gateway=redact(dict(payload)),
+        )
+        # A legacy delivery can reappear after its original SQL row was
+        # archived. Reuse the signed migration record for that exact identity.
+        backup = self.security_audit.backup_path(event)
+        if backup.exists():
+            envelope = json.loads(backup.read_bytes())
+            archived = json.loads(envelope["payload"])
+            if archived.get("source") == "legacy-gateway":
+                self.security_audit.verify(envelope["payload"], envelope["signature"])
+                if archived.get("originalId") != access_id or archived.get("timestamp") != event["timestamp"]:
+                    raise ValueError("网关日志编号与归档记录冲突")
+                event = archived
+        await self.security_audit.handle(event)
 
 
 class BusinessLogService:
