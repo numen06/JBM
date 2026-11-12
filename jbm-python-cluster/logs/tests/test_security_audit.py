@@ -319,3 +319,30 @@ async def test_audit_batch_commits_only_after_complete_handler_succeeds():
     consumer.commit = commit
     await kafka._consume_batch(consumer, "audit", handler, 1000)
     assert calls == ["handle", "handle", "commit"]
+
+
+@pytest.mark.asyncio
+async def test_single_kafka_consumer_commits_only_the_confirmed_partition():
+    from types import SimpleNamespace
+
+    from aiokafka import TopicPartition
+    from jbm_cluster_py.integrations.kafka import KafkaClient
+
+    kafka = KafkaClient({})
+    kafka.retry_seconds = 0
+    actions = []
+
+    class Consumer:
+        async def __aiter__(self):
+            yield SimpleNamespace(topic="business", partition=2, offset=21, value=b'{"eventId":"one"}')
+
+        async def commit(self, offsets):
+            actions.append(offsets)
+
+    async def handler(event):
+        actions.append(event["eventId"])
+        if len(actions) == 1:
+            raise RuntimeError("Archive read-back unavailable")
+
+    await kafka._consume(Consumer(), "business", handler)
+    assert actions == ["one", "one", {TopicPartition("business", 2): 22}]

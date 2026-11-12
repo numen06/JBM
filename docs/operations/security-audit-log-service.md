@@ -25,7 +25,7 @@
 
 1. 遵循主线版本 SOP，构建同一个冻结提交的 center、auth、gateway、logs、web/packages；宿主更新共享管理包和 web。先在原本地 debug 服务验收。
 2. 保留运行配置、数据库和数据卷。先备份当前认证关联表与 Loki，核对后端路径是否真的落盘；迁移持久路径须停写冷备、逐文件比较哈希后启动，不重建空卷覆盖原数据。
-3. 使用候选 center 镜像运行 Alembic 升级。新表保存密码年龄元信息、最新登录状态、未确认安全告警和短期 outbox，不修改既有密码、成员授权或密钥。
+3. 使用候选 center 镜像运行 Alembic 升级。安全表保存密码年龄元信息、最新登录状态和未确认安全告警。历史版本遗留的 SQL outbox 按上述流程退役；不新增 SQL 暂存，不修改既有密码、成员授权或密钥。
 4. 准备日志服务独立可写备份卷，以 logs 的有效 UID/GID 管理；注入私有完整性密钥，启用 `jbm.security-audit.enabled`，配置 logs Loki 连接与实际后端一年留存。先验证日志服务写入及回读，再更新生产者。
 5. `python -m jbm_cluster_py.platform.logs.archive_legacy` 先归档旧 `base_account_logs` 和 `gateway_logs`。保存脱敏在线事实、私有原记录备份及校验结果。重复运行必须得到相同事实。
 6. 通过归档和回读核验后，使用同一命令加 `--delete-verified` 比较原记录并逐条清理 SQL 历史。禁止 TRUNCATE。归档失败、记录变化或备份校验失败必须保留原数据。SQL 清理后再次验收登录、日期查询、安全告警、访问与管理日志；不能依赖 SQL 历史 fallback。

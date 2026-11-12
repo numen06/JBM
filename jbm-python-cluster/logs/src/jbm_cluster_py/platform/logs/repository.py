@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import uuid
 from collections.abc import Mapping
@@ -39,6 +40,8 @@ class LogsRepository:
             configured_database_url(database_config)
             or "sqlite+aiosqlite:///./data/jbm-python-cluster.db"
         )
+        self.business_archive = None
+        self._sqlite_append_lock = asyncio.Lock()
         self._sqlite = url.startswith("sqlite+aiosqlite:///")
         if self._sqlite:
             db_path = url.replace("sqlite+aiosqlite:///", "", 1)
@@ -54,7 +57,6 @@ class LogsRepository:
                     "gateway_logs",
                     "gateway_log_filter_rule",
                     "business_log",
-                    "business_log_line",
                     "business_log_stage",
                 ),
             )
@@ -81,15 +83,6 @@ class LogsRepository:
                 remark TEXT, business_type VARCHAR(128), business_id VARCHAR(255), source VARCHAR(255),
                 expire_days INTEGER, expire_date VARCHAR(64), total_lines INTEGER NOT NULL,
                 create_time VARCHAR(64), update_time VARCHAR(64)
-            )""",
-            """CREATE TABLE IF NOT EXISTS business_log_line (
-                log_id VARCHAR(64) NOT NULL, line_number INTEGER NOT NULL, content TEXT NOT NULL,
-                is_append INTEGER NOT NULL, create_time VARCHAR(64), trace_id VARCHAR(128),
-                business_type VARCHAR(128), business_id VARCHAR(255), source VARCHAR(255),
-                stage_code VARCHAR(128), stage_name VARCHAR(255), stage_index INTEGER,
-                stage_progress INTEGER, stage_status VARCHAR(32), stage_count INTEGER,
-                overall_progress INTEGER, stage_event INTEGER NOT NULL,
-                PRIMARY KEY (log_id, line_number)
             )""",
             """CREATE TABLE IF NOT EXISTS business_log_stage (
                 log_id VARCHAR(64) PRIMARY KEY, snapshot_json TEXT NOT NULL, version BIGINT NOT NULL,
@@ -378,8 +371,14 @@ class LogsRepository:
             matched.append(rule)
         return matched
 
-    async def create_business_log(self, body: Mapping[str, Any]) -> dict[str, Any]:
-        log_id = str(body.get("logId") or uuid.uuid4().hex)
+    async def create_business_log(self, body: Mapping[str, Any], *, event_key=None) -> dict[str, Any]:
+        log_id = str(body.get("logId") or event_key or uuid.uuid4().hex)
+        if event_key:
+            existing = await self.business_summary(log_id)
+            if existing:
+                if body.get("content"):
+                    await self.append_business_log(log_id, str(body["content"]), body, False, event_key=event_key)
+                return existing
         created = now_iso()
         expire_days = max(int(body.get("expireDays") or 30), 1)
         summary = {
@@ -409,60 +408,84 @@ class LogsRepository:
                 summary,
             )
         if body.get("content"):
-            await self.append_business_log(log_id, str(body["content"]), body, False)
+            await self.append_business_log(log_id, str(body["content"]), body, False, event_key=event_key)
         result = self._business_from_db(summary)
         result["logId"] = log_id
         return result
 
     async def append_business_log(
-        self, log_id: str, content: str, metadata: Mapping[str, Any], is_append: bool = True
+        self, log_id: str, content: str, metadata: Mapping[str, Any], is_append: bool = True,
+        *, event_key: str | None = None,
     ) -> list[dict[str, Any]]:
-        summary = await self.business_summary(log_id)
-        if not summary:
-            raise ValueError("业务日志不存在")
-        lines = content.splitlines() or [content]
-        if metadata.get("autoTimestamp"):
-            stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
-            lines = [f"[{stamp}] {line}" for line in lines]
-        start = int(summary.get("totalLines") or 0) + 1
-        rows = []
-        for offset, line in enumerate(lines):
-            rows.append(
-                {
-                    "log_id": log_id,
-                    "line_number": start + offset,
-                    "content": line,
-                    "is_append": 1 if is_append else 0,
-                    "create_time": now_iso(),
-                    "trace_id": metadata.get("traceId") or summary.get("traceId"),
-                    "business_type": metadata.get("businessType") or summary.get("businessType"),
-                    "business_id": metadata.get("businessId") or summary.get("businessId"),
-                    "source": metadata.get("source") or summary.get("source"),
-                    "stage_code": metadata.get("stageCode"),
-                    "stage_name": metadata.get("stageName"),
-                    "stage_index": metadata.get("stageIndex"),
-                    "stage_progress": metadata.get("stageProgress"),
-                    "stage_status": metadata.get("stageStatus"),
-                    "stage_count": metadata.get("stageCount"),
-                    "overall_progress": metadata.get("overallProgress"),
-                    "stage_event": 1 if metadata.get("stageEvent") else 0,
-                }
-            )
+        if self._sqlite:
+            async with self._sqlite_append_lock:
+                return await self._archive_append(log_id, content, metadata, is_append, event_key)
+        return await self._archive_append(log_id, content, metadata, is_append, event_key)
+
+    async def _archive_append(self, log_id, content, metadata, is_append, event_key):
+        archive = self._require_business_archive()
         async with self.engine.begin() as conn:
-            for row in rows:
-                await conn.execute(
-                    text(
-                        f"INSERT INTO business_log_line ({', '.join(row)}) VALUES ({', '.join(':' + c for c in row)})"
-                    ),
-                    row,
+            statement = "SELECT * FROM business_log WHERE log_id=:id" + ("" if self._sqlite else " FOR UPDATE")
+            stored = (await conn.execute(text(statement), {"id": log_id})).mappings().first()
+            if not stored:
+                raise ValueError("业务日志不存在")
+            summary = self._business_from_db(stored)
+            start = int(summary["totalLines"]) + 1
+            # Repair the counter if Loki confirmed an append before the SQL commit
+            # acknowledgement was lost. SQL holds only the current line count.
+            pending = await archive.read(summary, start)
+            if pending:
+                expected = list(range(start, start + len(pending)))
+                if [item["lineNumber"] for item in pending] != expected:
+                    raise ValueError("业务日志归档行号不连续")
+                start = expected[-1] + 1
+                await self._set_line_count(conn, log_id, start - 1)
+            if event_key:
+                existing = await archive.read(summary, event_key=event_key)
+                if existing:
+                    return [self._line_from_db(item["row"]) for item in existing]
+            lines = content.splitlines() or [content]
+            if metadata.get("autoTimestamp"):
+                stamp = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
+                lines = [f"[{stamp}] {line}" for line in lines]
+            rows = []
+            for offset, line in enumerate(lines):
+                rows.append(
+                    {
+                        "log_id": log_id,
+                        "line_number": start + offset,
+                        "content": line,
+                        "is_append": 1 if is_append else 0,
+                        "create_time": now_iso(),
+                        "trace_id": metadata.get("traceId") or summary.get("traceId"),
+                        "business_type": metadata.get("businessType") or summary.get("businessType"),
+                        "business_id": metadata.get("businessId") or summary.get("businessId"),
+                        "source": metadata.get("source") or summary.get("source"),
+                        "stage_code": metadata.get("stageCode"),
+                        "stage_name": metadata.get("stageName"),
+                        "stage_index": metadata.get("stageIndex"),
+                        "stage_progress": metadata.get("stageProgress"),
+                        "stage_status": metadata.get("stageStatus"),
+                        "stage_count": metadata.get("stageCount"),
+                        "overall_progress": metadata.get("overallProgress"),
+                        "stage_event": 1 if metadata.get("stageEvent") else 0,
+                    }
                 )
-            await conn.execute(
-                text(
-                    "UPDATE business_log SET total_lines=:total,update_time=:now WHERE log_id=:id"
-                ),
-                {"total": start + len(rows) - 1, "now": now_iso(), "id": log_id},
-            )
+            await archive.write_verified(summary, rows, event_key or uuid.uuid4().hex)
+            await self._set_line_count(conn, log_id, start + len(rows) - 1)
         return [self._line_from_db(row) for row in rows]
+
+    @staticmethod
+    async def _set_line_count(conn, log_id, count):
+        await conn.execute(
+            text("UPDATE business_log SET total_lines=:total,update_time=:now WHERE log_id=:id"),
+            {"total": count, "now": now_iso(), "id": log_id},
+        )
+
+    def _require_business_archive(self):
+        if self.business_archive is None:
+            raise RuntimeError("业务日志归档未启用")
+        return self.business_archive
 
     async def business_summary(self, log_id: str) -> dict[str, Any] | None:
         async with self.engine.connect() as conn:
@@ -480,25 +503,14 @@ class LogsRepository:
     async def business_lines(
         self, log_id: str, start: int = 1, end: int = -1
     ) -> list[dict[str, Any]]:
-        params: dict[str, Any] = {"id": log_id, "start": max(start, 1)}
-        end_sql = ""
-        if end >= 0:
-            params["end"] = end
-            end_sql = " AND line_number<=:end"
-        async with self.engine.connect() as conn:
-            rows = (
-                (
-                    await conn.execute(
-                        text(
-                            f"SELECT * FROM business_log_line WHERE log_id=:id AND line_number>=:start{end_sql} ORDER BY line_number"
-                        ),
-                        params,
-                    )
-                )
-                .mappings()
-                .all()
-            )
-        return [self._line_from_db(dict(row)) for row in rows]
+        summary = await self.business_summary(log_id)
+        if not summary:
+            return []
+        end = min(int(summary["totalLines"]), end) if end >= 0 else int(summary["totalLines"])
+        if end < max(start, 1):
+            return []
+        rows = await self._require_business_archive().read(summary, max(start, 1), end)
+        return [self._line_from_db(item["row"]) for item in rows]
 
     async def page_business_logs(self, body: Mapping[str, Any]) -> dict[str, Any]:
         query = (
@@ -541,9 +553,6 @@ class LogsRepository:
 
     async def delete_business_log(self, log_id: str) -> bool:
         async with self.engine.begin() as conn:
-            await conn.execute(
-                text("DELETE FROM business_log_line WHERE log_id=:id"), {"id": log_id}
-            )
             await conn.execute(
                 text("DELETE FROM business_log_stage WHERE log_id=:id"), {"id": log_id}
             )

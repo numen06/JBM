@@ -52,19 +52,19 @@ class BusinessLogService:
         self.repository = repository
         self.signing_secret = signing_secret.encode("utf-8")
 
-    async def create(self, body: Mapping[str, Any]) -> dict[str, Any]:
-        log = await self.repository.create_business_log(body)
+    async def create(self, body: Mapping[str, Any], *, event_key=None) -> dict[str, Any]:
+        log = await self.repository.create_business_log(body, event_key=event_key)
         stages = body.get("stages")
         if isinstance(stages, list) and stages:
             await self.init_stages({"logId": log["logId"], "stages": stages})
         return {"logId": log["logId"]}
 
     async def append(
-        self, log_id: str, content: str, body: Mapping[str, Any] | None = None
+        self, log_id: str, content: str, body: Mapping[str, Any] | None = None, *, event_key=None
     ) -> bool:
         if not log_id.strip() or not content:
             raise ValueError("logId和日志内容不能为空")
-        await self.repository.append_business_log(log_id, content, body or {}, True)
+        await self.repository.append_business_log(log_id, content, body or {}, True, event_key=event_key)
         return True
 
     async def lines(self, log_id: str, start: int = 1, end: int = -1) -> list[dict[str, Any]]:
@@ -259,8 +259,9 @@ class BusinessLogService:
     async def handle_event(self, event: Mapping[str, Any]) -> None:
         event_type = str(event.get("eventType") or "").upper()
         log_id = str(event.get("logId") or "")
+        event_key = str(event.get("_kafkaRecordId") or "") or None
         if event_type == "CREATE":
-            await self.create(event)
+            await self.create(event, event_key=event_key)
         elif event_type == "APPEND":
             if not log_id and event.get("businessType") and event.get("businessId"):
                 log_id = (
@@ -269,7 +270,7 @@ class BusinessLogService:
                     )
                     or ""
                 )
-            await self.append(log_id, str(event.get("content") or ""), event)
+            await self.append(log_id, str(event.get("content") or ""), event, event_key=event_key)
         elif event_type == "DELETE":
             await self.repository.delete_business_log(log_id)
         elif event_type == "UPDATE_EXPIRE":

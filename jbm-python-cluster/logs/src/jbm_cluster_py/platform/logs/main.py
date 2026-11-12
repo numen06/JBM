@@ -16,6 +16,7 @@ from jbm_cluster_py.common.logging import configure_logging
 from jbm_cluster_py.integrations.kafka import KafkaClient
 from jbm_cluster_py.integrations.nacos import NacosRegistrar
 from jbm_cluster_py.integrations.telemetry import init_telemetry
+from jbm_cluster_py.platform.logs.business_archive import BusinessLineArchive
 from jbm_cluster_py.platform.logs.loki import LokiSink
 from jbm_cluster_py.platform.logs.repository import LogsRepository
 from jbm_cluster_py.platform.logs.retention import AuditRetention
@@ -43,6 +44,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     security_audit = SecurityAuditStore({**dict(app_config.get("jbm.security-audit", {}) or {}), **dict(logs_config.get("security-audit", {}) or {})}, loki=loki, outbox_engine=repository.engine)
     retention = AuditRetention(os.getenv("JBM_AUDIT_LOKI_ADMIN_URL", ""), security_audit.tenant, security_audit.keep_days)
     access_ingest.security_audit = security_audit
+    repository.business_archive = BusinessLineArchive(loki, security_audit.tenant)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> Any:
@@ -60,7 +62,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         )
         group = str(app_config.kafka.get("consumer-group") or "jbm-cluster-platform-logs")
         await kafka.consume_json(access_topic, group + "-access", access_ingest.handle)
-        await kafka.consume_json(business_topic, group + "-business", service.handle_event)
+        await kafka.consume_json(business_topic, group + "-business", service.handle_event, source_ids=True)
         if security_audit.enabled:
             await kafka.consume_json(AUDIT_TOPIC, group + "-security-audit", security_audit.handle_batch, batch_size=1000)
         await nacos.start()

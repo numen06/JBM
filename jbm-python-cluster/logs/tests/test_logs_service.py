@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 
+from sqlalchemy import inspect
+
 import httpx
 import pytest
 from fastapi import FastAPI
@@ -17,10 +19,28 @@ def database_config(tmp_path) -> dict[str, str]:
     return {"url": f"sqlite+aiosqlite:///{(tmp_path / 'logs.db').as_posix()}"}
 
 
+class BusinessArchive:
+    def __init__(self):
+        self.rows = {}
+
+    async def read(self, summary, start=1, end=-1, *, event_key=None):
+        return [item for (log_id, number), item in sorted(self.rows.items())
+                if log_id == summary["logId"] and number >= start and (end < 0 or number <= end)
+                and (not event_key or item["eventKey"] == event_key)]
+
+    async def write_verified(self, summary, rows, event_key):
+        for row in rows:
+            number = row["line_number"]
+            key = summary["logId"], number
+            assert key not in self.rows
+            self.rows[key] = {"lineNumber": number, "eventKey": event_key, "row": row}
+
+
 @pytest.mark.asyncio
 async def test_business_log_lifecycle_and_stages(tmp_path) -> None:
     repository = LogsRepository(database_config(tmp_path))
     await repository.start()
+    repository.business_archive = BusinessArchive()
     service = BusinessLogService(repository, "test-secret")
     try:
         created = await service.create(
@@ -55,6 +75,14 @@ async def test_business_log_lifecycle_and_stages(tmp_path) -> None:
         token = service.token(log_id)
         service.verify_token(log_id, token)
         assert "publish" in await service.content(log_id, False)
+        event = {"eventType": "APPEND", "logId": log_id, "content": "Kafka",
+                 "_kafkaRecordId": "confirmed-partition-offset"}
+        await service.handle_event(event)
+        await service.handle_event(event)
+        assert [item["content"] for item in await service.lines(log_id, 5, 5)] == ["Kafka"]
+        assert (await repository.business_summary(log_id))["totalLines"] == 5
+        async with repository.engine.connect() as conn:
+            assert not await conn.run_sync(lambda c: inspect(c).has_table("business_log_line"))
     finally:
         await repository.stop()
 

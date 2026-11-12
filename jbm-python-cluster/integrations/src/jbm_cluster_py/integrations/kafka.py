@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import logging
 from collections.abc import Awaitable, Callable, Mapping
@@ -53,7 +54,7 @@ class KafkaClient:
         )
 
     async def consume_json(
-        self, topic: str, group_id: str, handler: MessageHandler, *, batch_size: int = 0
+        self, topic: str, group_id: str, handler: MessageHandler, *, batch_size: int = 0, source_ids: bool = False
     ) -> None:
         if not self.enabled:
             logger.info("Kafka client disabled")
@@ -73,18 +74,25 @@ class KafkaClient:
         self._consumers.append(consumer)
         consume = (
             self._consume_batch(consumer, topic, handler, batch_size)
-            if batch_size else self._consume(consumer, topic, handler)
+            if batch_size else self._consume(consumer, topic, handler, source_ids=source_ids)
         )
         self._tasks.append(asyncio.create_task(consume))
         logger.info("Consuming Kafka topic %s as %s", topic, group_id)
 
-    async def _consume(self, consumer: Any, topic: str, handler: MessageHandler) -> None:
+    async def _consume(self, consumer: Any, topic: str, handler: MessageHandler, *, source_ids: bool = False) -> None:
+        from aiokafka import TopicPartition
+
         async for message in consumer:
             while not self._stopped:
                 try:
                     payload = self._decode_message(message)
+                    if source_ids:
+                        identity = f"{message.topic}:{message.partition}:{message.offset}"
+                        payload = {**payload, "_kafkaRecordId": hashlib.sha256(identity.encode()).hexdigest()}
                     await handler(payload)
-                    await consumer.commit()
+                    # The handler only confirmed this record. Never advance a
+                    # different partition to its current fetch position.
+                    await consumer.commit({TopicPartition(message.topic, message.partition): message.offset + 1})
                     break
                 except asyncio.CancelledError:
                     raise
