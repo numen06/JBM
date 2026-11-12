@@ -13,7 +13,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import text
+from sqlalchemy import inspect, text
 from fastapi import HTTPException
 from jbm_cluster_py.common.api_access import is_platform, permission_codes, role_codes
 
@@ -60,10 +60,16 @@ class SecurityAuditStore:
         self.last_error = None
         self.publisher_health = None
         self.archive_ack = None
+        self.archive_confirmed = None
+        self.confirmed_batch = None
 
     async def start(self):
         if not self.enabled:
             return
+        if self.outbox_engine is not None:
+            async with self.outbox_engine.connect() as conn:
+                if not await conn.run_sync(lambda sync: inspect(sync).has_table("security_audit_outbox")):
+                    self.outbox_engine = None
         if len(self.secret) < 32:
             raise ValueError("审计完整性密钥必须至少32字节并通过秘密配置注入")
         if not self.loki.enabled:
@@ -143,6 +149,8 @@ class SecurityAuditStore:
         payload, signature = self.envelope(event)
         async with self.lock:
             try:
+                if self.archive_confirmed is not None and await self.archive_confirmed(event):
+                    return
                 path = self.backup_path(event)
                 if path.exists():
                     previous = json.loads(path.read_text(encoding="utf-8"))
@@ -172,6 +180,14 @@ class SecurityAuditStore:
             except Exception:
                 self.last_error = "安全日志归档或完整性校验失败，消息保留重试"
                 raise
+
+    async def handle_batch(self, events):
+        if not self.enabled:
+            raise RuntimeError("安全日志归档未启用")
+        confirmed = await self.confirmed_batch(events) if self.confirmed_batch else [False] * len(events)
+        for event, archived in zip(events, confirmed, strict=True):
+            if not archived:
+                await self.handle(event)
 
     async def query(self, body):
         grouped = body.get("groupOperations") is True

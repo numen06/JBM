@@ -219,7 +219,7 @@ class AuthRepository:
 
     async def require_login_security_schema(self) -> None:
         if self.security_audit is not None and self.security_audit.enabled:
-            await require_tables(self.engine, ("base_login_security_state", "base_login_security_alert", "security_audit_outbox"))
+            await require_tables(self.engine, ("base_login_security_state", "base_login_security_alert"))
             return
         async with self.engine.connect() as conn:
             columns = {row["name"] for row in await conn.run_sync(lambda sync: inspect(sync).get_columns("base_account_logs"))}

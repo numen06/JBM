@@ -225,3 +225,97 @@ async def test_bulk_backup_verifies_every_fact_and_preserves_it_on_redelivery(tm
         await store.handle_many([{**events[0], 'success': False}])
     assert len(pushes) == 1
     await sink.stop()
+
+
+@pytest.mark.asyncio
+async def test_security_publisher_keeps_source_until_loki_receipt_without_resending(tmp_path):
+    from types import SimpleNamespace
+
+    from jbm_cluster_py.common.operation_audit import OperationAuditor
+    from jbm_cluster_py.common.security_audit import OPERATION_ACK_PREFIX, audit_digest
+    from jbm_cluster_py.common.security_audit_delivery import SecurityAuditPublisher
+
+    sender = SecurityAuditPublisher.__new__(SecurityAuditPublisher)
+    sender.enabled = True
+    sender.legacy = None
+    sender.directory = tmp_path / "persistent"
+    sender.receipts = SimpleNamespace(client=SimpleNamespace(get=AsyncMock(return_value=None)))
+    sender.kafka = SimpleNamespace(publish_json=AsyncMock(side_effect=ConnectionError("offline")))
+    event = {**audit_event("auth", operation="LOGIN"), "category": "login"}
+    await sender.record(event)
+    source = sender.directory / (event["eventId"] + ".json")
+    assert json.loads(source.read_text()) == event
+    with pytest.raises(ConnectionError):
+        await sender.flush()
+    sender.kafka.publish_json.side_effect = None
+    await sender.flush()
+
+    restarted = SecurityAuditPublisher.__new__(SecurityAuditPublisher)
+    restarted.directory = sender.directory
+    restarted.legacy = None
+    restarted.kafka = sender.kafka
+    restarted.receipts = sender.receipts
+    await restarted.flush()
+    assert sender.kafka.publish_json.await_count == 2
+    assert source.is_file()
+
+    ack_client = SimpleNamespace(set=AsyncMock())
+    log_auditor = SimpleNamespace(receipts=SimpleNamespace(client=ack_client))
+    await OperationAuditor.acknowledge(log_auditor, event)
+    ack_client.set.assert_awaited_once_with(
+        OPERATION_ACK_PREFIX + event["eventId"], audit_digest(event), ex=7 * 86400,
+    )
+    sender.receipts.client.get.return_value = audit_digest(event)
+    await restarted.flush()
+    assert not source.exists()
+    assert not (sender.directory / "submitted" / source.name).exists()
+
+
+@pytest.mark.asyncio
+async def test_batch_only_skips_events_with_matching_archive_receipts(tmp_path):
+    from types import SimpleNamespace
+    from jbm_cluster_py.common.operation_audit import OperationAuditor
+    from jbm_cluster_py.common.security_audit import audit_digest
+
+    archived = audit_event("auth", operation="LOGIN")
+    pending = audit_event("gateway", operation="ACCESS")
+    client = SimpleNamespace(mget=AsyncMock(return_value=[audit_digest(archived), "mismatched"]))
+    publisher = SimpleNamespace(receipts=SimpleNamespace(client=client))
+    sink = loki_sink()
+    store = SecurityAuditStore({"enabled": True, "backup-directory": str(tmp_path)}, loki=sink)
+    store.confirmed_batch = lambda events: OperationAuditor.confirmed_audit_batch(publisher, events)
+    store.handle = AsyncMock()
+    await store.handle_batch([archived, pending])
+    store.handle.assert_awaited_once_with(pending)
+    await sink.stop()
+
+
+@pytest.mark.asyncio
+async def test_audit_batch_commits_only_after_complete_handler_succeeds():
+    from types import SimpleNamespace
+
+    from aiokafka import TopicPartition
+    from jbm_cluster_py.integrations.kafka import KafkaClient
+
+    kafka = KafkaClient({"enabled": True, "retry-seconds": 0})
+    kafka.retry_seconds = 0
+    partition = TopicPartition("audit", 0)
+    messages = [SimpleNamespace(offset=13, value=b'{"eventId":"one"}'),
+                SimpleNamespace(offset=14, value=b'{"eventId":"two"}')]
+    consumer = SimpleNamespace(getmany=AsyncMock(return_value={partition: messages}))
+    calls = []
+
+    async def handler(events):
+        assert [event["eventId"] for event in events] == ["one", "two"]
+        calls.append("handle")
+        if len(calls) == 1:
+            raise RuntimeError("Loki unavailable")
+
+    async def commit(offsets):
+        assert offsets == {partition: 15}
+        calls.append("commit")
+        kafka._stopped = True
+
+    consumer.commit = commit
+    await kafka._consume_batch(consumer, "audit", handler, 1000)
+    assert calls == ["handle", "handle", "commit"]

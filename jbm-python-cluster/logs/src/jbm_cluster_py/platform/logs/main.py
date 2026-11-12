@@ -62,7 +62,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
         await kafka.consume_json(access_topic, group + "-access", access_ingest.handle)
         await kafka.consume_json(business_topic, group + "-business", service.handle_event)
         if security_audit.enabled:
-            await kafka.consume_json(AUDIT_TOPIC, group + "-security-audit", security_audit.handle)
+            await kafka.consume_json(AUDIT_TOPIC, group + "-security-audit", security_audit.handle_batch, batch_size=1000)
         await nacos.start()
         try:
             yield
@@ -88,6 +88,8 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     install_api_protection(app, app_config, public_paths=("/health", "/actuator/health", "/businessLog/download/", "/businessLog/access/"))
     security_audit.publisher_health = app.state.operation_audit.publisher_health
     security_audit.archive_ack = app.state.operation_audit.acknowledge
+    security_audit.archive_confirmed = app.state.operation_audit.archive_confirmed
+    security_audit.confirmed_batch = app.state.operation_audit.confirmed_audit_batch
     app.include_router(build_health_router(app_config.service_name, app_config.profile))
     app.include_router(build_logs_router(repository, service, access_ingest))
 

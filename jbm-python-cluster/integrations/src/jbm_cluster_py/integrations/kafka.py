@@ -53,7 +53,7 @@ class KafkaClient:
         )
 
     async def consume_json(
-        self, topic: str, group_id: str, handler: MessageHandler
+        self, topic: str, group_id: str, handler: MessageHandler, *, batch_size: int = 0
     ) -> None:
         if not self.enabled:
             logger.info("Kafka client disabled")
@@ -71,18 +71,18 @@ class KafkaClient:
         )
         await consumer.start()
         self._consumers.append(consumer)
-        self._tasks.append(asyncio.create_task(self._consume(consumer, topic, handler)))
+        consume = (
+            self._consume_batch(consumer, topic, handler, batch_size)
+            if batch_size else self._consume(consumer, topic, handler)
+        )
+        self._tasks.append(asyncio.create_task(consume))
         logger.info("Consuming Kafka topic %s as %s", topic, group_id)
 
     async def _consume(self, consumer: Any, topic: str, handler: MessageHandler) -> None:
         async for message in consumer:
             while not self._stopped:
                 try:
-                    payload = json.loads(message.value.decode("utf-8"))
-                    if isinstance(payload, str):
-                        payload = json.loads(payload)
-                    if not isinstance(payload, Mapping):
-                        raise ValueError("Kafka log message must be a JSON object")
+                    payload = self._decode_message(message)
                     await handler(payload)
                     await consumer.commit()
                     break
@@ -96,6 +96,32 @@ class KafkaClient:
                         message.offset,
                     )
                     await asyncio.sleep(self.retry_seconds)
+
+    @staticmethod
+    def _decode_message(message):
+        payload = json.loads(message.value)
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        if not isinstance(payload, Mapping):
+            raise ValueError("Kafka log message must be a JSON object")
+        return payload
+
+    async def _consume_batch(self, consumer, topic, handler, batch_size):
+        while not self._stopped:
+            batches = await consumer.getmany(timeout_ms=500, max_records=batch_size)
+            for partition, messages in batches.items():
+                while not self._stopped:
+                    try:
+                        payloads = [self._decode_message(message) for message in messages]
+                        await handler(payloads)
+                        await consumer.commit({partition: messages[-1].offset + 1})
+                        break
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception:
+                        logger.exception("Kafka batch failed for %s partition=%s offset=%s; retrying",
+                                         topic, partition.partition, messages[0].offset)
+                        await asyncio.sleep(self.retry_seconds)
 
     async def stop(self) -> None:
         self._stopped = True

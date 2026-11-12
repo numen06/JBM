@@ -406,8 +406,24 @@ class OperationAuditor:
             for value in (await self.receipts.client.hgetall(OPERATION_HEALTH_KEY)).values()
         ]
 
+    async def archive_confirmed(self, event):
+        if self.receipts.client is None:
+            await self.receipts.start()
+        return await self.receipts.client.get(OPERATION_ACK_PREFIX + event["eventId"]) == audit_digest(event)
+
+    async def confirmed_audit_batch(self, events):
+        if not events:
+            return []
+        if self.receipts.client is None:
+            await self.receipts.start()
+        keys = [OPERATION_ACK_PREFIX + event["eventId"] for event in events]
+        receipts = await self.receipts.client.mget(keys)
+        return [receipt == audit_digest(event) for event, receipt in zip(events, receipts, strict=True)]
+
     async def acknowledge(self, event):
-        if event.get("category") != "operation" and event.get("source") not in {
+        if event.get("category") not in {"operation", "login", "access"} and event.get("source") not in {
+            "auth",
+            "gateway",
             "legacy-job",
             "legacy-feige",
         }:

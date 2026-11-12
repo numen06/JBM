@@ -22,7 +22,7 @@ from jbm_cluster_py.platform.gateway.routes import RouteRepository
 from jbm_cluster_py.platform.gateway.security import install_security_middleware
 from jbm_cluster_py.platform.gateway.service import AccessLogger, GatewayProxy, ServiceTokenProvider
 from jbm_cluster_py.platform.gateway.traffic import TrafficPolicyManager
-from jbm_cluster_py.common.security_audit import AuditOutbox
+from jbm_cluster_py.common.security_audit_delivery import SecurityAuditPublisher
 
 
 def create_app(config: Optional[AppConfig] = None) -> FastAPI:
@@ -60,7 +60,7 @@ def create_app(config: Optional[AppConfig] = None) -> FastAPI:
         http_client,
         KafkaClient(app_config.kafka),
     )
-    access_logger.audit = AuditOutbox(app_config.get("jbm.security-audit", {}) or {}, access_logger.kafka, app_config.database)
+    access_logger.audit = SecurityAuditPublisher(app_config, source="gateway")
     proxy = GatewayProxy(
         app_config,
         routes,

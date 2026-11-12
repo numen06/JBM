@@ -229,6 +229,8 @@ services:
       JBM_HEALTH_PORT: "5555"
     command: ["python", "-m", "jbm_cluster_py.platform.auth.main"]
     ports: ["127.0.0.1:5555:5555"]
+    volumes:
+      - operation-audit-spool:/app/data/security-audit-spool
     depends_on:
       jbm-cluster-platform-center: {condition: service_healthy}
       redis: {condition: service_healthy}
@@ -311,6 +313,8 @@ services:
       JBM_HEALTH_PORT: "6060"
     command: ["python", "-m", "jbm_cluster_py.platform.gateway.main"]
     ports: ["127.0.0.1:6060:6060"]
+    volumes:
+      - operation-audit-spool:/app/data/security-audit-spool
     depends_on:
       jbm-cluster-platform-center: {condition: service_healthy}
       jbm-cluster-platform-auth: {condition: service_healthy}
@@ -342,6 +346,7 @@ networks:
     internal: true
 
 volumes:
+  operation-audit-spool:
   security-audit-backup:
   database-backups:
   mysql-data:

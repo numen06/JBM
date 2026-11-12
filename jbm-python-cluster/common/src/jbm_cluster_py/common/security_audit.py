@@ -49,7 +49,7 @@ class AuditOutbox:
         self.task = None
         self.last_error = None
 
-    async def start(self):
+    async def start(self, *, background=True):
         if not self.enabled:
             return
         if not self.kafka.enabled:
@@ -59,7 +59,8 @@ class AuditOutbox:
                 await conn.execute(text("CREATE TABLE IF NOT EXISTS security_audit_outbox (event_id VARCHAR(64) PRIMARY KEY, payload TEXT NOT NULL, published_at BIGINT)"))
         else:
             await require_tables(self.engine, ("security_audit_outbox",))
-        self.task = asyncio.create_task(self._run())
+        if background:
+            self.task = asyncio.create_task(self._run())
 
     async def record(self, event):
         if not self.enabled:
@@ -70,7 +71,7 @@ class AuditOutbox:
 
     async def flush(self):
         async with self.engine.connect() as conn:
-            rows = (await conn.execute(text("SELECT event_id,payload FROM security_audit_outbox WHERE published_at IS NULL OR published_at<:retry ORDER BY event_id LIMIT 100"), {"retry": int(time.time()) - 30})).all()
+            rows = (await conn.execute(text("SELECT event_id,payload FROM security_audit_outbox WHERE published_at IS NULL ORDER BY event_id LIMIT 100"))).all()
         for event_id, payload in rows:
             await self.kafka.publish_json(AUDIT_TOPIC, json.loads(payload), key=event_id)
             async with self.engine.begin() as conn:

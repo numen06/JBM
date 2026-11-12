@@ -26,8 +26,7 @@ from jbm_cluster_py.integrations.telemetry import init_telemetry
 from jbm_cluster_py.platform.auth.repository import AuthRepository
 from jbm_cluster_py.platform.auth.router import build_auth_router
 from jbm_cluster_py.platform.auth.service import AuthService, TokenCache
-from jbm_cluster_py.common.security_audit import AuditOutbox
-from jbm_cluster_py.integrations.kafka import KafkaClient
+from jbm_cluster_py.common.security_audit_delivery import SecurityAuditPublisher
 
 
 def create_app(config: AppConfig | None = None) -> FastAPI:
@@ -56,8 +55,7 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
     auth_service = AuthService(
         repository, cache, auth_config, discovery=discovery, http_client=http_client
     )
-    audit_kafka = KafkaClient(app_config.kafka)
-    auth_service.audit = AuditOutbox(app_config.get("jbm.security-audit", {}) or {}, audit_kafka, app_config.database)
+    auth_service.audit = SecurityAuditPublisher(app_config, source="auth", legacy_database=app_config.database)
     repository.security_audit = auth_service.audit
 
     @asynccontextmanager
@@ -77,7 +75,6 @@ def create_app(config: AppConfig | None = None) -> FastAPI:
                 from jbm_cluster_py.integrations.database import require_tables
                 await require_tables(repository.engine, ("base_account_password_age",))
             await auth_service.audit.start()
-            stack.push_async_callback(audit_kafka.stop)
             stack.push_async_callback(auth_service.audit.stop)
             await auth_service.key_login.start()
             await auth_service.login_security.start()
