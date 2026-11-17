@@ -119,6 +119,12 @@ def _env_overrides() -> Dict[str, Any]:
         value = os.getenv(env_name)
         if value:
             nested_set(overrides, dotted_key, value)
+    key_file = os.getenv("JBM_AUTH_JWT_PRIVATE_KEY_FILE")
+    if key_file and not os.getenv("JBM_AUTH_JWT_PRIVATE_KEY"):
+        private_key = Path(key_file).read_text(encoding="utf-8")
+        if not private_key.strip():
+            raise ValueError("JWT signing key file must not be empty")
+        nested_set(overrides, "jbm.auth.jwt.private-key", private_key)
     for suffix, value in (
         ("server-addr", os.getenv("JBM_NACOS_SERVER_ADDR")),
         ("namespace", os.getenv("JBM_NACOS_NAMESPACE")),
