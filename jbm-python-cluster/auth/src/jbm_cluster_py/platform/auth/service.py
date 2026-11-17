@@ -286,7 +286,7 @@ class TokenCache:
         full_prefix = self._key(prefix)
         values: list[dict[str, Any]] = []
         if self.redis_client.client is not None:
-            async for key in self.redis_client.client.scan_iter(full_prefix + "*"):
+            async for key in self.redis_client.client.scan_iter(full_prefix + "*", count=1000):
                 raw = await self.redis_client.client.get(key)
                 if raw:
                     values.append(json.loads(raw))
