@@ -1,0 +1,14 @@
+# Append after the existing DEBUG Compose files; keep their environment and mounts.
+# The server-created key lives in this existing external volume, never in Git.
+services:
+  jbm-cluster-platform-auth:
+    environment:
+      JBM_AUTH_JWT_PRIVATE_KEY_FILE: /run/secrets/jbm-auth-signing/signing.pem
+      JBM_AUTH_JWT_KEY_ID: debug-local-20261118
+    volumes:
+      - jbm-debug-auth-signing:/run/secrets/jbm-auth-signing:ro
+
+volumes:
+  jbm-debug-auth-signing:
+    external: true
+    name: jbm-debug-auth-signing
