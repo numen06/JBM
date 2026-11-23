@@ -361,11 +361,14 @@ class DatabaseBackups:
             raise ValueError("数据库没有可备份的表")
         if any(row[1] == "BASE TABLE" and row[2] != "InnoDB" for row in meta["tables"]):
             raise ValueError("存在非 InnoDB 表，请先安排一致性备份维护窗口")
+        version = self.query(source, "SELECT VERSION();")
+        # OceanBase may reject SHOW EVENTS even when its event catalog is empty.
+        event_options = ["--events"] if "oceanbase" not in version.lower() or meta["events"] else []
         temporary = self.archives / (task["id"] + ".partial")
         path = self.archives / (task["id"] + ".sql.gz")
         with self.client_file(source) as config, tempfile.TemporaryFile() as errors:
             args = ["mysqldump", "--defaults-extra-file=" + config, "--single-transaction", "--quick",
-                    "--routines", "--events", "--triggers", "--hex-blob", "--no-tablespaces",
+                    "--routines", *event_options, "--triggers", "--hex-blob", "--no-tablespaces",
                     "--set-gtid-purged=OFF", "--column-statistics=0", source["database"]]
             process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=errors)
             deadline = threading.Timer(3600, process.kill)
@@ -392,7 +395,7 @@ class DatabaseBackups:
         with path.open("rb") as file:
             digest = hashlib.file_digest(file, "sha256").hexdigest()
         task.update(size=path.stat().st_size, sha256=digest,
-                    manifest={**meta, "version": self.query(source, "SELECT VERSION();"), "source": self.identity(source)},
+                    manifest={**meta, "version": version, "source": self.identity(source)},
                     filename=source["database"] + "-" + task["createdAt"][:19].replace(":", "-") + ".sql.gz")
         (self.archives / (task["id"] + ".manifest.json")).write_text(json.dumps(task, ensure_ascii=False), encoding="utf-8")
 

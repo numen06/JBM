@@ -1,12 +1,13 @@
 import gzip
 import hashlib
+import io
 import json
 import tempfile
 import subprocess
 import shutil
 import unittest
 from datetime import datetime, timezone
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from fastapi import FastAPI
 import httpx
@@ -44,6 +45,25 @@ class BackupTests(unittest.TestCase):
                 result = subprocess.run([client, "--defaults-extra-file=" + config, "--help"],
                                         stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
                 self.assertEqual(result.returncode, 0, result.stderr.decode())
+
+    def test_empty_oceanbase_event_catalog_is_not_dumped(self):
+        source = self.service.source("jbm-default")
+        cases = (("5.7.25-OceanBase_CE-v4.4.2.1", 0, False),
+                 ("5.7.25-OceanBase_CE-v4.4.2.1", 1, True), ("8.4.10", 0, True))
+        for index, (version, events, include_events) in enumerate(cases):
+            with self.subTest(version=version, events=events):
+                self.service.query = Mock(return_value=version)
+                self.service.metadata = Mock(return_value={
+                    "tables": [["example", "BASE TABLE", "InnoDB"]], "events": events,
+                })
+                task = {"id": str(index), "createdAt": "2026-11-24T00:00:00+00:00"}
+                with patch("jbm_cluster_py.platform.job.database_backups.subprocess.Popen") as dump:
+                    dump.return_value.stdout = io.BytesIO(bytes(range(256)))
+                    dump.return_value.wait.return_value = 0
+                    dump.return_value.poll.return_value = 0
+                    self.service.backup(task, source)
+                self.assertEqual("--events" in dump.call_args.args[0], include_events)
+                self.assertEqual(task["manifest"]["version"], version)
 
     def test_scheduler_runs_once_and_rejects_concurrent_work(self):
         self.service.save_policy("jbm-default", {"enabled": True, "time": "02:00"})
